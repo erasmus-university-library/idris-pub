@@ -4,13 +4,17 @@ import Button from 'material-ui/Button';
 class UserMenu extends Component {
 
   render() {
-    return (
-        <Button color="contrast"
-                aria-label="login"
-                onClick={this.props.onLoginClick}>
-          Login
-        </Button>
-    );
+      if (this.props.user){
+          return (
+              <Button color="contrast"
+                      aria-label="logout"
+                      onClick={this.props.onLogout}>Logout</Button>);
+      } else {
+          return (
+              <Button color="contrast"
+                      aria-label="login"
+                      onClick={this.props.onLogin}>Login</Button>);
+      }
   }
 }
 

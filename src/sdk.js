@@ -9,7 +9,7 @@ class CaleidoSDK {
             this.backendURL = 'http://localhost:6543/api/v1';
 
             this.login = this.login.bind(this);
-            this.typeList = this.typeList.bind(this);
+            this.recordList = this.recordList.bind(this);
 
             sdk_client = this;
         }
@@ -24,10 +24,19 @@ class CaleidoSDK {
                       body: JSON.stringify({user:user, password:password})});
     }
 
-    typeList = function() {
-        return [{'type': 'person', 'label': 'Persons'},
-                {'type': 'group', 'label': 'Groups'},
-                {'type': 'user', 'label': 'Users'}];
+    recordList = function(type, query='', offset=0, limit=10) {
+        query = encodeURIComponent(query);
+        return fetch(`${this.backendURL}/${type}/records?query=${query}&offset=${offset}&limit=${limit}`,
+                     {method: 'GET',
+                      mode: 'cors',
+                      headers: {'Authorization': `Bearer ${this.token}`}});
+    }
+
+    clientConfig = function(){
+        return fetch(this.backendURL + '/client',
+                     {method: 'GET',
+                      mode: 'cors'})
+
     }
 }
 

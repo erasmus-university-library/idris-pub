@@ -12,8 +12,10 @@ import ChevronLeftIcon from 'material-ui-icons/ChevronLeft';
 import ChevronRightIcon from 'material-ui-icons/ChevronRight';
 
 import styles from './LayoutStyles.js'
+import SideBarMenu from './SideBarMenu.js'
 import UserMenu from './UserMenu.js'
 import LoginForm from './LoginForm.js'
+import RecordList from './RecordList.js'
 
 @withStyles(styles, { withTheme: true })
 class Layout extends Component {
@@ -38,7 +40,9 @@ class Layout extends Component {
               <Typography type="title" color="inherit" noWrap className={classes.flex}>
                 {this.props.title}
               </Typography>
-              <UserMenu onLoginClick={this.props.action.loginForm.onOpen}/>
+              <UserMenu onLogin={this.props.action.loginForm.onOpen}
+                        onLogout={this.props.action.loginForm.onLogout}
+                        user={this.props.authenticatedUserId}/>
             </Toolbar>
           </AppBar>
           <Drawer
@@ -55,13 +59,12 @@ class Layout extends Component {
                 </IconButton>
               </div>
               <Divider />
+              <SideBarMenu {...this.props.sideBar} {...this.props.action.sideBar} />
             </div>
           </Drawer>
           <main className={classNames(classes.content, this.props.sideBar.open && classes.contentShift)}>
             <LoginForm {...this.props.loginForm} {...this.props.action.loginForm} />
-            <Typography type="body1" noWrap>
-              {'You think water moves fast? You should see ice.'}
-            </Typography>
+            <RecordList {...this.props.recordList} {...this.props.action.recordList} />
           </main>
         </div>
       </div>

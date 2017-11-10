@@ -24,7 +24,7 @@ class LoginForm extends Component {
   }
 
   handleSubmit = (event) => {
-      this.props.onSubmit(this.props.user, this.props.password);
+      this.props.onLogin(this.props.user, this.props.password);
   }
 
   render() {
@@ -42,7 +42,7 @@ class LoginForm extends Component {
               id="user"
               label="Username"
               className={classes.textField}
-              value={this.props.user || ''}
+              value={this.props.user}
               onChange={this.handleChange('user')}
               margin="dense"
             />
@@ -53,7 +53,7 @@ class LoginForm extends Component {
               className={classes.textField}
               type="password"
               autoComplete="current-password"
-              value={this.props.password || ''}
+              value={this.props.password}
               onChange={this.handleChange('password')}
               margin="dense"
             />

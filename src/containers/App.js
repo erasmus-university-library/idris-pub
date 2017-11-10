@@ -1,8 +1,21 @@
+import React, { Component } from 'react';
 import { connect } from 'react-redux'
-import { fetchToken,
+import { fetchToken, invalidateToken,
          loginFormOpen, loginFormClose, loginFormChange,
-         sideBarOpen, sideBarClose } from '../actions'
+         sideBarOpen, sideBarClose,
+         selectRecordType,
+         initializeApp,
+         fetchRecordList } from '../actions'
 import Layout from '../components/Layout.js'
+
+class App extends Component {
+  componentDidMount() {
+      this.props.action.initializeApp();
+  }
+  render() {
+      return <Layout {...this.props} />
+  }
+}
 
 const mapStateToProps = state => {
   return {authenticatedUserId: state.app.auth.user,
@@ -11,25 +24,39 @@ const mapStateToProps = state => {
                       user: state.app.loginForm.user,
                       password: state.app.loginForm.password,
                       error: state.app.loginForm.error},
-          sideBar: {open: state.app.sideBar.open},
+          sideBar: {open: state.app.sideBar.open,
+                    types: state.app.config.types},
+          recordList: {total: state.app.recordList.total,
+                       records: state.app.recordList.records,
+                       offset: state.app.recordList.offset,
+                       query: state.app.recordList.query,
+                       type: state.app.recordList.type,
+                       label: state.app.recordList.label,
+                       label_plural: state.app.recordList.label_plural,
+                       page: state.app.recordList.page,
+                       limit: state.app.recordList.limit}
       };
 }
 
 const mapDispatchToProps = dispatch => {
     return {
         action: {
+            initializeApp: () => {dispatch(initializeApp())},
             loginForm: {onOpen: () => {dispatch(loginFormOpen())},
                         onClose: () => {dispatch(loginFormClose())},
                         onChange: (user, password) => {dispatch(loginFormChange(user, password))},
-                        onSubmit: (user, password) => {dispatch(fetchToken(user, password))}
+                        onLogin: (user, password) => {dispatch(fetchToken(user, password))},
+                        onLogout: () => {dispatch(invalidateToken())},
             },
             sideBar: {onOpen: () => {dispatch(sideBarOpen())},
-                      onClose: () => {dispatch(sideBarClose())}
+                      onClose: () => {dispatch(sideBarClose())},
+                      onTypeClicked: (type, label) => {dispatch(selectRecordType(type))},
             },
+            recordList: {
+                handleFetch: (type, query, offset, limit, timeout) => {dispatch(
+                    fetchRecordList(type, query, offset, limit, timeout))}},
         }
     };
 }
 
-const App = connect(mapStateToProps, mapDispatchToProps)(Layout);
-
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App);

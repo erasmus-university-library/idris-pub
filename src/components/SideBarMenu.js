@@ -6,7 +6,14 @@ import FaceIcon from 'material-ui-icons/Face';
 
 class SideBarMenu extends Component {
 
+  handleTypeClicked = (type) => (event) => {
+      this.props.onTypeClicked(type);
+  }
+
   render() {
+      if (!this.props.types) {
+          return null;
+      }
       let icons = {
           'person': <PersonIcon />,
           'group': <GroupIcon />,
@@ -14,8 +21,8 @@ class SideBarMenu extends Component {
       };
 
       let listItems = this.props.types.map((type) =>
-          <ListItem button key={type.type}>
-            <ListItemIcon>{icons[type.type] || null}</ListItemIcon>
+          <ListItem button key={type.id} onClick={this.handleTypeClicked(type)}>
+            <ListItemIcon>{icons[type.id] || null}</ListItemIcon>
             <ListItemText primary={type.label} />
           </ListItem>);
 
