@@ -11,9 +11,9 @@ const styles = theme => ({
     flex: 0,
   },
   textField: {
-    marginLeft: theme.spacing.unit,
-    marginRight: theme.spacing.unit,
-    width: '100%'
+    margin: theme.spacing.unit,
+    marginBottom: theme.spacing.unit - 1,
+    width: '200px'
   },
   formControl: {
     margin: theme.spacing.unit,

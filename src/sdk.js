@@ -24,9 +24,16 @@ class CaleidoSDK {
                       body: JSON.stringify({user:user, password:password})});
     }
 
-    recordList = function(type, query='', offset=0, limit=10) {
+    recordList = function(type, query='', filters={}, offset=0, limit=10) {
         query = encodeURIComponent(query);
-        return fetch(`${this.backendURL}/${type}/records?query=${query}&offset=${offset}&limit=${limit}`,
+        let url = `${this.backendURL}/${type}/records?format=snippet&query=${query}`;
+        url = url + `&offset=${offset}&limit=${limit}`;
+        for (const [key, values] of Object.entries(filters)){
+            for (const value of values){
+                url = url + `&filter_${key}=${encodeURIComponent(value)}`;
+            }
+        }
+        return fetch(url,
                      {method: 'GET',
                       mode: 'cors',
                       headers: {'Authorization': `Bearer ${this.token}`}});

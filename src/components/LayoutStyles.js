@@ -1,4 +1,4 @@
-const drawerWidth = 240;
+const drawerWidth = 260;
 const styles = theme => ({
   root: {
     width: '100%',

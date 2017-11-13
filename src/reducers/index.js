@@ -10,31 +10,52 @@ import { CHANGE_APP_TITLE,
 
 const initialState = {
     title: 'EUR Affiliations',
-    config: {error: null,
-             types: []},
     auth: {user:null,
            token:null,
            errorMessage: '',
            isFetching: false},
     sideBar: {open: false,
               types: []},
+
     loginForm: {user: '',
                 password: '',
                 open: false,
                 error: ''},
+    selectedRecord: null,
+    selectedRecordType: null,
+    recordTypes: {},
     recordList: {type: null,
                  records: [],
                  total: 0,
                  offset: 0,
                  page: 0,
+                 filters: {},
                  limit: 10}
 }
 
 const appReducer = (state = initialState, action) => {
     switch (action.type) {
+
         case RECEIVE_CLIENT_CONFIG:
+            let recordTypes = {};
+            let sideBarTypes = [];
+            for (const type of action.config.types){
+                recordTypes[type.id] = {id: type.id,
+                                        label: type.label,
+                                        labelPlural: type.label_plural,
+                                        fields: type.fields,
+                                        filters: type.filters};
+                sideBarTypes.push({id: type.id,
+                                   label: type.label,
+                                   open: false,
+                                   filters: type.filters || []});
+            }
+
             return {...state,
-                    config: action.config}
+                    sideBar: {...state.sideBar,
+                              types: sideBarTypes},
+                    recordTypes: recordTypes};
+
         case RECEIVE_CLIENT_CONFIG_ERROR:
             return {...state,
                     config: {error: action.error, types: []}
@@ -46,6 +67,8 @@ const appReducer = (state = initialState, action) => {
             return {...state,
                     recordList: {...state.recordList,
                                  query: action.query,
+                                 filters: {...state.recordList.filters,
+                                           ...action.filters},
                                  timeoutId: action.timeoutId}
             }
         case RECEIVE_RECORD_LIST:
@@ -58,11 +81,26 @@ const appReducer = (state = initialState, action) => {
                                  page: action.page,
                                  label: state.selectedRecordType.label,
                                  label_plural: state.selectedRecordType.label_plural,
+                                 fields: state.selectedRecordType.fields,
+                                 types: state.selectedRecordType.types,
                                  type: action.recordType}
             };
         case CHANGE_RECORD_TYPE:
+
             return {...state,
-                    selectedRecordType: action.recordType};
+                    title: state.recordTypes[action.typeId].labelPlural,
+                    selectedRecordType: action.typeId,
+                    recordList: {
+                        type: action.typeId,
+                        limit: 10,
+                        offset: 0,
+                        total: 0,
+                        page: 1,
+                        query: '',
+                        fields: state.recordTypes[action.typeId].fields,
+                        records: [],
+                        filters: {}
+                    }};
         case RECEIVE_TYPES:
             return {
                 ...state,

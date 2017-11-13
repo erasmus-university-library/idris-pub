@@ -21,7 +21,6 @@ export const RECEIVE_TOKEN_ERROR = 'RECEIVE_TOKEN_ERROR';
 export const FETCH_RECORD_TYPES = 'FETCH_TYPES';
 export const RECEIVE_TYPES = 'RECEIVE_TYPES';
 
-export const SELECT_RECORD_TYPE = 'SELECT_RECORD_TYPE';
 export const CHANGE_RECORD_TYPE = 'CHANGE_RECORD_TYPE';
 export const FETCH_RECORD_LIST = 'FETCH_RECORD_LIST';
 export const RECEIVE_RECORD_LIST = 'RECEIVE_RECORD_LIST';
@@ -30,14 +29,6 @@ export const UPDATE_RECORD_LIST_QUERY = 'UPDATE_RECORD_LIST_QUERY';
 
 const sdk = new CaleidoSDK();
 
-
-export const selectRecordType = (type) => {
-    return dispatch => {
-        dispatch(changeRecordType(type));
-        dispatch(changeAppTitle(type.label_plural));
-        dispatch(fetchRecordList(type.id));
-    }
-}
 
 export const initializeApp = () => {
     return dispatch => {
@@ -70,17 +61,18 @@ export const receiveClientConfigError = (error) => {
             error: error}
 }
 
-export const fetchRecordList = (type, query='', offset=0, limit=10, timeout=0) => {
+export const fetchRecordList = (type, query='', filters={}, offset=0, limit=10, timeout=0) => {
     console.log('fetchRecordList with timeout', timeout);
     return dispatch => {
       if (timeout > 0){
-          let timeoutId = setTimeout(() => dispatch(fetchRecordList(type, query, offset, limit, -1)), timeout);
-          dispatch(updateRecordListQuery(query, timeoutId));
+          let timeoutId = setTimeout(() => dispatch(fetchRecordList(
+              type, query, filters, offset, limit, -1)), timeout);
+          dispatch(updateRecordListQuery(query, filters, timeoutId));
       } else {
         if (!timeout){
-            dispatch(updateRecordListQuery(query));
+            dispatch(updateRecordListQuery(query, filters));
         }
-        return sdk.recordList(type, query, offset, limit)
+        return sdk.recordList(type, query, filters, offset, limit)
             .then(response => response.json(),
                   error => dispatch(receiveRecordListError(type, error)))
             .then(data => {
@@ -94,9 +86,10 @@ export const fetchRecordList = (type, query='', offset=0, limit=10, timeout=0) =
     }
 
 }
-export const updateRecordListQuery = (query, timeoutId=null) => {
+export const updateRecordListQuery = (query, filters={}, timeoutId=null) => {
     return {type: UPDATE_RECORD_LIST_QUERY,
             query,
+            filters,
             timeoutId: timeoutId};
 }
 
@@ -117,7 +110,7 @@ export const receiveRecordListError = (type, error) => {
 }
 
 export const changeRecordType = (type) => {
-    return {type: CHANGE_RECORD_TYPE, recordType: type};
+    return {type: CHANGE_RECORD_TYPE, typeId: type};
 }
 
 export const changeAppTitle = (title) => {

@@ -18,6 +18,7 @@ class RecordList extends Component {
   handleChangePage = (event, page) => {
       this.props.handleFetch(this.props.type,
                              this.props.query,
+                             this.props.filters,
                              page * this.props.limit,
                              this.props.limit);
   }
@@ -27,19 +28,46 @@ class RecordList extends Component {
       let timeout = 250;
       this.props.handleFetch(this.props.type,
                              event.target.value,
+                             this.props.filters,
                              offset,
                              this.props.limit,
                              timeout);
   }
+
+  handleChangeFilterType = (event) => {
+      let offset = 0;
+      let filters = {...this.props.filters,
+                     type: [event.target.value]};
+      this.props.handleFetch(this.props.type,
+                             this.props.query,
+                             filters,
+                             offset,
+                             this.props.limit);
+  }
+
 
   handleChangeRowsPerPage = event => {
       let offset = 0;
       let limit = event.target.value;
       this.props.handleFetch(this.props.type,
                              this.props.query,
+                             this.props.filters,
                              offset,
                              limit);
   };
+
+  componentWillReceiveProps(nextProps) {
+      console.log('receive props');
+      return
+      if (nextProps.type !== this.props.type){
+          this.props.handleFetch(this.props.type,
+                                 this.props.query,
+                                 this.props.filters,
+                                 this.props.offset,
+                                 this.props.limit);
+      }
+  }
+
 
   render() {
       const { classes } = this.props;
@@ -47,10 +75,25 @@ class RecordList extends Component {
       if (!this.props.type){
           return null;
       }
+
+      const columns = this.props.fields.map(field => {
+          return <TableCell numeric={field.type === 'number'} key={field.id}>{field.label}</TableCell>;
+      });
+
+      const rows = this.props.records.map(record => {
+            return (
+              <TableRow key={record.id}>
+                {this.props.fields.map(field => {
+                    return <TableCell key={`${record.id}-${field.id}`}
+                                      numeric={field.type === 'number'}>{record[field.id]}</TableCell>
+                })}
+              </TableRow>
+            );
+      });
       return (
           <div>
         <Paper className={classes.root}>
-          <AppBar position="static" color="inherit">
+          <AppBar position="static" color="default">
           <Toolbar>
           <FormControl fullWidth className={classes.formControl}>
           <InputLabel htmlFor="search">{`Search ${this.props.label}`}</InputLabel>
@@ -59,7 +102,7 @@ class RecordList extends Component {
             type="text"
             value={this.props.query}
             onChange={this.handleChangeQuery}
-            endAdornment={<InputAdornment><IconButton><SearchIcon /></IconButton></InputAdornment>}
+            endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
           />
         </FormControl>
           </Toolbar>
@@ -69,25 +112,9 @@ class RecordList extends Component {
 
       <Table className={classes.table}>
         <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell numeric>Memberships</TableCell>
-            <TableCell>Accounts</TableCell>
-            <TableCell>Last Modified</TableCell>
-          </TableRow>
+          <TableRow>{columns}</TableRow>
         </TableHead>
-        <TableBody>
-          {this.props.records.map(record => {
-            return (
-              <TableRow key={record.id}>
-                <TableCell>{record.name}</TableCell>
-                <TableCell numeric>0</TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
+        <TableBody>{rows}</TableBody>
         <TableFooter>
           <TableRow>
             <TablePagination

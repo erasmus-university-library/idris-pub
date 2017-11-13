@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { fetchToken, invalidateToken,
          loginFormOpen, loginFormClose, loginFormChange,
          sideBarOpen, sideBarClose,
-         selectRecordType,
+         changeRecordType,
          initializeApp,
          fetchRecordList } from '../actions'
 import Layout from '../components/Layout.js'
@@ -25,7 +25,7 @@ const mapStateToProps = state => {
                       password: state.app.loginForm.password,
                       error: state.app.loginForm.error},
           sideBar: {open: state.app.sideBar.open,
-                    types: state.app.config.types},
+                    types: state.app.sideBar.types},
           recordList: {total: state.app.recordList.total,
                        records: state.app.recordList.records,
                        offset: state.app.recordList.offset,
@@ -33,6 +33,9 @@ const mapStateToProps = state => {
                        type: state.app.recordList.type,
                        label: state.app.recordList.label,
                        label_plural: state.app.recordList.label_plural,
+                       fields: state.app.recordList.fields,
+                       types: state.app.recordList.types,
+                       filters: state.app.recordList.filters,
                        page: state.app.recordList.page,
                        limit: state.app.recordList.limit}
       };
@@ -50,11 +53,11 @@ const mapDispatchToProps = dispatch => {
             },
             sideBar: {onOpen: () => {dispatch(sideBarOpen())},
                       onClose: () => {dispatch(sideBarClose())},
-                      onTypeClicked: (type, label) => {dispatch(selectRecordType(type))},
+                      onTypeClicked: (type_id) => {dispatch(changeRecordType(type_id))},
             },
             recordList: {
-                handleFetch: (type, query, offset, limit, timeout) => {dispatch(
-                    fetchRecordList(type, query, offset, limit, timeout))}},
+                handleFetch: (type, query, filteredType, offset, limit, timeout) => {dispatch(
+                    fetchRecordList(type, query, filteredType, offset, limit, timeout))}},
         }
     };
 }
