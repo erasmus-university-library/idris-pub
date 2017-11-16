@@ -29,9 +29,7 @@ class CaleidoSDK {
         let url = `${this.backendURL}/${type}/records?format=snippet&query=${query}`;
         url = url + `&offset=${offset}&limit=${limit}`;
         for (const [key, values] of Object.entries(filters)){
-            for (const value of values){
-                url = url + `&filter_${key}=${encodeURIComponent(value)}`;
-            }
+            url = url + `&filter_${key}=${encodeURIComponent(values.join(','))}`;
         }
         return fetch(url,
                      {method: 'GET',

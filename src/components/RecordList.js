@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { withStyles } from 'material-ui/styles';
+import isEqual  from 'lodash/isEqual';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
 import Paper from 'material-ui/Paper';
@@ -16,55 +17,53 @@ import styles from './RecordListStyles.js'
 class RecordList extends Component {
 
   handleChangePage = (event, page) => {
-      this.props.handleFetch(this.props.type,
-                             this.props.query,
-                             this.props.filters,
-                             page * this.props.limit,
-                             this.props.limit);
+      this.props.updateRecordListing({offset: page * this.props.limit});
   }
 
   handleChangeQuery = (event) => {
-      let offset = 0;
-      let timeout = 250;
-      this.props.handleFetch(this.props.type,
-                             event.target.value,
-                             this.props.filters,
-                             offset,
-                             this.props.limit,
-                             timeout);
+      this.props.updateRecordListing({query: event.target.value,
+                                      offset: 0});
   }
-
-  handleChangeFilterType = (event) => {
-      let offset = 0;
-      let filters = {...this.props.filters,
-                     type: [event.target.value]};
-      this.props.handleFetch(this.props.type,
-                             this.props.query,
-                             filters,
-                             offset,
-                             this.props.limit);
-  }
-
 
   handleChangeRowsPerPage = event => {
-      let offset = 0;
-      let limit = event.target.value;
-      this.props.handleFetch(this.props.type,
-                             this.props.query,
-                             this.props.filters,
-                             offset,
-                             limit);
+      this.props.updateRecordListing({offset: 0,
+                                      limit: event.target.value});
   };
 
   componentWillReceiveProps(nextProps) {
-      console.log('receive props');
-      return
-      if (nextProps.type !== this.props.type){
-          this.props.handleFetch(this.props.type,
-                                 this.props.query,
-                                 this.props.filters,
-                                 this.props.offset,
-                                 this.props.limit);
+      if (nextProps.type !== this.props.type ||
+          nextProps.query !== this.props.query ||
+          nextProps.offset !== this.props.offset ||
+          nextProps.limit !== this.props.limit ||
+          !isEqual(this.props.filters, nextProps.filters)){
+          // a fetch is needed
+          if (this.props.timeoutId){
+              // a fetch is in already scheduled with a timeout, cancel it
+              clearTimeout(this.props.timeoutId);
+            }
+
+
+          let timeoutId = null;
+          if (nextProps.query !== this.props.query){
+              // fetch after the timeout has passed
+              let timeout = 200;
+              timeoutId = setTimeout(() => {
+                  this.props.fetchRecordListing(nextProps.type,
+                                                nextProps.query,
+                                                nextProps.filters,
+                                                nextProps.offset,
+                                                nextProps.limit);
+              }, timeout);
+          } else {
+              this.props.fetchRecordListing(nextProps.type,
+                                            nextProps.query,
+                                            nextProps.filters,
+                                            nextProps.offset,
+                                            nextProps.limit)
+          }
+          this.props.updateRecordListing({isFetching: true,
+                                          timeoutId});
+
       }
   }
 
@@ -112,7 +111,7 @@ class RecordList extends Component {
 
       <Table className={classes.table}>
         <TableHead>
-          <TableRow>{columns}</TableRow>
+          <TableRow button>{columns}</TableRow>
         </TableHead>
         <TableBody>{rows}</TableBody>
         <TableFooter>
@@ -120,7 +119,7 @@ class RecordList extends Component {
             <TablePagination
               count={this.props.total}
               rowsPerPage={this.props.limit}
-              page={this.props.page}
+              page={this.props.offset / this.props.limit}
               onChangePage={this.handleChangePage}
               onChangeRowsPerPage={this.handleChangeRowsPerPage} />
           </TableRow>

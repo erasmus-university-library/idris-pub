@@ -1,6 +1,4 @@
 import React, { Component } from 'react';
-import {connect} from 'react-redux';
-import ui from 'redux-ui';
 import { withStyles } from 'material-ui/styles';
 import Button from 'material-ui/Button';
 import TextField from 'material-ui/TextField';
@@ -13,14 +11,12 @@ import Dialog, {
 
 import styles from './LoginFormStyles.js'
 
-@ui({state: {loginFormUser: '', loginFormPassword: ''}})
 @withStyles(styles)
-@connect()
 class LoginForm extends Component {
 
 
   handleChange = (name) => (event) => {
-      this.props.onChange(name, event.target.value);
+      this.props.onChange({[name]: event.target.value});
   }
 
   handleSubmit = (event) => {

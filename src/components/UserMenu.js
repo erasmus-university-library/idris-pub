@@ -4,7 +4,8 @@ import Button from 'material-ui/Button';
 class UserMenu extends Component {
 
   render() {
-      if (this.props.user){
+
+      if (this.props.authenticatedUser){
           return (
               <Button color="contrast"
                       aria-label="logout"
@@ -13,7 +14,7 @@ class UserMenu extends Component {
           return (
               <Button color="contrast"
                       aria-label="login"
-                      onClick={this.props.onLogin}>Login</Button>);
+                      onClick={this.props.onShowLoginForm}>Login</Button>);
       }
   }
 }
