@@ -3,11 +3,13 @@ import { connect } from 'react-redux';
 
 import { fetchAppConfig } from '../actions/SettingsActions';
 import { changeAppTitle, updateUI } from '../actions/UIActions';
-
-import { getAppTitle, getSideBarOpen } from '../selectors/UISelectors';
+import { updateRecordDetail } from '../actions/RecordActions';
+import { getAppTitle,
+         getSideBarOpen } from '../selectors/UISelectors';
 import { getAuthenticatedUserId,
          getSettingsError } from '../selectors/SettingsSelectors';
-import { getIsFetching } from '../selectors/GlobalSelectors';
+import { getIsFetching,
+         getDetailOpen } from '../selectors/GlobalSelectors';
 
 import Layout from '../components/LayoutComponent';
 import AlertDialog from '../components/AlertDialog';
@@ -32,7 +34,8 @@ const mapStateToProps = state => {
         settingsError: getSettingsError(state),
         showProgress: getIsFetching(state),
         userLoggedIn: getAuthenticatedUserId(state) !== null,
-        isSideBarOpen: getSideBarOpen(state)
+        isSideBarOpen: getSideBarOpen(state),
+        isDetailOpen:  getDetailOpen(state)
     };
 }
 
@@ -42,6 +45,7 @@ const mapDispatchToProps = dispatch => {
         changeAppTitle: (title) => {dispatch(changeAppTitle(title))},
         openSideBar: () => {dispatch(updateUI({sideBarOpen: true}))},
         closeSideBar: () => {dispatch(updateUI({sideBarOpen: false}))},
+        closeDetailBar: () => {dispatch(updateRecordDetail({id: null, type:null}))}
     };
 }
 export default connect(mapStateToProps, mapDispatchToProps)(AppContainer);

@@ -30,6 +30,10 @@ class RecordList extends Component {
                                       limit: event.target.value});
   };
 
+  handleRowClicked = (type, id) => event => {
+      this.props.selectRecord(type, id);
+  }
+
   componentWillReceiveProps(nextProps) {
       if (nextProps.type !== this.props.type ||
           nextProps.query !== this.props.query ||
@@ -69,7 +73,7 @@ class RecordList extends Component {
 
 
   render() {
-      const { classes } = this.props;
+      const { classes , type } = this.props;
 
       if (!this.props.type){
           return null;
@@ -81,7 +85,10 @@ class RecordList extends Component {
 
       const rows = this.props.records.map(record => {
             return (
-              <TableRow key={record.id}>
+              <TableRow key={record.id}
+                        hover
+                        selected={record.isSelected}
+                        onClick={this.handleRowClicked(type, record.id)}>
                 {this.props.fields.map(field => {
                     return <TableCell key={`${record.id}-${field.id}`}
                                       numeric={field.type === 'number'}>{record[field.id]}</TableCell>
@@ -111,7 +118,7 @@ class RecordList extends Component {
 
       <Table className={classes.table}>
         <TableHead>
-          <TableRow button>{columns}</TableRow>
+          <TableRow>{columns}</TableRow>
         </TableHead>
         <TableBody>{rows}</TableBody>
         <TableFooter>

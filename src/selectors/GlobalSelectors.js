@@ -4,10 +4,11 @@ import { getAuthenticatedUserId,
 import { getLoginFormState as getLoginFormStateUI} from './UISelectors';
 import { getSelectedRecordType,
          getSelectedRecordFilters,
-         getRecordListIsFetching } from './RecordSelectors';
+         getRecordListIsFetching,
+         getRecordDetailIsFetching} from './RecordSelectors';
 
 export const getIsFetching = (state) => {
-    return getSettingsIsFetching(state) || getRecordListIsFetching(state);
+    return getSettingsIsFetching(state) || getRecordListIsFetching(state) || getRecordDetailIsFetching(state);
 }
 
 export const getLoginFormState = (state) => {
@@ -18,13 +19,15 @@ export const getLoginFormState = (state) => {
     return formState;
 };
 
-export const getSelectedRecordListingFields = (state) => {
+export const getSelectedRecordListingSettings = (state) => {
     const selectedRecordType = getSelectedRecordType(state);
     const recordType = getRecordTypes(state).filter((type) => type.id === selectedRecordType)[0];
     if (recordType){
-        return recordType.fields;
+        return {fields: recordType.fields,
+                label: recordType.label,
+                labelPlural: recordType.label_plural};
     } else {
-        return [];
+        return {};
     }
 
 };
@@ -67,3 +70,12 @@ export const getTypeNavigation = (state) => {
     }
     return types
 };
+
+
+export const getDetailOpen = (state) => {
+    if (state.record.detail.id){
+        return true;
+    } else {
+        return false;
+    }
+}

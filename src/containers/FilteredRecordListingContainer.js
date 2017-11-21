@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 
 import RecordList from '../components/RecordList';
 import { getRecordListingState, getRecordListIsFetching } from '../selectors/RecordSelectors';
-import { getSelectedRecordListingFields } from '../selectors/GlobalSelectors';
-import { updateRecordListing, fetchRecordListing } from '../actions/RecordActions';
+import { getSelectedRecordListingSettings } from '../selectors/GlobalSelectors';
+import { updateRecordListing, fetchRecordListing, selectRecord} from '../actions/RecordActions';
 
 class FilteredRecordListing extends Component {
   render() {
@@ -13,7 +13,7 @@ class FilteredRecordListing extends Component {
 }
 const mapStateToProps = (state) => {
     return {
-        fields: getSelectedRecordListingFields(state),
+        ...getSelectedRecordListingSettings(state),
         showProgress: getRecordListIsFetching(state),
         ...getRecordListingState(state)
     };
@@ -22,6 +22,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = dispatch => {
     return {
         updateRecordListing: (newState) => {dispatch(updateRecordListing(newState))},
+        selectRecord: (type, id) => {dispatch(selectRecord(type, id))},
         fetchRecordListing: (type, query, filters, offset, limit) => {dispatch(
             fetchRecordListing(type, query, filters, offset, limit))},
     };

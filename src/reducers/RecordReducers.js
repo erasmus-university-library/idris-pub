@@ -11,7 +11,12 @@ const defaultState = {
               error: null,
               isFetching: false,
 },
-    detail: null
+    detail: {
+        type: null,
+        record: {},
+        error: null,
+        isFetching: false,
+    }
 }
 
 const reducer = handleActions({
@@ -23,6 +28,11 @@ const reducer = handleActions({
         ...state,
         listing: {...state.listing,
                   ...action.payload}
+    }),
+    RECORD_DETAIL_UPDATE: (state, action) => ({
+        ...state,
+        detail: {...state.detail,
+                 ...action.payload}
     }),
     RECORD_LISTING_FILTERS_UPDATE: (state, action) => ({
         ...state,

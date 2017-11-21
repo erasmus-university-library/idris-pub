@@ -18,13 +18,15 @@ import styles from './LayoutStyles.js';
 import UserContainer from '../containers/UserContainer';
 import FilteredRecordTypesContainer from '../containers/FilteredRecordTypesContainer';
 import FilteredRecordListingContainer from '../containers/FilteredRecordListingContainer';
+import RecordEditor from '../containers/RecordEditor'
 
 @withStyles(styles, { withTheme: true })
 class Layout extends Component {
 
   render() {
       const { classes, theme, isSideBarOpen, userLoggedIn, title,
-              openSideBar, closeSideBar} = this.props;
+              openSideBar, closeSideBar,
+              isDetailOpen } = this.props;
       let progress = null;
       if (this.props.showProgress){
           progress = <LinearProgress />;
@@ -55,12 +57,12 @@ class Layout extends Component {
           <Drawer
             type="persistent"
             classes={{
-              paper: classes.drawerPaper,
+              paper: classes.sideBarPaper,
             }}
             open={isSideBarOpen}
           >
             <div className={classes.drawerInner}>
-              <div className={classes.drawerHeader}>
+              <div className={classes.sideBarHeader}>
                 <IconButton onClick={closeSideBar}>
                   {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
                 </IconButton>
@@ -69,9 +71,23 @@ class Layout extends Component {
               <FilteredRecordTypesContainer />
             </div>
           </Drawer>
-          <main className={classNames(classes.content, isSideBarOpen && classes.contentShift)}>
+          <main className={classNames(classes.content,
+                                      isSideBarOpen && classes.contentShift,
+                                      isDetailOpen && classes.contentShiftDetail)}>
               { userLoggedIn ? <FilteredRecordListingContainer /> : null }
           </main>
+          <Drawer
+            anchor="right"
+            type="persistent"
+            classes={{
+              paper: classes.detailPaper,
+            }}
+            open={isDetailOpen}
+          >
+            <div className={classes.detailInner}>
+              <RecordEditor />
+            </div>
+          </Drawer>
         </div>
       </div>
     );

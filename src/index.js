@@ -9,6 +9,7 @@ import './index.css';
 import 'typeface-roboto';
 
 import App from './containers/AppContainer';
+import {reducer as formReducer } from 'redux-form';
 import settingsReducer from './reducers/SettingsReducers';
 import uiReducer from './reducers/UIReducers';
 import recordReducer from './reducers/RecordReducers';
@@ -20,7 +21,8 @@ const preloadedState = {};
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 const store = createStore(combineReducers({settings: settingsReducer,
                                            ui: uiReducer,
-                                           record: recordReducer}),
+                                           record: recordReducer,
+                                           form: formReducer}),
                           preloadedState,
                           composeEnhancers(reduxBatch, applyMiddleware(thunkMiddleware), reduxBatch));
 

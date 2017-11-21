@@ -37,6 +37,23 @@ class CaleidoSDK {
                       headers: {'Authorization': `Bearer ${this.token}`}});
     }
 
+    record = function(type, id){
+        return fetch(`${this.backendURL}/${type}/records/${id}`,
+                     {method: 'GET',
+                      mode: 'cors',
+                      headers: {'Authorization': `Bearer ${this.token}`}});
+    }
+
+    recordSubmit = function(type, id, value){
+        return fetch(`${this.backendURL}/${type}/records/${id}`,
+                     {method: 'PUT',
+                      mode: 'cors',
+                      body: JSON.stringify(value),
+                      headers: {'Authorization': `Bearer ${this.token}`,
+                                'Content-Type': 'application/json'}});
+    }
+
+
     clientConfig = function(){
         return fetch(this.backendURL + '/client',
                      {method: 'GET',
