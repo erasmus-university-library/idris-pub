@@ -20,7 +20,9 @@ export const selectRecordType = (recordType) => {
     return dispatch => {
         dispatch(updateRecordListing({type: recordType,
                                       offset: 0}))
-        dispatch(updateRecordDetail({type: null, id: null}))
+        dispatch(updateRecordDetail({type: null,
+                                     id: null,
+                                     openedAccordion: recordType}))
     }
 }
 
@@ -86,9 +88,26 @@ export const submitRecord = (type, id, values) => {
                                                  isFetching: false,
                                                  error: null}));
                 } else {
-                    let formErrors = {_error: `Error Submitting ${type} ${id}`};
+                    const formErrors = {_error: `Error Submitting ${type} ${id}`};
+                    // build an error object from the error strings, these can be nested and repeated
+                    // for example: {name: accounts.3.type, description: Required}
                     for (const error of data.errors){
-                        formErrors[error.name] = error.description;
+                        let parent = formErrors;
+                        const parts = error.name.split('.');
+                        for (let i = 0; i < parts.length; i++){
+                            if (i === parts.length - 1){
+                                parent[parts[i]] = error.description
+                            } else {
+                                if (parent[parts[i]] === undefined){
+                                    if (parseFloat(parts[i]) >= 0 && !Array.isArray(parent)){
+                                        parent[parts[i]] = [];
+                                    }
+                                    parent[parts[i]] = {};
+                                }
+                                parent = parent[parts[i]];
+                            }
+
+                        }
                     }
                     dispatch(stopSubmit(type, formErrors));
                     dispatch(updateRecordDetail({isFetching: false}));

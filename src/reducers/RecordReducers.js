@@ -13,8 +13,8 @@ const defaultState = {
 },
     detail: {
         type: null,
+        openedAccordion: null,
         record: {},
-        error: null,
         isFetching: false,
     }
 }

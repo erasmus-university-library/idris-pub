@@ -5,14 +5,27 @@ const styles = theme => ({
   flex: {
     flex: 1,
   },
+  fabButtonRight: {
+      display: 'flex',
+      justifyContent: 'flex-end',
+  },
+  errorBGColor: {
+      backgroundColor: 'rgb(255, 23, 68)',
+  },
   gutter: {
     margin: theme.spacing.unit
   },
-  card: {
+  collapse: {
+      paddingLeft: theme.spacing.unit * 3,
+      paddingRight: theme.spacing.unit * 3,
+  },
+  accountTypeSelect: {
+      minWidth: 60,
+  },
+  editorCard: {
     minWidth: `calc(100% - ${theme.spacing.unit * 6}px)`,
     backgroundColor: 'white',
-    padding: theme.spacing.unit * 3,
-    paddingTop: theme.spacing.unit,
+    padding: 0,
     height: 'calc(100% - 56px)',
     marginTop: theme.spacing.unit * 3,
     [theme.breakpoints.up('sm')]: {
@@ -22,6 +35,13 @@ const styles = theme => ({
       },
     },
   },
-
+  accordionCard: {
+      paddingTop: theme.spacing.unit,
+      paddingLeft: theme.spacing.unit * 3,
+      paddingRight: theme.spacing.unit * 3,
+  },
+  noPadding: {
+      padding: 0,
+  },
 });
 export default styles

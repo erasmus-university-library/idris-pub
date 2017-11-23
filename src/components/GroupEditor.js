@@ -11,14 +11,14 @@ import Button from 'material-ui/Button';
 import List from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 
-import PersonForm from './forms/PersonForm';
+import GroupForm from './forms/GroupForm';
 import AccountsForm from './forms/AccountsForm';
 
 import styles from './EditorStyles.js';
 
 @withStyles(styles, { withTheme: true })
-@reduxForm({form: 'person'})
-class PersonEditor extends React.Component {
+@reduxForm({form: 'group'})
+class GroupEditor extends React.Component {
 
   handleSubmit = (values) => {
       return this.props.submitRecord(this.props.type,
@@ -52,10 +52,11 @@ class PersonEditor extends React.Component {
         <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>
             <List className={classes.noPadding}>
-              <PersonForm open={openedAccordion === 'person'}
-                          name="person"
+              <GroupForm open={openedAccordion === 'group'}
+                          name="group"
                           errors={submittedErrors}
-                          onAccordionClicked={this.handleAccordionClicked('person')}/>
+                          typeOptions={settings.types}
+                          onAccordionClicked={this.handleAccordionClicked('group')}/>
               <Divider />
               <AccountsForm open={openedAccordion === 'account'}
                             name="account"
@@ -77,4 +78,4 @@ class PersonEditor extends React.Component {
   }
 }
 
-export default PersonEditor;
+export default GroupEditor;

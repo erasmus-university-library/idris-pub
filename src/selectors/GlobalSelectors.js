@@ -19,9 +19,14 @@ export const getLoginFormState = (state) => {
     return formState;
 };
 
+export const getSelectedRecordTypeSettings = (state) => {
+   const selectedRecordType = getSelectedRecordType(state);
+   const recordType = getRecordTypes(state).filter((type) => type.id === selectedRecordType)[0];
+   return recordType || null;
+}
+
 export const getSelectedRecordListingSettings = (state) => {
-    const selectedRecordType = getSelectedRecordType(state);
-    const recordType = getRecordTypes(state).filter((type) => type.id === selectedRecordType)[0];
+    const recordType = getSelectedRecordTypeSettings(state);
     if (recordType){
         return {fields: recordType.fields,
                 label: recordType.label,
@@ -32,6 +37,13 @@ export const getSelectedRecordListingSettings = (state) => {
 
 };
 
+export const getSubmittedErrors = (state) => {
+    const recordTypeId = getSelectedRecordType(state)
+    if (!recordTypeId || !state.form[recordTypeId]){
+        return null
+    }
+    return state.form[recordTypeId].submitErrors || null;
+}
 export const getTypeNavigation = (state) => {
     const selectedRecordId = getSelectedRecordType(state);
     const selectedRecordFilters = getSelectedRecordFilters(state);
