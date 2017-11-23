@@ -5,7 +5,8 @@ import { getLoginFormState as getLoginFormStateUI} from './UISelectors';
 import { getSelectedRecordType,
          getSelectedRecordFilters,
          getRecordListIsFetching,
-         getRecordDetailIsFetching} from './RecordSelectors';
+         getRecordDetailIsFetching,
+         getRecordDetailState} from './RecordSelectors';
 
 export const getIsFetching = (state) => {
     return getSettingsIsFetching(state) || getRecordListIsFetching(state) || getRecordDetailIsFetching(state);
@@ -36,6 +37,7 @@ export const getSelectedRecordListingSettings = (state) => {
     }
 
 };
+
 
 export const getSubmittedErrors = (state) => {
     const recordTypeId = getSelectedRecordType(state)
@@ -85,7 +87,7 @@ export const getTypeNavigation = (state) => {
 
 
 export const getDetailOpen = (state) => {
-    if (state.record.detail.id){
+    if (getRecordDetailState(state).id){
         return true;
     } else {
         return false;

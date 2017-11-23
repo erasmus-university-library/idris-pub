@@ -8,7 +8,6 @@ import ExpandLess from 'material-ui-icons/ExpandLess';
 import ExpandMore from 'material-ui-icons/ExpandMore';
 import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
-import InputLabel from 'material-ui/Input';
 import { mappedTextField, mappedSelect } from '../widgets/mapping.js';
 import styles from '../EditorStyles.js';
 

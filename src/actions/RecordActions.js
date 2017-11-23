@@ -4,6 +4,8 @@ import CaleidoSDK from '../sdk.js';
 
 import { stopSubmit } from 'redux-form';
 
+import {flashMessage } from './UIActions.js';
+
 const sdk = new CaleidoSDK();
 
 export const updateRecords = createAction('RECORD_UPDATE');
@@ -84,9 +86,9 @@ export const submitRecord = (type, id, values) => {
             .then(data => {
                 if (data.id){
                     dispatch(updateRecordDetail({record: data,
-                                                 flash: `Updated ${type} ${id}`,
                                                  isFetching: false,
                                                  error: null}));
+                    dispatch(flashMessage(`Updated ${type} ${id}`))
                 } else {
                     const formErrors = {_error: `Error Submitting ${type} ${id}`};
                     // build an error object from the error strings, these can be nested and repeated

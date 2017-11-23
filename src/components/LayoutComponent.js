@@ -12,6 +12,8 @@ import MenuIcon from 'material-ui-icons/Menu';
 import ChevronLeftIcon from 'material-ui-icons/ChevronLeft';
 import ChevronRightIcon from 'material-ui-icons/ChevronRight';
 import { LinearProgress } from 'material-ui/Progress';
+import Snackbar from 'material-ui/Snackbar';
+import CloseIcon from 'material-ui-icons/Close';
 
 import styles from './LayoutStyles.js';
 
@@ -22,18 +24,47 @@ import RecordEditor from '../containers/RecordEditor'
 
 @withStyles(styles, { withTheme: true })
 class Layout extends Component {
+  renderFlash(){
+      const { classes, flash} = this.props;
+      return <Snackbar anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+          }}
+          open={flash !== null}
+          autoHideDuration={3000}
+          onRequestClose={this.handleFlashClose}
+          SnackbarContentProps={{
+            'aria-describedby': 'message-id',
+          }}
+          message={<span id="message-id">{flash}</span>}
+          action={[
+            <IconButton
+              key="close"
+              aria-label="Close"
+              color="inherit"
+              className={classes.close}
+              onClick={this.handleFlashClose}
+            >
+              <CloseIcon />
+            </IconButton>,
+          ]}
+        />
+  }
 
+  handleFlashClose = () => {
+      this.props.changeFlashMessage(null);
+  }
   render() {
       const { classes, theme, isSideBarOpen, userLoggedIn, title,
-              openSideBar, closeSideBar,
+              openSideBar, closeSideBar, flash,
               isDetailOpen } = this.props;
       let progress = null;
       if (this.props.showProgress){
           progress = <LinearProgress />;
       }
-
     return (
       <div className={classes.root}>
+        { flash !== null ? this.renderFlash() : null}
         <div className={classes.appFrame}>
           <AppBar position="static"
                   className={classNames(classes.appBar, isSideBarOpen && classes.appBarShift)}>

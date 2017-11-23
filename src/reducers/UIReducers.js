@@ -3,6 +3,7 @@ import { handleActions } from 'redux-actions';
 const defaultState = {
     title: null,
     sideBarOpen: false,
+    flashMessage: null,
     loginForm: {open: false,
                 user: '',
                 error: '',
@@ -23,6 +24,10 @@ const reducer = handleActions({
         loginForm: {...state.loginForm,
                     ...action.payload}
     }),
+    MESSAGE_FLASH: (state, action) => ({
+        ...state,
+        flashMessage: action.payload
+    })
     }, defaultState);
 
 export default reducer;
