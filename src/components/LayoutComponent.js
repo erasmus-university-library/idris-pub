@@ -116,7 +116,7 @@ class Layout extends Component {
             open={isDetailOpen}
           >
             <div className={classes.detailInner}>
-              <RecordEditor />
+              { userLoggedIn ? <RecordEditor /> : null }
             </div>
           </Drawer>
         </div>
