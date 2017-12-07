@@ -13,6 +13,7 @@ import Divider from 'material-ui/Divider';
 
 import PersonForm from './forms/PersonForm';
 import AccountsForm from './forms/AccountsForm';
+import MembershipsForm from './forms/MembershipsForm';
 
 import styles from './EditorStyles.js';
 
@@ -51,7 +52,7 @@ class PersonEditor extends React.Component {
         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
         <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>
-            <List className={classes.noPadding}>
+            <List className={classes.noPadding} dense={true}>
               <PersonForm open={openedAccordion === 'person'}
                           name="person"
                           errors={submittedErrors}
@@ -62,6 +63,13 @@ class PersonEditor extends React.Component {
                             errors={submittedErrors}
                             typeOptions={settings.account_types}
                             onAccordionClicked={this.handleAccordionClicked('account')}/>
+              <Divider />
+              <MembershipsForm open={openedAccordion === 'memberships'}
+                               name="memberships"
+                               errors={submittedErrors}
+                               record={record}
+                               typeOptions={settings.account_types}
+                               onAccordionClicked={this.handleAccordionClicked('memberships')}/>
              </List>
           </CardContent>
         <CardActions>

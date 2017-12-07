@@ -39,6 +39,9 @@ class PersonForm extends React.Component {
           <Card>
           <CardContent className={classes.accordionCard}>
            <div className={classes.flexContainer}>
+             <Field name="type" component={mappedSelect} options={typeOptions} label="Type" className={classes.flex}/>
+           </div>
+           <div className={classes.flexContainer}>
              <Field name="international_name" component={mappedTextField} label="International Name" className={classes.flex}/>
            </div>
            <div className={classes.flexContainer}>
@@ -46,9 +49,6 @@ class PersonForm extends React.Component {
            </div>
            <div className={classes.flexContainer}>
              <Field name="abbreviated_name" component={mappedTextField} label="Abbreviated Name" className={classes.flex}/>
-           </div>
-           <div className={classes.flexContainer}>
-             <Field name="type" component={mappedSelect} options={typeOptions} label="Type" className={classes.flex}/>
            </div>
         </CardContent>
       </Card>

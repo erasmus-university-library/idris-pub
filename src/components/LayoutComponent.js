@@ -103,7 +103,7 @@ class Layout extends Component {
             </div>
           </Drawer>
           <main className={classNames(classes.content,
-                                      isSideBarOpen && classes.contentShift,
+                                      isSideBarOpen && classes.contentShiftV,
                                       isDetailOpen && classes.contentShiftDetail)}>
               { userLoggedIn ? <FilteredRecordListingContainer /> : null }
           </main>

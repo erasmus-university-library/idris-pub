@@ -13,6 +13,7 @@ import Divider from 'material-ui/Divider';
 
 import GroupForm from './forms/GroupForm';
 import AccountsForm from './forms/AccountsForm';
+import MembersForm from './forms/MembersForm';
 
 import styles from './EditorStyles.js';
 
@@ -51,7 +52,7 @@ class GroupEditor extends React.Component {
         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
         <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>
-            <List className={classes.noPadding}>
+            <List className={classes.noPadding} dense={true}>
               <GroupForm open={openedAccordion === 'group'}
                           name="group"
                           errors={submittedErrors}
@@ -63,6 +64,11 @@ class GroupEditor extends React.Component {
                             errors={submittedErrors}
                             typeOptions={settings.account_types}
                             onAccordionClicked={this.handleAccordionClicked('account')}/>
+              <Divider />
+              <MembersForm open={openedAccordion === 'members'}
+                           name="members"
+                           errors={submittedErrors}
+                           onAccordionClicked={this.handleAccordionClicked('members')}/>
              </List>
           </CardContent>
         <CardActions>

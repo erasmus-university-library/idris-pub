@@ -24,6 +24,7 @@ export const selectRecordType = (recordType) => {
                                       offset: 0}))
         dispatch(updateRecordDetail({type: null,
                                      id: null,
+                                     selectedKey: null,
                                      openedAccordion: recordType}))
     }
 }
@@ -36,7 +37,7 @@ export const fetchRecordListing = (type, query='', filters={}, offset=0, limit=1
                                                          isFetching: false})))
             .then(data => {
                 if (data.status === 'ok'){
-                    dispatch(updateRecordListing({records: data.records,
+                    dispatch(updateRecordListing({records: data.snippets,
                                                   isFetching: false,
                                                   error: null,
                                                   total: data.total}));
@@ -52,6 +53,7 @@ export const selectRecord = (recordType, recordId) => {
         dispatch(updateRecordDetail({type: recordType,
                                      id: recordId,
                                      isFetching: true}))
+        dispatch(updateRecordListing({selectedKey: recordId}))
         dispatch(fetchRecord(recordType, recordId));
     }
 }

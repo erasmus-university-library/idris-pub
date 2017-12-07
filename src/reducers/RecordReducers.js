@@ -5,6 +5,7 @@ const defaultState = {
               query: '',
               filters: {},
               records: [],
+              selectedKey: null,
               total: 0,
               offset: 0,
               limit: 10,
@@ -16,7 +17,18 @@ const defaultState = {
         openedAccordion: null,
         record: {},
         isFetching: false,
-    }
+    },
+    formListing: {type: null,
+                  query: '',
+                  filters: {},
+                  records: [],
+                  selectedKey: null,
+                  total: 0,
+                  offset: 0,
+                  limit: 10,
+                  error: null,
+                  isFetching: false,
+}
 }
 
 const reducer = handleActions({
@@ -24,15 +36,15 @@ const reducer = handleActions({
         ...state,
         ...action.payload
     }),
-    RECORD_LISTING_UPDATE: (state, action) => ({
-        ...state,
-        listing: {...state.listing,
-                  ...action.payload}
-    }),
     RECORD_DETAIL_UPDATE: (state, action) => ({
         ...state,
         detail: {...state.detail,
                  ...action.payload}
+    }),
+    RECORD_LISTING_UPDATE: (state, action) => ({
+        ...state,
+        listing: {...state.listing,
+                  ...action.payload}
     }),
     RECORD_LISTING_FILTERS_UPDATE: (state, action) => ({
         ...state,
@@ -41,7 +53,21 @@ const reducer = handleActions({
                   filters: {...state.filters,
                             ...action.payload}
         }
+    }),
+    FORM_LISTING_UPDATE: (state, action) => ({
+        ...state,
+        formListing: {...state.listing,
+                  ...action.payload}
+    }),
+    FORM_LISTING_FILTERS_UPDATE: (state, action) => ({
+        ...state,
+        formListing: {...state.listing,
+                      offset: 0,
+                      filters: {...state.filters,
+                                ...action.payload}
+        }
     })
+
 }, defaultState);
 
 export default reducer;

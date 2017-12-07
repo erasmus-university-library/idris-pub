@@ -19,7 +19,8 @@ class PersonForm extends React.Component {
             return 0
         }
         let errorCount = 0;
-        for (const field of ['family_name', 'initials', 'given_name', 'family_name_prefix']){
+        for (const field of ['family_name', 'initials', 'given_name',
+                             'family_name_prefix', 'alternative_name']){
             if (this.props.errors[field] !== undefined){
                 errorCount += 1;
             }
@@ -48,6 +49,13 @@ class PersonForm extends React.Component {
              <Field name="given_name" component={mappedTextField} className={classes.flex} label="Given Name"/>
              <span className={classes.gutter}> </span>
              <Field name="initials" component={mappedTextField} label="Initials"/>
+           </div>
+           <div className={classes.flexContainer}>
+             <Field name="alternative_name"
+                    component={mappedTextField}
+                    multiline
+                    label="Alternative Name(s)"
+                    className={classes.flex}/>
            </div>
         </CardContent>
       </Card>

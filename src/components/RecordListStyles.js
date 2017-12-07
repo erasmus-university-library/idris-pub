@@ -22,6 +22,9 @@ const styles = theme => ({
   withoutLabel: {
     marginTop: theme.spacing.unit * 3,
   },
+  recordRow: {
+      height: 36
+  }
 });
 
 export default styles

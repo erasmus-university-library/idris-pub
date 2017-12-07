@@ -37,7 +37,7 @@ const styles = theme => ({
   },
   accordionCard: {
       paddingTop: theme.spacing.unit,
-      paddingLeft: theme.spacing.unit * 3,
+      paddingLeft: theme.spacing.unit * 5,
       paddingRight: theme.spacing.unit * 3,
   },
   noPadding: {

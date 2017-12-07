@@ -14,66 +14,43 @@ import IconButton from 'material-ui/IconButton';
 import styles from './RecordListStyles.js'
 
 @withStyles(styles)
-class RecordList extends Component {
+class MembersList extends Component {
 
   handleChangePage = (event, page) => {
-      this.props.updateRecordListing({offset: page * this.props.limit});
+      this.props.updateMemberListing({offset: page * this.props.limit});
   }
 
   handleChangeQuery = (event) => {
-      this.props.updateRecordListing({query: event.target.value,
-                                      offset: 0});
+      this.props.updateMemberListing({query: event.target.value,
+                                    offset: 0});
   }
 
   handleChangeRowsPerPage = event => {
-      this.props.updateRecordListing({offset: 0,
+      this.props.updateMemberListing({offset: 0,
                                       limit: event.target.value});
   };
 
   handleRowClicked = (type, id) => event => {
-      this.props.selectRecord(type, id);
+      this.props.selectMember(type, id);
   }
 
   componentWillReceiveProps(nextProps) {
-      if (nextProps.type !== this.props.type ||
-          nextProps.query !== this.props.query ||
-          nextProps.offset !== this.props.offset ||
+      if (nextProps.offset !== this.props.offset ||
           nextProps.limit !== this.props.limit ||
           !isEqual(this.props.filters, nextProps.filters)){
-          // a fetch is needed
-          if (this.props.timeoutId){
-              // a fetch is in already scheduled with a timeout, cancel it
-              clearTimeout(this.props.timeoutId);
-            }
-
-
-          let timeoutId = null;
-          if (nextProps.query !== this.props.query){
-              // fetch after the timeout has passed
-              let timeout = 200;
-              timeoutId = setTimeout(() => {
-                  this.props.fetchRecordListing(nextProps.type,
-                                                nextProps.query,
-                                                nextProps.filters,
-                                                nextProps.offset,
-                                                nextProps.limit);
-              }, timeout);
-          } else {
               this.props.fetchRecordListing(nextProps.type,
                                             nextProps.query,
                                             nextProps.filters,
                                             nextProps.offset,
                                             nextProps.limit)
           }
-          this.props.updateRecordListing({isFetching: true,
-                                          timeoutId});
+          this.props.updateMemberListing({isFetching: true});
 
       }
   }
 
 
   render() {
-
       const { classes , type, selectedKey } = this.props;
 
       if (!this.props.type){
@@ -99,30 +76,20 @@ class RecordList extends Component {
             );
       });
       return (
-          <div>
-        <Paper className={classes.root}>
-          <AppBar position="static" color="default">
-          <Toolbar>
-          <FormControl fullWidth className={classes.formControl}>
-          <InputLabel htmlFor="search">{`Search ${this.props.label}`}</InputLabel>
-          <Input
-            id="search"
-            type="text"
-            value={this.props.query}
-            onChange={this.handleChangeQuery}
-            endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
-          />
-        </FormControl>
-          </Toolbar>
-      </AppBar>
-        </Paper>
-        <Paper className={classes.root}>
-
-      <Table className={classes.table}>
+      <Table className={classes.table} dense={true}>
         <TableHead>
-          <TableRow>{columns}</TableRow>
+          <TableRow>
+            <TableCell>Foo</TableCell>
+          </TableRow>
         </TableHead>
-        <TableBody>{rows}</TableBody>
+        <TableBody>
+          <TableRow hover
+                    selected={record.id === selectedKey}
+                    className={classes.recordRow}
+                    onClick={this.handleRowClicked(type, record.id)}>
+             <TableCell>Foo</TableCell>
+          </TableRow>
+        </TableBody>
         <TableFooter>
           <TableRow>
             <TablePagination
@@ -134,10 +101,8 @@ class RecordList extends Component {
           </TableRow>
         </TableFooter>
       </Table>
-      </Paper>
-          </div>
          );
   }
 }
 
-export default RecordList;
+export default MembersList;

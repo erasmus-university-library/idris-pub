@@ -48,7 +48,7 @@ class AccountsForm extends React.Component {
           <CardContent className={classes.accordionCard}>
           <FieldArray name="accounts" component={accounts =>
               <div>
-              <ul className={classes.noPadding}num>
+              <ul className={classes.noPadding}>
               {accounts.fields.map((account, accountIndex) =>
            <li key={accountIndex} className={classes.flexContainer}>
              <Field name={`${account}.type`} component={mappedSelect} options={typeOptions} label="Type" className={classes.accountTypeSelect}/>

@@ -62,7 +62,8 @@ class RecordTypes extends Component {
               </ListItem>);
           return  <List className={classes.nested}
                         subheader={filterHeader}
-                        key={filter.id} >{items}</List>
+                        key={filter.id}
+                        dense={true}>{items}</List>
 
       });
       return (<Collapse in={type.filtersOpen} transitionDuration="auto" unmountOnExit>
@@ -91,7 +92,7 @@ class RecordTypes extends Component {
           {this.renderFilters(this.props, type)}
           </div>
       );
-      return <List subheader={<ListSubheader>Types</ListSubheader>} >{listItems}</List>;
+      return <List subheader={<ListSubheader>Types</ListSubheader>}>{listItems}</List>;
   }
 }
 
