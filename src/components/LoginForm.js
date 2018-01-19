@@ -9,14 +9,24 @@ import Dialog, {
   DialogTitle,
 } from 'material-ui/Dialog';
 
-import styles from './LoginFormStyles.js'
+const styles = theme => ({
+  container: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  textField: {
+    marginLeft: theme.spacing.unit,
+    marginRight: theme.spacing.unit,
+    width: 200,
+  },
+});
 
 @withStyles(styles)
 class LoginForm extends Component {
 
 
   handleChange = (name) => (event) => {
-      this.props.onChange({[name]: event.target.value});
+      this.props.onChange({[name]: event.target.value, error:null});
   }
 
   handleSubmit = (event) => {
@@ -25,8 +35,12 @@ class LoginForm extends Component {
 
   render() {
     const { classes } = this.props;
+    if (this.props.open === false){
+        return <Button color="contrast" onClick={() => this.props.onChange({open: true})}>Login</Button>;
+
+    }
     return (
-        <Dialog open={this.props.open} onRequestClose={this.props.onClose}>
+        <Dialog open={this.props.open !== false} onClose={() => this.props.onChange({open: false})}>
           <DialogTitle>Login</DialogTitle>
           <DialogContent>
             <DialogContentText>
@@ -56,7 +70,7 @@ class LoginForm extends Component {
             </form>
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.props.onClose} color="primary">
+            <Button onClick={() => this.props.onChange({open: false})} color="primary">
               Cancel
             </Button>
             <Button onClick={this.handleSubmit} color="primary"

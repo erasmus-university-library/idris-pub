@@ -29,9 +29,7 @@ class MembersForm extends React.Component {
 
     }
     handleQueryChange = (event) => {
-        this.props.onChange({query: event.target.value,
-                             offset: 0,
-                             group_id: this.props.id});
+        this.props.onChange({query: event.target.value, offset: 0});
     }
 
     handlePageChange = (event, page) => {

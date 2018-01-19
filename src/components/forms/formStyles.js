@@ -20,7 +20,10 @@ const styles = theme => ({
       paddingRight: theme.spacing.unit * 3,
   },
   accountTypeSelect: {
-      minWidth: 60,
+      minWidth: 120,
+  },
+  dateField: {
+      width: 126
   },
   editorCard: {
     minWidth: `calc(100% - ${theme.spacing.unit * 6}px)`,

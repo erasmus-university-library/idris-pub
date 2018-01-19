@@ -15,15 +15,16 @@ import Badge from 'material-ui/Badge';
 
 
 import { mappedTextField, mappedSelect } from '../widgets/mapping.js';
-import styles from '../EditorStyles.js';
+import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
 class AccountsForm extends React.Component {
+
+
     getErrorCount() {
         if (!this.props.errors || !this.props.errors.accounts){
             return 0
         }
-        console.log(this.props.errors.accounts)
         let errorCount = 0;
         for (const error of Object.values(this.props.errors.accounts)){
           for (const field of ['type', 'value']){
@@ -35,19 +36,9 @@ class AccountsForm extends React.Component {
         return errorCount
     }
 
-    render(){
-        const { classes, onAccordionClicked, open, typeOptions } = this.props;
-        const errorCount = this.getErrorCount();
-        return (<div><ListItem button onClick={onAccordionClicked}>
-            <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><FingerprintIcon /></Badge>: <FingerprintIcon />}</ListItemIcon>
-            <ListItemText primary="Accounts" />
-            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
-          </ListItem>
-          <Collapse in={open} transitionDuration="auto" unmountOnExit>
-          <Card>
-          <CardContent className={classes.accordionCard}>
-          <FieldArray name="accounts" component={accounts =>
-              <div>
+    renderAccounts = (accounts) => {
+        const { classes, typeOptions } = this.props;
+        return (<div>
               <ul className={classes.noPadding}>
               {accounts.fields.map((account, accountIndex) =>
            <li key={accountIndex} className={classes.flexContainer}>
@@ -58,11 +49,26 @@ class AccountsForm extends React.Component {
            </li>)}
               </ul>
               <div className={classes.fabButtonRight}>
-              <Button fab color="primary" aria-label="add" onClick={() => accounts.fields.push({})} >
-                <AddIcon />
+              <Button color="primary" aria-label="add" onClick={() => accounts.fields.push({})} >
+                <AddIcon /> Add Account
               </Button>
               </div>
-          </div>}/>
+            </div>)
+
+    }
+
+    render(){
+        const { classes, onAccordionClicked, open } = this.props;
+        const errorCount = this.getErrorCount();
+        return (<div><ListItem button onClick={onAccordionClicked} disableRipple={true}>
+            <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><FingerprintIcon /></Badge>: <FingerprintIcon />}</ListItemIcon>
+            <ListItemText primary="Accounts" />
+            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
+          </ListItem>
+          <Collapse in={open} unmountOnExit>
+          <Card>
+          <CardContent className={classes.accordionCard}>
+          <FieldArray name="accounts" component={this.renderAccounts} />
         </CardContent>
         </Card>
         </Collapse>

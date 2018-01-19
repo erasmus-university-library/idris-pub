@@ -9,10 +9,10 @@ import ExpandMore from 'material-ui-icons/ExpandMore';
 import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
 import { mappedTextField, mappedSelect } from '../widgets/mapping.js';
-import styles from '../EditorStyles.js';
+import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
-class PersonForm extends React.Component {
+class GroupForm extends React.Component {
     getErrorCount() {
         if (!this.props.errors){
             return 0
@@ -35,7 +35,7 @@ class PersonForm extends React.Component {
             <ListItemText primary="Group" />
             <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
           </ListItem>
-          <Collapse in={open} transitionDuration="auto" unmountOnExit>
+          <Collapse in={open} unmountOnExit>
           <Card>
           <CardContent className={classes.accordionCard}>
            <div className={classes.flexContainer}>
@@ -57,5 +57,5 @@ class PersonForm extends React.Component {
       );
     }
 }
-export default PersonForm;
+export default GroupForm;
 

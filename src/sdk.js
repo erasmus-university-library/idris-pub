@@ -28,9 +28,19 @@ class CaleidoSDK {
         query = encodeURIComponent(query);
         let url = `${this.backendURL}/${type}/records?format=snippet&query=${query}`;
         url = url + `&offset=${offset}&limit=${limit}`;
-        for (const [key, values] of Object.entries(filters)){
-            url = url + `&filter_${key}=${encodeURIComponent(values.join(','))}`;
+        for (const [key, value] of Object.entries(filters)){
+            url = url + `&${key}=${encodeURIComponent(value)}`;
         }
+        return fetch(url,
+                     {method: 'GET',
+                      mode: 'cors',
+                      headers: {'Authorization': `Bearer ${this.token}`}});
+    }
+
+    recordSearch = function(type, query='', offset=0, limit=10) {
+        query = encodeURIComponent(query);
+        let url = `${this.backendURL}/${type}/search?query=${query}`;
+        url = url + `&offset=${offset}&limit=${limit}`;
         return fetch(url,
                      {method: 'GET',
                       mode: 'cors',
@@ -45,12 +55,22 @@ class CaleidoSDK {
     }
 
     recordSubmit = function(type, id, value){
-        return fetch(`${this.backendURL}/${type}/records/${id}`,
-                     {method: 'PUT',
-                      mode: 'cors',
-                      body: JSON.stringify(value),
-                      headers: {'Authorization': `Bearer ${this.token}`,
-                                'Content-Type': 'application/json'}});
+        if (id === null) {
+            return fetch(`${this.backendURL}/${type}/records`,
+                         {method: 'POST',
+                          mode: 'cors',
+                          body: JSON.stringify(value),
+                          headers: {'Authorization': `Bearer ${this.token}`,
+                                    'Content-Type': 'application/json'}});
+
+        } else {
+            return fetch(`${this.backendURL}/${type}/records/${id}`,
+                         {method: 'PUT',
+                          mode: 'cors',
+                          body: JSON.stringify(value),
+                          headers: {'Authorization': `Bearer ${this.token}`,
+                                    'Content-Type': 'application/json'}});
+        }
     }
 
 

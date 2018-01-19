@@ -10,7 +10,7 @@ import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
 
 import { mappedTextField } from '../widgets/mapping.js';
-import styles from '../EditorStyles.js';
+import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
 class PersonForm extends React.Component {
@@ -32,12 +32,12 @@ class PersonForm extends React.Component {
       const { classes, onAccordionClicked, open } = this.props;
       const errorCount = this.getErrorCount();
 
-      return (<div><ListItem button onClick={onAccordionClicked}>
+      return (<div><ListItem button onClick={onAccordionClicked} disableRipple={true}>
             <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><PersonIcon /></Badge>: <PersonIcon />}</ListItemIcon>
             <ListItemText primary="Person" />
             <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
           </ListItem>
-          <Collapse in={open} transitionDuration="auto" unmountOnExit>
+          <Collapse in={open} unmountOnExit>
           <Card>
           <CardContent className={classes.accordionCard}>
            <div className={classes.flexContainer}>

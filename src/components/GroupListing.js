@@ -1,11 +1,5 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { withStyles } from 'material-ui/styles';
-import Card, { CardContent } from 'material-ui/Card';
-import { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
-import CardMembershipIcon from 'material-ui-icons/CardMembership';
-import ExpandLess from 'material-ui-icons/ExpandLess';
-import ExpandMore from 'material-ui-icons/ExpandMore';
-import Collapse from 'material-ui/transitions/Collapse';
 
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
@@ -19,19 +13,30 @@ import Button from 'material-ui/Button';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
 
-import styles from './formStyles.js';
+const styles = theme => ({
+  formControl: {
+    width: '100%',
+  },
+  table: {
+      marginTop: theme.spacing.unit
+  },
+  fabButtonRight: {
+      padding: theme.spacing.unit,
+      display: 'flex',
+      justifyContent: 'flex-end',
+  },
 
-@withStyles(styles, { withTheme: true })
-class MembersForm extends React.Component {
+});
+
+@withStyles(styles)
+class GroupListing extends Component {
+
     handleRowClick = (record) => (event) => {
-        this.props.history.push(`/record/person/${record.person_id}`);
+        this.props.history.push(`/record/group/${record.id}`);
         this.props.onChange({selected: record.id});
-
     }
     handleQueryChange = (event) => {
-        this.props.onChange({query: event.target.value,
-                             offset: 0,
-                             group_id: this.props.id});
+        this.props.onChange({query: event.target.value, offset: 0});
     }
 
     handlePageChange = (event, page) => {
@@ -46,7 +51,7 @@ class MembersForm extends React.Component {
     componentWillMount(){
       if (this.props.offset === undefined){
           // first run
-          this.props.onChange({offset: 0, filters: {group_id: this.props.id}});
+          this.props.onChange({offset: 0});
       }
     }
 
@@ -77,21 +82,14 @@ class MembersForm extends React.Component {
     }
 
     render(){
-      const { classes, onAccordionClicked, open, query, total, limit, offset, records } = this.props;
-      return (<div><ListItem button onClick={onAccordionClicked} disableRipple={true}>
-            <ListItemIcon><CardMembershipIcon /></ListItemIcon>
-            <ListItemText primary="Members" />
-            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
-          </ListItem>
-          <Collapse in={open} unmountOnExit>
-          <Card>
-          <CardContent className={classes.accordionCard}>
+        const { classes, query, total, limit, offset, records } = this.props;
+      return (
         <div>
         <Paper>
           <AppBar position="static" color="default">
             <Toolbar>
               <FormControl fullWidth className={classes.formControl}>
-              <InputLabel htmlFor="search">{`Search Members`}</InputLabel>
+              <InputLabel htmlFor="search">{`Search Groups`}</InputLabel>
               <Input
                 id="search"
                 type="text"
@@ -106,8 +104,7 @@ class MembersForm extends React.Component {
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
-            <TableCell>Start Date</TableCell>
-            <TableCell>End Date</TableCell>
+            <TableCell numeric>Members</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -116,9 +113,8 @@ class MembersForm extends React.Component {
                         selected={record.id === this.props.selected}
                         onClick={this.handleRowClick(record)}
                         hover>
-                <TableCell>{record.person_name}</TableCell>
-                <TableCell>{record.start_date}</TableCell>
-                <TableCell>{record.end_date}</TableCell>
+                <TableCell>{record.name}</TableCell>
+                <TableCell numeric>{record.members}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -135,17 +131,15 @@ class MembersForm extends React.Component {
         </TableFooter>
       </Table>
       <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" onClick={this.handleRowClick('/record/group/add')} >
+        <Button fab color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/group/add')}} >
           <AddIcon />
         </Button>
       </div>
       </Paper>
       </div>
-        </CardContent>
-        </Card>
-        </Collapse>
-          </div>);
+      );
 
     }
 }
-export default MembersForm;
+
+export default GroupListing;

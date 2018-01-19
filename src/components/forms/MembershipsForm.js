@@ -1,7 +1,7 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
 import Card, { CardContent } from 'material-ui/Card';
-import { Field, FieldArray } from 'redux-form'
+import { Field, Fields, FieldArray } from 'redux-form'
 import DeleteIcon from 'material-ui-icons/Delete';
 import AddIcon from 'material-ui-icons/Add';
 import Button from 'material-ui/Button';
@@ -13,9 +13,9 @@ import ExpandMore from 'material-ui-icons/ExpandMore';
 import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
 
-
+import RelationField from '../widgets/RelationField';
 import { mappedTextField } from '../widgets/mapping.js';
-import styles from '../EditorStyles.js';
+import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
 class MembershipsForm extends React.Component {
@@ -57,11 +57,51 @@ class MembershipsForm extends React.Component {
         return {firstYear, lastYear};
     }
 
+    renderMemberships = (memberships) => {
+        const { classes } = this.props;
+        return (<div>
+              <ul className={classes.noPadding}>
+              {memberships.fields.map((membership, membershipIndex) =>
+           <li key={membershipIndex} className={classes.flexContainer}>
+             <Fields names={[`${membership}._group_name`, `${membership}.group_id`]}
+                    component={RelationField}
+                    label_input={(props)=> (props.memberships[membershipIndex]._group_name.input)}
+                    id_input={(props)=> (props.memberships[membershipIndex].group_id.input)}
+                    label="Group"
+                    type="number"
+                    kind="group"
+                    className={classes.flex}/>
+             <span className={classes.gutter}> </span>
+             <Field name={`${membership}.start_date`}
+                    component={mappedTextField}
+                    label="Start Date"
+                    type="date"
+                    className={classes.dateField}
+                    InputLabelProps={{shrink: true}}/>
+             <span className={classes.gutter}> </span>
+             <Field name={`${membership}.end_date`}
+                    component={mappedTextField}
+                    label="End Date"
+                    type="date"
+                    className={classes.dateField}
+                    InputLabelProps={{shrink: true}}/>
+             <IconButton aria-label="Delete" onClick={() => memberships.fields.remove(membershipIndex)}><DeleteIcon /></IconButton>
+           </li>)}
+              </ul>
+              <div className={classes.fabButtonRight}>
+              <Button color="primary" aria-label="add" onClick={() => memberships.fields.push({})} >
+                <AddIcon /> Add Membership
+              </Button>
+              </div>
+          </div>);
+
+    }
+
+
     render(){
         const { classes, onAccordionClicked, open } = this.props;
         const errorCount = this.getErrorCount(this.props.errors);
-
-        return (<div><ListItem button onClick={onAccordionClicked}>
+        return (<div><ListItem button onClick={onAccordionClicked} disableRipple={true}>
             <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><CardMembershipIcon /></Badge>: <CardMembershipIcon />}</ListItemIcon>
             <ListItemText primary="Memberships" />
             <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
@@ -69,37 +109,7 @@ class MembershipsForm extends React.Component {
           <Collapse in={open} transitionDuration="auto" unmountOnExit>
           <Card>
           <CardContent className={classes.accordionCard}>
-          <FieldArray name="memberships" component={memberships =>
-              <div>
-              <ul className={classes.noPadding}>
-              {memberships.fields.map((membership, membershipIndex) =>
-           <li key={membershipIndex} className={classes.flexContainer}>
-             <Field name={`${membership}.group_id`}
-                    component={mappedTextField}
-                    label="Group"
-                    type="number"
-                    className={classes.flex}/>
-             <span className={classes.gutter}> </span>
-             <Field name={`${membership}.start_date`}
-                    component={mappedTextField}
-                    label="Start Date"
-                    type="date"
-                    InputLabelProps={{shrink: true}}/>
-             <span className={classes.gutter}> </span>
-             <Field name={`${membership}.end_date`}
-                    component={mappedTextField}
-                    label="End Date"
-                    type="date"
-                    InputLabelProps={{shrink: true}}/>
-             <IconButton aria-label="Delete" onClick={() => memberships.fields.remove(membershipIndex)}><DeleteIcon /></IconButton>
-           </li>)}
-              </ul>
-              <div className={classes.fabButtonRight}>
-              <Button fab color="primary" aria-label="add" onClick={() => memberships.fields.push({})} >
-                <AddIcon />
-              </Button>
-              </div>
-          </div>}/>
+          <FieldArray name="memberships" component={this.renderMemberships} />
         </CardContent>
         </Card>
         </Collapse>

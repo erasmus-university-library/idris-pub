@@ -8,27 +8,28 @@ import {Provider} from 'react-redux';
 import './index.css';
 import 'typeface-roboto';
 
-import App from './containers/AppContainer';
+import App from './components/App';
+
 import {reducer as formReducer } from 'redux-form';
-import settingsReducer from './reducers/SettingsReducers';
-import uiReducer from './reducers/UIReducers';
-import recordReducer from './reducers/RecordReducers';
+import appReducer from './reducers';
+
+import { HashRouter as Router} from 'react-router-dom'
 
 import registerServiceWorker from './registerServiceWorker';
 
 const preloadedState = {};
 
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-const store = createStore(combineReducers({settings: settingsReducer,
-                                           ui: uiReducer,
-                                           record: recordReducer,
+const store = createStore(combineReducers({app: appReducer,
                                            form: formReducer}),
                           preloadedState,
                           composeEnhancers(reduxBatch, applyMiddleware(thunkMiddleware), reduxBatch));
 
 
 ReactDOM.render(<Provider store={store}>
+                 <Router>
                   <App />
+                 </Router>
                 </Provider>,
                 document.getElementById('root'));
 registerServiceWorker();
