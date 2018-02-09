@@ -25,11 +25,17 @@ class CaleidoSDK {
     }
 
     recordList = function(type, query='', filters={}, offset=0, limit=10) {
+        if (type === 'subgroup'){
+            type = 'group';
+        }
         query = encodeURIComponent(query);
         let url = `${this.backendURL}/${type}/records?format=snippet&query=${query}`;
         url = url + `&offset=${offset}&limit=${limit}`;
         for (const [key, value] of Object.entries(filters)){
             url = url + `&${key}=${encodeURIComponent(value)}`;
+        }
+        if( type === 'membership') {
+            url = url + '&transitive=true';
         }
         return fetch(url,
                      {method: 'GET',

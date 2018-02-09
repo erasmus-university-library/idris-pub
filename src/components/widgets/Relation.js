@@ -6,6 +6,11 @@ import TextField from 'material-ui/TextField';
 import Paper from 'material-ui/Paper';
 import { MenuItem } from 'material-ui/Menu';
 import { withStyles } from 'material-ui/styles';
+import IconButton from 'material-ui/IconButton';
+import { InputAdornment } from 'material-ui/Input';
+import OpenInNewIcon from 'material-ui-icons/OpenInNew';
+import { Link } from 'react-router-dom';
+
 
 import CaleidoSDK from '../../sdk.js';
 const sdk = new CaleidoSDK();
@@ -36,7 +41,6 @@ const styles = theme => ({
 
 
 
-
 class RelationField extends React.Component {
     state = {
         value: '',
@@ -61,30 +65,13 @@ class RelationField extends React.Component {
     }
 
     renderInput = (inputProps) => {
-        const { classes, autoFocus, value, label, ref, ...other } = inputProps;
-
-        const value_id = parseInt(value, 10)
-        const value_label = this.state.labels[value_id];
-        const id_input = this.props.id_input(this.props);
-        const label_input = this.props.label_input(this.props);
-
-        if (value_id > 0 && value_label){
-
-            setTimeout(() => {
-                id_input.onChange(value_id);
-                label_input.onChange(value_label);
-            }, 1);
-
-        }
-
-
+        const { classes, autoFocus, value, label, placeholder, ref, kind, ...other } = inputProps;
         return (<div>
             <TextField
             autoFocus={autoFocus}
             className={classes.textField}
-            id={label_input.name}
-            value={value_label || value}
-            label={label}
+            value={this.state.label || label}
+            label={placeholder}
             inputRef={ref}
             InputLabelProps={{
                 shrink: true,
@@ -94,16 +81,26 @@ class RelationField extends React.Component {
                     input: classes.input,
                 },
                 ...other,
-                placeholder: label_input.value
+                placeholder: placeholder,
+                endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton  disabled={label === ''}
+                                   to={`/record/${kind}/${value}`}
+                                   component={Link}>
+                        <OpenInNewIcon/>
+                      </IconButton>
+                    </InputAdornment>
+                )
+
             }}
-            /></div>
+            />
+            </div>
         );
     }
 
     renderSuggestion = (suggestion, { query, isHighlighted }) => {
         const matches = match(suggestion.name, query);
         const parts = parse(suggestion.name, matches);
-
         return (
             <MenuItem selected={isHighlighted} component="div">
             <div>
@@ -150,15 +147,25 @@ class RelationField extends React.Component {
     });
   };
 
-  handleChange = (event, { newValue }) => {
+  handleChange = (event, change) => {
+
+    if (change.method === 'type'){
+        this.setState({
+            label: change.newValue,
+        });
+    }
+    if (change.method === 'click'){
     this.setState({
-      value: newValue,
+      label: this.state.labels[change.newValue],
+      value: change.newValue
     });
+    this.props.onChange(change.newValue, this.state.labels[change.newValue]);
+
+    }
   };
 
   render() {
     const { classes } = this.props;
-      console.log('render ' + this.state.value)
       return (
       <Autosuggest
         theme={{
@@ -178,9 +185,11 @@ class RelationField extends React.Component {
           autoFocus: false,
           classes,
           label: this.props.label,
-          value: this.state.value,
-          input: this.props.input,
+          kind: this.props.kind,
+          value: (this.props.value || -1).toString(),
+          placeholder: this.props.placeholder,
           onChange: this.handleChange,
+          onSubmit: this.props.onChange
         }}
       />
     );

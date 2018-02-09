@@ -18,6 +18,7 @@ class GroupRecord extends Component {
         if (match.params.id === undefined){
             return <GroupListing {...listing}
                                   history={this.props.history}
+                                  settings={this.props.detailSettings}
                                   onChange={this.props.updateListingState}
                                   onFetch={this.props.fetchRecordListing} />;
         } else {
@@ -29,11 +30,17 @@ class GroupRecord extends Component {
                                   settings={this.props.detailSettings}
                                   history={this.props.history}
                                   onChange={this.props.updateGroupState}
-                                  memberListingState={this.props.memberListing}
                                   onFetch={this.props.fetchGroupRecord}
                                   onSubmit={this.props.postGroupRecord}
+
+                                  memberListingState={this.props.memberListing}
                                   onMemberChange={this.props.updateMemberListingState}
-                                  onMemberFetch={this.props.fetchMemberListing} />;
+                                  onMemberFetch={this.props.fetchMemberListing}
+
+                                  subgroupListingState={this.props.subgroupListing}
+                                  onSubgroupChange={this.props.updateSubgroupListingState}
+                                  onSubgroupFetch={this.props.fetchSubgroupListing}
+            />;
         }
     }
 }
@@ -44,6 +51,7 @@ const mapStateToProps = state => {
         listing: getListingState('group', state),
         detail: getDetailState('group', state),
         memberListing: getListingState('membership', state),
+        subgroupListing: getListingState('subgroup', state),
         detailErrors: getDetailSubmitErrors('group', state),
         detailSettings: getDetailSettings('group', state),
     };
@@ -54,7 +62,10 @@ const mapDispatchToProps = dispatch => {
         updateListingState: (state) => {dispatch(updateListingState('group', state))},
         fetchMemberListing: (query, filters, offset, limit) => {dispatch(
             fetchRecordListing('membership', query, filters, offset, limit))},
+        fetchSubgroupListing: (query, filters, offset, limit) => {dispatch(
+            fetchRecordListing('subgroup', query, filters, offset, limit))},
         updateMemberListingState: (state) => {dispatch(updateListingState('membership', state))},
+        updateSubgroupListingState: (state) => {dispatch(updateListingState('subgroup', state))},
         fetchRecordListing: (query, filters, offset, limit) => {dispatch(
             fetchRecordListing('group', query, filters, offset, limit))},
         updateGroupState: (state) => {dispatch(updateDetailState('group', state))},

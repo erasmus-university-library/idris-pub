@@ -11,14 +11,19 @@ import List from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import { Link } from 'react-router-dom';
 import AddIcon from 'material-ui-icons/Add';
-
+import OpenInNewIcon from 'material-ui-icons/OpenInNew';
+import Chip from 'material-ui/Chip';
 import GroupForm from './forms/GroupForm';
+import SubGroupsForm from './forms/SubGroupsForm';
 import AccountsForm from './forms/AccountsForm';
 import MembersForm from './forms/MembersForm';
 
 const styles = theme => ({
+    flex: {
+        flex: 1
+    },
     headerText: {
-        flex:1
+        float: 'left'
     },
     fabButtonRight: {
         padding: theme.spacing.unit,
@@ -26,13 +31,15 @@ const styles = theme => ({
         justifyContent: 'flex-end',
         flex: 1
     },
+    chip: {
+        float: 'right',
+    },
 });
 
 
 @withStyles(styles, { withTheme: true })
 @reduxForm({form: 'group'})
 class GroupDetail extends React.Component {
-
     componentWillMount(){
        if (this.props.id !== 'add'){
            this.props.onFetch(this.props.id);
@@ -54,28 +61,42 @@ class GroupDetail extends React.Component {
       } else {
           this.props.onChange({openedAccordion: name});
       }
-  }/*
+  }
     componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
-           this.props.onFetch(nextProps.id);
+            this.props.onFetch(nextProps.id);
         }
     }
-*/
+
   render() {
     const { classes, record, handleSubmit, openedAccordion, submittedErrors,
             settings, onMemberChange, onMemberFetch, onMemberSubmit,
-            memberListingState } = this.props;
+            onSubgroupChange, onSubgroupFetch, subgroupListingState,
+            memberListingState, history } = this.props;
       if (parseInt(this.props.id, 10) > 0){
         if((record || {}).id !== parseInt(this.props.id, 10)){
             return null
         }
       }
+    let header = 'New Group';
+    if (record){
+        if (record.parent_id){
+            header = (<div><span className={classes.headerText}>{`${record.name}`}</span><Chip label={record._parent_name} align="right"
+                                 className={classes.chip}
+                                 onClick={(e) => (this.props.history.push(`/record/group/${record.parent_id}`))}
+                                 onDelete={(e) => (this.props.history.push(`/record/group/${record.parent_id}`))}
+                                 deleteIcon={<OpenInNewIcon />} /></div>);
+        } else {
+            header = record.name
+        }
+    }
+
     return (
       <div>
         <AppBar position="static" color="default">
           <Toolbar>
-            <Typography type="headline" color="inherit" noWrap className={classes.headerText}>
-              {(record || {}).name || 'New Group'}
+            <Typography type="headline" color="inherit" noWrap className={classes.flex}>
+              {header}
             </Typography>
         </Toolbar>
         </AppBar>
@@ -87,6 +108,7 @@ class GroupDetail extends React.Component {
                           name="group"
                           errors={submittedErrors}
                           typeOptions={settings.type}
+                          history={history}
                           onAccordionClicked={this.handleAccordionClicked('group')}/>
               <Divider />
               <AccountsForm open={openedAccordion === 'account'}
@@ -94,11 +116,19 @@ class GroupDetail extends React.Component {
                             errors={submittedErrors}
                             typeOptions={settings.account_types}
                             onAccordionClicked={this.handleAccordionClicked('account')}/>
+              <SubGroupsForm open={openedAccordion === 'subgroups'}
+                            name="subgroups"
+                            id={this.props.id}
+                            history={history}
+                            {...subgroupListingState}
+                            onAccordionClicked={this.handleAccordionClicked('subgroups')}
+                            onChange={onSubgroupChange}
+                            onFetch={onSubgroupFetch} />
               <Divider />
               <MembersForm open={openedAccordion === 'members'}
                             name="members"
                             id={this.props.id}
-                            history={this.props.history}
+                            history={history}
                             {...memberListingState}
                             onAccordionClicked={this.handleAccordionClicked('members')}
                             onChange={onMemberChange}

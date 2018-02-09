@@ -105,7 +105,8 @@ class PersonListing extends Component {
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
-            <TableCell numeric>Memberships</TableCell>
+            <TableCell>Group Memberships</TableCell>
+            <TableCell numeric>Total Memberships</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -115,6 +116,7 @@ class PersonListing extends Component {
                         onClick={this.handleRowClick(record)}
                         hover>
                 <TableCell>{record.name}</TableCell>
+                <TableCell>{record.groups}</TableCell>
                 <TableCell numeric>{record.memberships}</TableCell>
               </TableRow>
             ))}

@@ -23,7 +23,7 @@ const styles = theme => ({
       minWidth: 120,
   },
   dateField: {
-      width: 126
+      width: 180,
   },
   editorCard: {
     minWidth: `calc(100% - ${theme.spacing.unit * 6}px)`,

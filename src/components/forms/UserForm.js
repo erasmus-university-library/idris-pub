@@ -13,8 +13,7 @@ import ExpandMore from 'material-ui-icons/ExpandMore';
 import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
 
-import RelationField from '../widgets/RelationField';
-import { mappedTextField, mappedSelect } from '../widgets/mapping.js';
+import { mappedTextField, mappedSelect, mappedRelationField } from '../widgets/mapping.js';
 import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
@@ -38,21 +37,15 @@ class UserForm extends React.Component {
               <ul className={classes.noPadding}>
               {owners.fields.map((owner, ownerIndex) =>
            <li key={ownerIndex} className={classes.flexContainer}>
-             <Fields names={[`${owner}._person_name`, `${owner}.person_id`]}
-                    component={RelationField}
-                    label_input={(props)=> (props.owns[ownerIndex]._person_name.input)}
-                    id_input={(props)=> (props.owns[ownerIndex].person_id.input)}
-                    label="Owner of Person Record"
-                    type="number"
+             <Fields names={[`${owner}.person_id`, `${owner}._person_name`]}
+                    component={mappedRelationField}
+                    placeholder="Owner of Person Record"
                     kind="person"
                     className={classes.flex}/>
              <span className={classes.gutter}> </span>
-             <Fields names={[`${owner}._group_name`, `${owner}.group_id`]}
-                    component={RelationField}
-                    label_input={(props)=> (props.owns[ownerIndex]._group_name.input)}
-                    id_input={(props)=> (props.owns[ownerIndex].group_id.input)}
-                    label="Owner of Group Record"
-                    type="number"
+             <Fields names={[`${owner}.group_id`, `${owner}._group_name`]}
+                    component={mappedRelationField}
+                    placeholder="Owner of Group Record"
                     kind="group"
                     className={classes.flex}/>
              <IconButton aria-label="Delete" onClick={() => owners.fields.remove(ownerIndex)}><DeleteIcon /></IconButton>

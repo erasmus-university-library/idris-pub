@@ -14,11 +14,11 @@ import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
 import { FormControl } from 'material-ui/Form';
 import SearchIcon from 'material-ui-icons/Search';
 import IconButton from 'material-ui/IconButton';
-import AddIcon from 'material-ui-icons/Add';
-import Button from 'material-ui/Button';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
 
+import TextField from 'material-ui/TextField';
+import MemberAddForm from './MemberAddForm.js'
 import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
@@ -29,10 +29,18 @@ class MembersForm extends React.Component {
 
     }
     handleQueryChange = (event) => {
-        this.props.onChange({query: event.target.value,
-                             offset: 0,
-                             group_id: this.props.id});
+        const filters = Object.assign({}, this.props.filters);
+        filters.group_id = this.props.id;
+        this.props.onChange({query: event.target.value, offset: 0, filters});
     }
+
+    handleFilterChange = (name) => (event) => {
+        const filters = Object.assign({}, this.props.filters);
+        filters[name] = event.target.value;
+
+        this.props.onChange({offset: 0, filters})
+    }
+
 
     handlePageChange = (event, page) => {
         this.props.onChange({offset: page * (this.props.limit || 10)});
@@ -44,15 +52,16 @@ class MembersForm extends React.Component {
     };
 
     componentWillMount(){
-      if (this.props.offset === undefined){
-          // first run
-          this.props.onChange({offset: 0, filters: {group_id: this.props.id}});
-      }
+        this.props.onChange({offset: 0, filters: {group_id: this.props.id}});
     }
 
     componentWillReceiveProps(nextProps) {
+
         if (nextProps.query !== this.props.query ||
             nextProps.offset !== this.props.offset ||
+            (nextProps.filters || {}).group_id !== (this.props.filters || {}).group_id ||
+            (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
+            (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date ||
             nextProps.limit !== this.props.limit){
             // a fetch is needed
           if (this.timeoutId){
@@ -66,7 +75,10 @@ class MembersForm extends React.Component {
                                  nextProps.offset,
                                  nextProps.limit);
           };
-          if (nextProps.query !== this.props.query){
+          if (nextProps.query !== this.props.query ||
+              (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
+              (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date
+              ){
               // fetch after the timeout has passed
               this.timeoutId = setTimeout(fetchCallBack, 200);
           } else {
@@ -77,7 +89,7 @@ class MembersForm extends React.Component {
     }
 
     render(){
-      const { classes, onAccordionClicked, open, query, total, limit, offset, records } = this.props;
+      const { classes, onAccordionClicked, open, query, total, limit, offset, records, filters} = this.props;
       return (<div><ListItem button onClick={onAccordionClicked} disableRipple={true}>
             <ListItemIcon><CardMembershipIcon /></ListItemIcon>
             <ListItemText primary="Members" />
@@ -100,12 +112,35 @@ class MembersForm extends React.Component {
                 endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
               />
               </FormControl>
+          <TextField
+          id="active-membership-from-date"
+          label="From Date"
+          type="date"
+          value={(filters||{}).start_date || ''}
+          onChange={this.handleFilterChange('start_date')}
+          className={classes.dateField}
+          InputLabelProps={{
+              shrink: true,
+          }}
+          />
+          <TextField
+          id="active-membership-until-date"
+          label="Until Date"
+          type="date"
+          value={(filters||{}).end_date || ''}
+          onChange={this.handleFilterChange('end_date')}
+          className={classes.dateField}
+          InputLabelProps={{
+              shrink: true,
+          }}
+          />
             </Toolbar>
           </AppBar>
       <Table className={classes.table}>
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
+            <TableCell>Group</TableCell>
             <TableCell>Start Date</TableCell>
             <TableCell>End Date</TableCell>
           </TableRow>
@@ -117,6 +152,7 @@ class MembersForm extends React.Component {
                         onClick={this.handleRowClick(record)}
                         hover>
                 <TableCell>{record.person_name}</TableCell>
+                <TableCell>{record.group_name}</TableCell>
                 <TableCell>{record.start_date}</TableCell>
                 <TableCell>{record.end_date}</TableCell>
               </TableRow>
@@ -134,10 +170,8 @@ class MembersForm extends React.Component {
           </TableRow>
         </TableFooter>
       </Table>
-      <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" onClick={this.handleRowClick('/record/group/add')} >
-          <AddIcon />
-        </Button>
+      <div>
+        <MemberAddForm group={this.props.id} />
       </div>
       </Paper>
       </div>

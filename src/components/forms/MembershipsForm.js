@@ -13,8 +13,7 @@ import ExpandMore from 'material-ui-icons/ExpandMore';
 import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
 
-import RelationField from '../widgets/RelationField';
-import { mappedTextField } from '../widgets/mapping.js';
+import { mappedTextField, mappedRelationField } from '../widgets/mapping.js';
 import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
@@ -63,12 +62,9 @@ class MembershipsForm extends React.Component {
               <ul className={classes.noPadding}>
               {memberships.fields.map((membership, membershipIndex) =>
            <li key={membershipIndex} className={classes.flexContainer}>
-             <Fields names={[`${membership}._group_name`, `${membership}.group_id`]}
-                    component={RelationField}
-                    label_input={(props)=> (props.memberships[membershipIndex]._group_name.input)}
-                    id_input={(props)=> (props.memberships[membershipIndex].group_id.input)}
-                    label="Group"
-                    type="number"
+             <Fields names={[`${membership}.group_id`, `${membership}._group_name`]}
+                    component={mappedRelationField}
+                    placeholder="Group"
                     kind="group"
                     className={classes.flex}/>
              <span className={classes.gutter}> </span>
