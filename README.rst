@@ -29,7 +29,8 @@ Note that there are no further dependencies on Node.js, the resulting javascript
 Running the Backend API
 -----------------------
 
-The client connects to the Caleido backend API
+The client connects to the Caleido backend API: https://github.com/jascoul/caleido
+
 
 * Start the development webserver::
 
