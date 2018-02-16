@@ -90,8 +90,8 @@ class MembersForm extends React.Component {
     render(){
       const { classes, query, total, limit, offset, records, filters} = this.props;
       return (
-          <Card>
-          <CardContent className={classes.accordionCard}>
+          <Card className={classes.editorCard}>
+          <CardContent>
         <div>
         <Paper>
           <AppBar position="static" color="default">
@@ -145,6 +145,7 @@ class MembersForm extends React.Component {
               <TableRow key={record.id}
                         selected={record.id === this.props.selected}
                         onClick={this.handleRowClick(record)}
+                        style={{cursor:'pointer'}}
                         hover>
                 <TableCell>{record.person_name}</TableCell>
                 <TableCell>{record.groups}</TableCell>

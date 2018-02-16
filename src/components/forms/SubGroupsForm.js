@@ -1,11 +1,7 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
-import Card, { CardContent } from 'material-ui/Card';
-import { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
+import { ListItemIcon, ListItemText } from 'material-ui/List';
 import SupervisorAccountIcon from 'material-ui-icons/SupervisorAccount';
-import ExpandLess from 'material-ui-icons/ExpandLess';
-import ExpandMore from 'material-ui-icons/ExpandMore';
-import Collapse from 'material-ui/transitions/Collapse';
 
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
@@ -16,6 +12,13 @@ import SearchIcon from 'material-ui-icons/Search';
 import IconButton from 'material-ui/IconButton';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
+import ExpansionPanel, {
+  ExpansionPanelDetails,
+  ExpansionPanelSummary,
+} from 'material-ui/ExpansionPanel';
+import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+import Card, { CardContent } from 'material-ui/Card';
+
 
 import styles from './formStyles.js';
 
@@ -76,14 +79,15 @@ class SubGroupsForm extends React.Component {
 
     render(){
       const { classes, onAccordionClicked, open, query, total, limit, offset, records } = this.props;
-      return (<div><ListItem button onClick={onAccordionClicked}>
-            <ListItemIcon><SupervisorAccountIcon /></ListItemIcon>
-            <ListItemText primary="Sub Groups" />
-            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
-          </ListItem>
-          <Collapse in={open} unmountOnExit>
-          <Card>
-          <CardContent className={classes.accordionCard}>
+      return (
+          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <ListItemIcon><SupervisorAccountIcon /></ListItemIcon>
+              <ListItemText primary="Sub Groups" />
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+          <Card className={classes.editorCard} style={{boxShadow:'unset'}}>
+          <CardContent style={{padding:0}}>
         <div>
         <Paper>
           <AppBar position="static" color="default">
@@ -135,9 +139,9 @@ class SubGroupsForm extends React.Component {
       </Paper>
       </div>
         </CardContent>
-      </Card>
-          </Collapse>
-</div>
+          </Card>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
       );
     }
 }

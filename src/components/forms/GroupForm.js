@@ -1,14 +1,19 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
-import Card, { CardContent } from 'material-ui/Card';
 import { Field, Fields } from 'redux-form'
-import { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
+import { ListItemIcon, ListItemText } from 'material-ui/List';
 import GroupIcon from 'material-ui-icons/Group';
-import ExpandLess from 'material-ui-icons/ExpandLess';
-import ExpandMore from 'material-ui-icons/ExpandMore';
-import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
+import ExpansionPanel, {
+  ExpansionPanelDetails,
+  ExpansionPanelSummary,
+} from 'material-ui/ExpansionPanel';
+import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+import Card, { CardActions, CardContent } from 'material-ui/Card';
+import Button from 'material-ui/Button';
+
 import { mappedTextField, mappedSelect, mappedRelationField } from '../widgets/mapping.js';
+
 import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
@@ -30,14 +35,15 @@ class GroupForm extends React.Component {
       const { classes, onAccordionClicked, open, typeOptions } = this.props;
       const errorCount = this.getErrorCount();
 
-      return (<div><ListItem button onClick={onAccordionClicked}>
-            <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><GroupIcon /></Badge>: <GroupIcon />}</ListItemIcon>
-            <ListItemText primary="Group" />
-            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
-          </ListItem>
-          <Collapse in={open} unmountOnExit>
-          <Card>
-          <CardContent className={classes.accordionCard}>
+      return (
+          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><GroupIcon /></Badge>: <GroupIcon />}</ListItemIcon>
+              <ListItemText primary="Group" />
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+          <Card className={classes.editorCard}>
+          <CardContent>
            <div className={classes.flexContainer}>
              <Field name="type" component={mappedSelect} options={typeOptions} label="Type" className={classes.flex}/>
            </div>
@@ -56,11 +62,15 @@ class GroupForm extends React.Component {
                     kind="group"
                     className={classes.flex}/>
            </div>
-
         </CardContent>
-      </Card>
-          </Collapse>
-</div>
+          <CardActions>
+          <Button type="submit" color="primary">
+          Update
+          </Button>
+          </CardActions>
+          </Card>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
       );
     }
 }

@@ -1,34 +1,12 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
 
-import Card, { CardActions, CardContent } from 'material-ui/Card';
 import { reduxForm } from 'redux-form'
-import Button from 'material-ui/Button';
-import List from 'material-ui/List';
-import Divider from 'material-ui/Divider';
 import Tabs, { Tab } from 'material-ui/Tabs';
 import GroupForm from './forms/GroupForm';
 import SubGroupsForm from './forms/SubGroupsForm';
 import AccountsForm from './forms/AccountsForm';
 import MembersForm from './forms/MembersForm';
 
-const styles = theme => ({
-    flex: {
-        flex: 1
-    },
-    headerText: {
-        float: 'left'
-    },
-    fabButtonRight: {
-        padding: theme.spacing.unit,
-        display: 'flex',
-        justifyContent: 'flex-end',
-        flex: 1
-    },
-});
-
-
-@withStyles(styles, { withTheme: true })
 @reduxForm({form: 'group'})
 class GroupDetail extends React.Component {
     componentWillMount(){
@@ -68,7 +46,7 @@ class GroupDetail extends React.Component {
     }
 
   render() {
-    const { classes, record, handleSubmit, openedAccordion, submittedErrors,
+    const { record, handleSubmit, openedAccordion, submittedErrors,
             settings, onMemberChange, onMemberFetch, onMemberSubmit, onMemberAdd,
             onSubgroupChange, onSubgroupFetch, subgroupListingState,
             memberListingState, history, currentTab } = this.props;
@@ -86,43 +64,31 @@ class GroupDetail extends React.Component {
             textColor="primary"
             centered>
         <Tab label="Group Information" />
-        <Tab label="Person Members" />
-        <Tab label="Work Contributions" />
+        <Tab label="Members" />
+        <Tab label="Affiliated Works" />
       </Tabs>
 
-        {!currentTab? <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
-        <Card className={classes.editorCard}>
-          <CardContent className={classes.noPadding}>
-            <List dense={true}>
-              <GroupForm open={openedAccordion === 'group' || openedAccordion === undefined}
-                          name="group"
+        {!currentTab?
+         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
+            <GroupForm open={openedAccordion === 'group' || openedAccordion === undefined}
+                       name="group"
+                       errors={submittedErrors}
+                       typeOptions={settings.type}
+                       history={history}
+                       onAccordionClicked={this.handleAccordionClicked('group')}/>
+            <AccountsForm open={openedAccordion === 'account'}
+                          name="account"
                           errors={submittedErrors}
-                          typeOptions={settings.type}
-                          history={history}
-                          onAccordionClicked={this.handleAccordionClicked('group')}/>
-              <Divider />
-              <AccountsForm open={openedAccordion === 'account'}
-                            name="account"
-                            errors={submittedErrors}
-                            typeOptions={settings.account_types}
-                            onAccordionClicked={this.handleAccordionClicked('account')}/>
-              <Divider />
-              <SubGroupsForm open={openedAccordion === 'subgroups'}
-                            name="subgroups"
-                            id={this.props.id}
-                            history={history}
-                            {...subgroupListingState}
-                            onAccordionClicked={this.handleAccordionClicked('subgroups')}
-                            onChange={onSubgroupChange}
-                            onFetch={onSubgroupFetch} />
-             </List>
-          </CardContent>
-        <CardActions>
-          <Button type="submit" color="primary">
-              Update
-          </Button>
-        </CardActions>
-        </Card>
+                          typeOptions={settings.account_types}
+                          onAccordionClicked={this.handleAccordionClicked('account')}/>
+            <SubGroupsForm open={openedAccordion === 'subgroups'}
+                           name="subgroups"
+                           id={this.props.id}
+                           history={history}
+                           {...subgroupListingState}
+                           onAccordionClicked={this.handleAccordionClicked('subgroups')}
+                           onChange={onSubgroupChange}
+                           onFetch={onSubgroupFetch} />
         </form>: null}
         {currentTab === 1?
               <MembersForm open={true}

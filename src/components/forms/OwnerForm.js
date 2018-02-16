@@ -1,17 +1,19 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
-import Card, { CardContent } from 'material-ui/Card';
 import { FieldArray, Fields} from 'redux-form'
 import IconButton from 'material-ui/IconButton';
-import { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
+import { ListItemIcon, ListItemText } from 'material-ui/List';
 import DeleteIcon from 'material-ui-icons/Delete';
 import AddIcon from 'material-ui-icons/Add';
 import Button from 'material-ui/Button';
 import CardGiftcardIcon from 'material-ui-icons/CardGiftcard';
-import ExpandLess from 'material-ui-icons/ExpandLess';
-import ExpandMore from 'material-ui-icons/ExpandMore';
-import Collapse from 'material-ui/transitions/Collapse';
+import ExpansionPanel, {
+  ExpansionPanelDetails,
+  ExpansionPanelSummary,
+} from 'material-ui/ExpansionPanel';
+import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
 import Badge from 'material-ui/Badge';
+import Card, { CardActions, CardContent } from 'material-ui/Card';
 
 import { mappedRelationField } from '../widgets/mapping.js';
 import styles from './formStyles.js';
@@ -64,19 +66,24 @@ class OwnerForm extends React.Component {
       const { classes, onAccordionClicked, open } = this.props;
       const errorCount = this.getErrorCount();
 
-      return (<div><ListItem button onClick={onAccordionClicked}>
-            <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><CardGiftcardIcon /></Badge>: <CardGiftcardIcon />}</ListItemIcon>
-            <ListItemText primary="Person / Group Ownerships" />
-            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
-          </ListItem>
-          <Collapse in={open} unmountOnExit>
-          <Card>
-          <CardContent className={classes.accordionCard}>
-            <FieldArray name="owns" component={this.renderOwners} />
-        </CardContent>
-      </Card>
-          </Collapse>
-</div>
+      return (<ExpansionPanel expanded={open} onChange={onAccordionClicked}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><CardGiftcardIcon /></Badge>: <CardGiftcardIcon />}</ListItemIcon>
+              <ListItemText primary="Person / Group Ownerships" />
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+          <Card className={classes.editorCard}>
+          <CardContent>
+             <FieldArray name="owns" component={this.renderOwners} />
+          </CardContent>
+          <CardActions>
+          <Button type="submit" color="primary">
+          Update
+          </Button>
+          </CardActions>
+          </Card>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
       );
     }
 }

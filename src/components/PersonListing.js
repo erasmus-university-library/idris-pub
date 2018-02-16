@@ -115,6 +115,7 @@ class PersonListing extends Component {
               <TableRow key={record.id}
                         selected={record.id === this.props.selected}
                         onClick={this.handleRowClick(record)}
+                        style={{cursor:'pointer'}}
                         hover>
                 <TableCell>{record.name}</TableCell>
                 <TableCell>{record.groups}</TableCell>

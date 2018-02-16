@@ -120,6 +120,7 @@ class UserListing extends Component {
               <TableRow key={record.id}
                         selected={record.id === this.props.selected}
                         onClick={this.handleRowClick(record)}
+                        style={{cursor:'pointer'}}
                         hover>
                 <TableCell>{record.userid}</TableCell>
                 <TableCell numeric>{this.groupTypeLabels[record.user_group]}</TableCell>

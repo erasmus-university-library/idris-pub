@@ -1,17 +1,19 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
-import Card, { CardContent } from 'material-ui/Card';
 import { Field, FieldArray } from 'redux-form'
 import DeleteIcon from 'material-ui-icons/Delete';
 import AddIcon from 'material-ui-icons/Add';
 import Button from 'material-ui/Button';
 import IconButton from 'material-ui/IconButton';
-import { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
+import { ListItemIcon, ListItemText } from 'material-ui/List';
 import FingerprintIcon from 'material-ui-icons/Fingerprint';
-import ExpandLess from 'material-ui-icons/ExpandLess';
-import ExpandMore from 'material-ui-icons/ExpandMore';
-import Collapse from 'material-ui/transitions/Collapse';
 import Badge from 'material-ui/Badge';
+import ExpansionPanel, {
+  ExpansionPanelDetails,
+  ExpansionPanelSummary,
+} from 'material-ui/ExpansionPanel';
+import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+import Card, { CardActions, CardContent } from 'material-ui/Card';
 
 
 import { mappedTextField, mappedSelect } from '../widgets/mapping.js';
@@ -60,19 +62,26 @@ class AccountsForm extends React.Component {
     render(){
         const { classes, onAccordionClicked, open } = this.props;
         const errorCount = this.getErrorCount();
-        return (<div><ListItem button onClick={onAccordionClicked} disableRipple={true}>
-            <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><FingerprintIcon /></Badge>: <FingerprintIcon />}</ListItemIcon>
-            <ListItemText primary="Accounts" />
-            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
-          </ListItem>
-          <Collapse in={open} unmountOnExit>
-          <Card>
-          <CardContent className={classes.accordionCard}>
+        return (
+          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><FingerprintIcon /></Badge>: <FingerprintIcon />}</ListItemIcon>
+              <ListItemText primary="Accounts" />
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+          <Card className={classes.editorCard}>
+          <CardContent>
           <FieldArray name="accounts" component={this.renderAccounts} />
         </CardContent>
-        </Card>
-        </Collapse>
-          </div>);
+          <CardActions>
+          <Button type="submit" color="primary">
+          Update
+          </Button>
+          </CardActions>
+          </Card>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+        );
     }
 }
 export default AccountsForm;
