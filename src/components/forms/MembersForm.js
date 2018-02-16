@@ -1,11 +1,6 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
 import Card, { CardContent } from 'material-ui/Card';
-import { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
-import CardMembershipIcon from 'material-ui-icons/CardMembership';
-import ExpandLess from 'material-ui-icons/ExpandLess';
-import ExpandMore from 'material-ui-icons/ExpandMore';
-import Collapse from 'material-ui/transitions/Collapse';
 
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
@@ -52,7 +47,11 @@ class MembersForm extends React.Component {
     };
 
     componentWillMount(){
-        this.props.onChange({offset: 0, filters: {group_id: this.props.id}});
+        if (this.props.id === 'add'){
+            this.props.onChange({offset: 0, filters: {group_id: null}});
+        } else if ((this.props.filters||{}).group_id !== this.props.id) {
+            this.props.onChange({offset: 0, filters: {group_id: this.props.id}});
+        }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -89,13 +88,8 @@ class MembersForm extends React.Component {
     }
 
     render(){
-      const { classes, onAccordionClicked, open, query, total, limit, offset, records, filters} = this.props;
-      return (<div><ListItem button onClick={onAccordionClicked} disableRipple={true}>
-            <ListItemIcon><CardMembershipIcon /></ListItemIcon>
-            <ListItemText primary="Members" />
-            <ListItemIcon>{open ? <ExpandLess />: <ExpandMore />}</ListItemIcon>
-          </ListItem>
-          <Collapse in={open} unmountOnExit>
+      const { classes, query, total, limit, offset, records, filters} = this.props;
+      return (
           <Card>
           <CardContent className={classes.accordionCard}>
         <div>
@@ -140,9 +134,10 @@ class MembersForm extends React.Component {
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
-            <TableCell>Group</TableCell>
-            <TableCell>Start Date</TableCell>
-            <TableCell>End Date</TableCell>
+            <TableCell>Groups</TableCell>
+            <TableCell>From Date</TableCell>
+            <TableCell>Until Date</TableCell>
+            <TableCell numeric style={{width:80}}>Memberships</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -152,9 +147,10 @@ class MembersForm extends React.Component {
                         onClick={this.handleRowClick(record)}
                         hover>
                 <TableCell>{record.person_name}</TableCell>
-                <TableCell>{record.group_name}</TableCell>
-                <TableCell>{record.start_date}</TableCell>
-                <TableCell>{record.end_date}</TableCell>
+                <TableCell>{record.groups}</TableCell>
+                <TableCell>{record.earliest}</TableCell>
+                <TableCell>{record.latest}</TableCell>
+                <TableCell numeric>{record.memberships}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -171,14 +167,12 @@ class MembersForm extends React.Component {
         </TableFooter>
       </Table>
       <div>
-        <MemberAddForm group={this.props.id} />
+        <MemberAddForm group={this.props.id} onSubmit={this.props.onMemberAdd}/>
       </div>
       </Paper>
       </div>
         </CardContent>
-        </Card>
-        </Collapse>
-          </div>);
+        </Card>);
 
     }
 }

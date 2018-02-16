@@ -8,7 +8,7 @@ import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
 import { FormControl } from 'material-ui/Form';
 import SearchIcon from 'material-ui-icons/Search';
 import IconButton from 'material-ui/IconButton';
-import AddIcon from 'material-ui-icons/Add';
+import GroupAddIcon from 'material-ui-icons/GroupAdd';
 import Button from 'material-ui/Button';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
@@ -64,6 +64,7 @@ class GroupListing extends Component {
     };
 
     componentWillMount(){
+      this.props.changeAppHeader('Groups');
       if (this.props.offset === undefined){
           // first run
           this.props.onChange({offset: 0});
@@ -172,7 +173,7 @@ class GroupListing extends Component {
       </Table>
       <div className={classes.fabButtonRight}>
         <Button fab color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/group/add')}} >
-          <AddIcon />
+          <GroupAddIcon />
         </Button>
       </div>
       </Paper>

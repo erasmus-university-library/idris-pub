@@ -1,16 +1,12 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
 
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Typography from 'material-ui/Typography';
 import Card, { CardActions, CardContent } from 'material-ui/Card';
 import { reduxForm } from 'redux-form'
 import Button from 'material-ui/Button';
 import List from 'material-ui/List';
 import Divider from 'material-ui/Divider';
-import { Link } from 'react-router-dom';
-import AddIcon from 'material-ui-icons/Add';
+import Tabs, { Tab } from 'material-ui/Tabs';
 
 import PersonForm from './forms/PersonForm';
 import AccountsForm from './forms/AccountsForm';
@@ -36,7 +32,10 @@ class PersonDetail extends React.Component {
 
 
     componentWillMount(){
-       if (this.props.id !== 'add'){
+       if (this.props.id === 'add'){
+           this.props.changeAppHeader('Add Person');
+           this.props.onFetch(null)
+       } else {
            this.props.onFetch(this.props.id);
        }
 
@@ -57,6 +56,11 @@ class PersonDetail extends React.Component {
           this.props.onChange({openedAccordion: name});
       }
   }
+
+  handleTabClicked = (event, value) => {
+      this.props.onChange({currentTab: value});
+  }
+
     componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
            this.props.onFetch(nextProps.id);
@@ -64,7 +68,8 @@ class PersonDetail extends React.Component {
     }
 
   render() {
-    const { classes, record, handleSubmit, openedAccordion, submittedErrors, settings } = this.props;
+    const { classes, record, handleSubmit, openedAccordion, submittedErrors,
+            settings, currentTab } = this.props;
     if (parseInt(this.props.id, 10) > 0){
         if((record || {}).id !== parseInt(this.props.id, 10)){
             return null
@@ -72,17 +77,20 @@ class PersonDetail extends React.Component {
     }
     return (
       <div>
-        <AppBar position="static" color="default">
-          <Toolbar>
-            <Typography type="headline" color="inherit" noWrap className={classes.headerText}>
-              {(record || {}).name || 'New Person'}
-            </Typography>
-        </Toolbar>
-        </AppBar>
+      <Tabs value={currentTab || 0}
+            onChange={this.handleTabClicked}
+            indicatorColor="primary"
+            textColor="primary"
+            centered>
+        <Tab label="Personal Information" />
+        <Tab label="Group Memberships" />
+        <Tab label="Work Contributions" />
+      </Tabs>
+        {!currentTab?
         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
         <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>
-            <List className={classes.noPadding} dense={true}>
+            <List dense={true}>
               <PersonForm open={openedAccordion === 'person' || openedAccordion === undefined}
                           name="person"
                           errors={submittedErrors}
@@ -106,15 +114,9 @@ class PersonDetail extends React.Component {
           <Button type="submit" color="primary">
               Update
           </Button>
-      <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" to={'/record/person/add'} component={Link} >
-          <AddIcon />
-        </Button>
-      </div>
         </CardActions>
         </Card>
-
-        </form>
+        </form>: null}
 
       </div>
     );

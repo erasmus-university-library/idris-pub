@@ -27,16 +27,16 @@ class MemberAddForm extends React.Component {
         value: null,
     };
 
-
-
-
     handleSubmit = (event) => {
-        console.log('submit')
-        console.log(event);
+        const personId = this.state.value;
+        const groupId = this.props.group;
+        this.props.onSubmit(groupId, personId);
     }
 
     render() {
-        const { classes, handleSubmit } = this.props;
+        if (this.props.group === 'add'){ return null}
+
+        const { classes } = this.props;
 
         return (<div className={classes.padded}>
             <div className={classes.memberAdd}>

@@ -1,17 +1,14 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
 
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Typography from 'material-ui/Typography';
 import Card, { CardActions, CardContent } from 'material-ui/Card';
 import { reduxForm } from 'redux-form'
 import Button from 'material-ui/Button';
 import List from 'material-ui/List';
-import { Link } from 'react-router-dom';
-import AddIcon from 'material-ui-icons/Add';
+import Divider from 'material-ui/Divider';
 
 import UserForm from './forms/UserForm';
+import OwnerForm from './forms/OwnerForm';
 
 const styles = theme => ({
     headerText: {
@@ -32,10 +29,12 @@ class UserDetail extends React.Component {
 
 
     componentWillMount(){
-       if (this.props.id !== 'add'){
+       if (this.props.id === 'add'){
+           this.props.changeAppHeader('Add User');
+           this.props.onFetch(null);
+       } else {
            this.props.onFetch(this.props.id);
        }
-
     }
 
   handleSubmit = (values) => {
@@ -68,13 +67,6 @@ class UserDetail extends React.Component {
     }
     return (
       <div>
-        <AppBar position="static" color="default">
-          <Toolbar>
-            <Typography type="headline" color="inherit" noWrap className={classes.headerText}>
-              {(record || {}).userid || 'New User'}
-            </Typography>
-        </Toolbar>
-        </AppBar>
         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
         <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>
@@ -84,17 +76,17 @@ class UserDetail extends React.Component {
                           errors={submittedErrors}
                           typeOptions={settings.type}
                           onAccordionClicked={this.handleAccordionClicked('user')}/>
+              <Divider />
+              <OwnerForm open={openedAccordion === 'owner' || openedAccordion === undefined}
+                         name="owner"
+                         errors={submittedErrors}
+                         onAccordionClicked={this.handleAccordionClicked('owner')}/>
              </List>
           </CardContent>
         <CardActions>
           <Button type="submit" color="primary">
               Update
           </Button>
-      <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" to={'/record/user/add'} component={Link} >
-          <AddIcon />
-        </Button>
-      </div>
         </CardActions>
         </Card>
 

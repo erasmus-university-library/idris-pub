@@ -7,7 +7,8 @@ import UserDetail from './UserDetail';
 
 import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErrors } from '../selectors';
 import { updateListingState, fetchRecordListing,
-         updateDetailState, fetchRecordDetail, postRecordDetail } from '../actions';
+         updateDetailState, fetchRecordDetail, postRecordDetail,
+         changeAppHeader } from '../actions';
 
 
 class UserRecord extends Component {
@@ -19,6 +20,7 @@ class UserRecord extends Component {
             return <UserListing {...listing}
                                   settings={this.props.detailSettings}
                                   history={this.props.history}
+                                  changeAppHeader={this.props.changeAppHeader}
                                   onChange={this.props.updateListingState}
                                   onFetch={this.props.fetchRecordListing} />;
         } else {
@@ -26,6 +28,7 @@ class UserRecord extends Component {
                                   initialValues={detail.record}
                                   enableReinitialize={true}
                                   submittedErrors={detailErrors}
+                                  changeAppHeader={this.props.changeAppHeader}
                                   id={match.params.id}
                                   settings={this.props.detailSettings}
                                   history={this.props.history}
@@ -48,6 +51,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
+        changeAppHeader: (title) => {dispatch(changeAppHeader(title))},
         updateListingState: (state) => {dispatch(updateListingState('user', state))},
         fetchRecordListing: (query, filters, offset, limit) => {dispatch(
             fetchRecordListing('user', query, filters, offset, limit))},

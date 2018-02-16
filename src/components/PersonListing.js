@@ -8,7 +8,7 @@ import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
 import { FormControl } from 'material-ui/Form';
 import SearchIcon from 'material-ui-icons/Search';
 import IconButton from 'material-ui/IconButton';
-import AddIcon from 'material-ui-icons/Add';
+import PersonAddIcon from 'material-ui-icons/PersonAdd';
 import Button from 'material-ui/Button';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
@@ -50,6 +50,7 @@ class PersonListing extends Component {
     };
 
     componentWillMount(){
+      this.props.changeAppHeader('Persons');
       if (this.props.offset === undefined){
           // first run
           this.props.onChange({offset: 0});
@@ -135,7 +136,7 @@ class PersonListing extends Component {
       </Table>
       <div className={classes.fabButtonRight}>
         <Button fab color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/person/add')}} >
-          <AddIcon />
+          <PersonAddIcon />
         </Button>
       </div>
       </Paper>

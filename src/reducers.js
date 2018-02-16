@@ -2,6 +2,9 @@ import { handleActions } from 'redux-actions';
 
 const defaultState = {
     ui: {title: null,
+         icon:null,
+         seeAlsoURL: null,
+         seeAlsoName: null,
          sideBarOpen: false,
          appState: 'initializing',
          error: null,

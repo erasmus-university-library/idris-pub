@@ -7,7 +7,8 @@ import GroupDetail from './GroupDetail';
 
 import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErrors } from '../selectors';
 import { updateListingState, fetchRecordListing,
-         updateDetailState, fetchRecordDetail, postRecordDetail } from '../actions';
+         updateDetailState, fetchRecordDetail, postRecordDetail,
+         changeAppHeader } from '../actions';
 
 
 class GroupRecord extends Component {
@@ -19,11 +20,13 @@ class GroupRecord extends Component {
             return <GroupListing {...listing}
                                   history={this.props.history}
                                   settings={this.props.detailSettings}
+                                  changeAppHeader={this.props.changeAppHeader}
                                   onChange={this.props.updateListingState}
                                   onFetch={this.props.fetchRecordListing} />;
         } else {
             return <GroupDetail {...detail}
                                   initialValues={detail.record}
+                                  changeAppHeader={this.props.changeAppHeader}
                                   enableReinitialize={true}
                                   submittedErrors={detailErrors}
                                   id={match.params.id}
@@ -36,6 +39,7 @@ class GroupRecord extends Component {
                                   memberListingState={this.props.memberListing}
                                   onMemberChange={this.props.updateMemberListingState}
                                   onMemberFetch={this.props.fetchMemberListing}
+                                  onMemberAdd={this.props.postMembershipRecord}
 
                                   subgroupListingState={this.props.subgroupListing}
                                   onSubgroupChange={this.props.updateSubgroupListingState}
@@ -59,6 +63,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
+        changeAppHeader: (title) => {dispatch(changeAppHeader(title))},
         updateListingState: (state) => {dispatch(updateListingState('group', state))},
         fetchMemberListing: (query, filters, offset, limit) => {dispatch(
             fetchRecordListing('membership', query, filters, offset, limit))},
@@ -71,6 +76,7 @@ const mapDispatchToProps = dispatch => {
         updateGroupState: (state) => {dispatch(updateDetailState('group', state))},
         fetchGroupRecord: (id) => {dispatch(fetchRecordDetail('group', id))},
         postGroupRecord: (id, data) => {dispatch(postRecordDetail('group', id, data))},
+        postMembershipRecord: (group_id, person_id) => {dispatch(postRecordDetail('membership', null, {group_id, person_id}))},
         updateMemberState: (state) => {dispatch(updateDetailState('membership', state))},
         fetchMemberRecord: (id) => {dispatch(fetchRecordDetail('membership', id))},
     };

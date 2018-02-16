@@ -1,18 +1,12 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
 
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Typography from 'material-ui/Typography';
 import Card, { CardActions, CardContent } from 'material-ui/Card';
 import { reduxForm } from 'redux-form'
 import Button from 'material-ui/Button';
 import List from 'material-ui/List';
 import Divider from 'material-ui/Divider';
-import { Link } from 'react-router-dom';
-import AddIcon from 'material-ui-icons/Add';
-import OpenInNewIcon from 'material-ui-icons/OpenInNew';
-import Chip from 'material-ui/Chip';
+import Tabs, { Tab } from 'material-ui/Tabs';
 import GroupForm from './forms/GroupForm';
 import SubGroupsForm from './forms/SubGroupsForm';
 import AccountsForm from './forms/AccountsForm';
@@ -31,9 +25,6 @@ const styles = theme => ({
         justifyContent: 'flex-end',
         flex: 1
     },
-    chip: {
-        float: 'right',
-    },
 });
 
 
@@ -41,10 +32,12 @@ const styles = theme => ({
 @reduxForm({form: 'group'})
 class GroupDetail extends React.Component {
     componentWillMount(){
-       if (this.props.id !== 'add'){
+       if (this.props.id === 'add'){
+           this.props.changeAppHeader('Add Group');
+           this.props.onFetch(null);
+       } else {
            this.props.onFetch(this.props.id);
        }
-
     }
 
   handleSubmit = (values) => {
@@ -62,6 +55,12 @@ class GroupDetail extends React.Component {
           this.props.onChange({openedAccordion: name});
       }
   }
+
+  handleTabClicked = (event, value) => {
+      this.props.onChange({currentTab: value});
+  }
+
+
     componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
             this.props.onFetch(nextProps.id);
@@ -70,40 +69,31 @@ class GroupDetail extends React.Component {
 
   render() {
     const { classes, record, handleSubmit, openedAccordion, submittedErrors,
-            settings, onMemberChange, onMemberFetch, onMemberSubmit,
+            settings, onMemberChange, onMemberFetch, onMemberSubmit, onMemberAdd,
             onSubgroupChange, onSubgroupFetch, subgroupListingState,
-            memberListingState, history } = this.props;
+            memberListingState, history, currentTab } = this.props;
       if (parseInt(this.props.id, 10) > 0){
         if((record || {}).id !== parseInt(this.props.id, 10)){
             return null
         }
       }
-    let header = 'New Group';
-    if (record){
-        if (record.parent_id){
-            header = (<div><span className={classes.headerText}>{`${record.name}`}</span><Chip label={record._parent_name} align="right"
-                                 className={classes.chip}
-                                 onClick={(e) => (this.props.history.push(`/record/group/${record.parent_id}`))}
-                                 onDelete={(e) => (this.props.history.push(`/record/group/${record.parent_id}`))}
-                                 deleteIcon={<OpenInNewIcon />} /></div>);
-        } else {
-            header = record.name
-        }
-    }
 
     return (
-      <div>
-        <AppBar position="static" color="default">
-          <Toolbar>
-            <Typography type="headline" color="inherit" noWrap className={classes.flex}>
-              {header}
-            </Typography>
-        </Toolbar>
-        </AppBar>
-        <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
+        <div>
+      <Tabs value={currentTab || 0}
+            onChange={this.handleTabClicked}
+            indicatorColor="primary"
+            textColor="primary"
+            centered>
+        <Tab label="Group Information" />
+        <Tab label="Person Members" />
+        <Tab label="Work Contributions" />
+      </Tabs>
+
+        {!currentTab? <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
         <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>
-            <List className={classes.noPadding} dense={true}>
+            <List dense={true}>
               <GroupForm open={openedAccordion === 'group' || openedAccordion === undefined}
                           name="group"
                           errors={submittedErrors}
@@ -116,6 +106,7 @@ class GroupDetail extends React.Component {
                             errors={submittedErrors}
                             typeOptions={settings.account_types}
                             onAccordionClicked={this.handleAccordionClicked('account')}/>
+              <Divider />
               <SubGroupsForm open={openedAccordion === 'subgroups'}
                             name="subgroups"
                             id={this.props.id}
@@ -124,33 +115,27 @@ class GroupDetail extends React.Component {
                             onAccordionClicked={this.handleAccordionClicked('subgroups')}
                             onChange={onSubgroupChange}
                             onFetch={onSubgroupFetch} />
-              <Divider />
-              <MembersForm open={openedAccordion === 'members'}
-                            name="members"
-                            id={this.props.id}
-                            history={history}
-                            {...memberListingState}
-                            onAccordionClicked={this.handleAccordionClicked('members')}
-                            onChange={onMemberChange}
-                            onFetch={onMemberFetch}
-                            onSubmit={onMemberSubmit} />
              </List>
           </CardContent>
         <CardActions>
           <Button type="submit" color="primary">
               Update
           </Button>
-      <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" to={'/record/group/add'} component={Link} >
-          <AddIcon />
-        </Button>
-      </div>
         </CardActions>
         </Card>
-
-        </form>
-
-      </div>
+        </form>: null}
+        {currentTab === 1?
+              <MembersForm open={true}
+                            name="members"
+                            id={this.props.id}
+                            history={history}
+                            {...memberListingState}
+                            onChange={onMemberChange}
+                            onFetch={onMemberFetch}
+                            onSubmit={onMemberSubmit}
+                            onMemberAdd={onMemberAdd} />
+        : null}
+        </div>
     );
   }
 }

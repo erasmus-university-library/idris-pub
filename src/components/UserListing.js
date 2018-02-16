@@ -50,6 +50,7 @@ class UserListing extends Component {
     };
 
     componentWillMount(){
+      this.props.changeAppHeader('Users');
         this.groupTypeLabels = {};
 
         for (const groupType of this.props.settings.type){
