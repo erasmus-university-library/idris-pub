@@ -1,4 +1,5 @@
 import React from 'react';
+import { withStyles } from 'material-ui/styles';
 
 import { reduxForm } from 'redux-form'
 import Tabs, { Tab } from 'material-ui/Tabs';
@@ -6,7 +7,15 @@ import Tabs, { Tab } from 'material-ui/Tabs';
 import PersonForm from './forms/PersonForm';
 import AccountsForm from './forms/AccountsForm';
 import MembershipsForm from './forms/MembershipsForm';
+import ContributorsForm from './forms/ContributorsForm';
 
+const styles = theme => ({
+  tabContent: {
+      margin: theme.spacing.unit * 2
+  }
+});
+
+@withStyles(styles)
 @reduxForm({form: 'person'})
 class PersonDetail extends React.Component {
 
@@ -48,8 +57,10 @@ class PersonDetail extends React.Component {
     }
 
   render() {
-    const { record, handleSubmit, openedAccordion, submittedErrors,
-            settings, currentTab } = this.props;
+    const { classes, record, handleSubmit, openedAccordion, submittedErrors,
+            settings, currentTab, history,
+            contributorListingState, workSettings,
+            onContributorFetch, onContributorChange } = this.props;
     if (parseInt(this.props.id, 10) > 0){
         if((record || {}).id !== parseInt(this.props.id, 10)){
             return null
@@ -63,9 +74,9 @@ class PersonDetail extends React.Component {
             textColor="primary"
             centered>
         <Tab label="Personal Information" />
-        <Tab label="Group Memberships" />
         <Tab label="Work Contributions" />
       </Tabs>
+      <div className={classes.tabContent}>
         {!currentTab?
         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
             <PersonForm open={openedAccordion === 'person' || openedAccordion === undefined}
@@ -84,7 +95,15 @@ class PersonDetail extends React.Component {
                              typeOptions={[]}
                              onAccordionClicked={this.handleAccordionClicked('memberships')}/>
         </form>: null}
-
+        {currentTab === 1?
+           <ContributorsForm {...contributorListingState}
+                             history={history}
+                             id={this.props.id}
+                             settings={workSettings}
+                             onChange={onContributorChange}
+                             onFetch={onContributorFetch} />
+         : null}
+        </div>
       </div>
     );
   }

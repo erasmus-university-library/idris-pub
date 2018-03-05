@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withStyles } from 'material-ui/styles';
 
+import Card, { CardContent } from 'material-ui/Card';
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
@@ -8,50 +9,35 @@ import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
 import { FormControl } from 'material-ui/Form';
 import SearchIcon from 'material-ui-icons/Search';
 import IconButton from 'material-ui/IconButton';
-import GroupAddIcon from 'material-ui-icons/GroupAdd';
+import AddIcon from 'material-ui-icons/Add';
 import Button from 'material-ui/Button';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
 import { MenuItem } from 'material-ui/Menu';
 import Select from 'material-ui/Select';
+import TextField from 'material-ui/TextField';
+import Citation from '../widgets/Citation';
 
-const styles = theme => ({
-  formControl: {
-    width: '100%',
-  },
-  formControlSelect: {
-      minWidth: 200,
-      maxWidth: 350,
-  },
-  table: {
-      marginTop: theme.spacing.unit
-  },
-  fabButtonRight: {
-      padding: theme.spacing.unit,
-      display: 'flex',
-      justifyContent: 'flex-end',
-  },
-  chips: {
-    display: 'flex',
-    flexWrap: 'wrap',
-  },
-  chip: {
-    margin: theme.spacing.unit / 4,
-  },
-});
+import styles from './formStyles.js';
+
 
 @withStyles(styles)
-class GroupListing extends Component {
+class AffiliationsForm extends Component {
 
     handleRowClick = (record) => (event) => {
-        this.props.history.push(`/record/group/${record.id}`);
+        this.props.history.push(`/record/work/${record.id}`);
         this.props.onChange({selected: record.id});
     }
     handleQueryChange = (event) => {
-        this.props.onChange({query: event.target.value, offset: 0});
+        const filters = Object.assign({}, this.props.filters);
+        filters.affiliation_group_id = this.props.id;
+        this.props.onChange({query: event.target.value, offset: 0, filters});
     }
-    handleTypeChange = (event) => {
-        this.props.onChange({filter_type: event.target.value, offset: 0});
+
+    handleFilterChange = (name) => (event) => {
+        const filters = Object.assign({}, this.props.filters);
+        filters[name] = event.target.value;
+        this.props.onChange({offset: 0, filters})
     }
 
     handlePageChange = (event, page) => {
@@ -64,16 +50,19 @@ class GroupListing extends Component {
     };
 
     componentWillMount(){
-      this.props.changeAppHeader('Groups');
-      if (this.props.offset === undefined){
-          // first run
-          this.props.onChange({offset: 0});
-      }
+        if (this.props.id === 'add'){
+            this.props.onChange({offset: 0, filters: {affiliation_group_id: null}});
+        } else if ((this.props.filters||{}).contributor_person_id !== this.props.id) {
+            this.props.onChange({offset: 0, filters: {affiliation_group_id: this.props.id}});
+        }
     }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.query !== this.props.query ||
-            nextProps.filter_type !== this.props.filter_type ||
+            (nextProps.filters || {}).filter_type !== (this.props.filters || {}).filter_type ||
+            (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
+            (nextProps.filters || {}).affiliation_group_id !== (this.props.filters || {}).affiliation_group_id ||
+            (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date ||
             nextProps.offset !== this.props.offset ||
             nextProps.limit !== this.props.limit){
             // a fetch is needed
@@ -81,18 +70,18 @@ class GroupListing extends Component {
               // a fetch is in already scheduled with a timeout, cancel it
               clearTimeout(this.timeoutId);
           }
-          const filters = {};
-          if (nextProps.filter_type){
-              filters.filter_type = nextProps.filter_type
-          };
 
           const fetchCallBack = () => {
               this.props.onFetch(nextProps.query,
-                                 filters,
+                                 nextProps.filters,
                                  nextProps.offset,
                                  nextProps.limit);
           };
-          if (nextProps.query !== this.props.query){
+          if (nextProps.query !== this.props.query ||
+              (nextProps.filters || {}).affiliation_group_id !== (this.props.filters || {}).affiliation_group_id ||
+              (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
+              (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date
+              ){
               // fetch after the timeout has passed
               this.timeoutId = setTimeout(fetchCallBack, 200);
           } else {
@@ -103,14 +92,16 @@ class GroupListing extends Component {
     }
 
     render(){
-        const { settings, classes, query, filter_type, total, limit, offset, records } = this.props;
+        const { settings, classes, query, filters, total, limit, offset, records } = this.props;
       return (
+          <Card className={classes.editorCard}>
+          <CardContent className={classes.noPadding}>
         <div>
         <Paper>
           <AppBar position="static" color="default">
             <Toolbar>
               <FormControl fullWidth className={classes.formControl}>
-              <InputLabel htmlFor="search">Search Groups</InputLabel>
+              <InputLabel htmlFor="search">Search Works</InputLabel>
               <Input
                 id="search"
                 type="text"
@@ -120,32 +111,53 @@ class GroupListing extends Component {
               />
               </FormControl>
         <FormControl className={classes.formControlSelect}>
-          <InputLabel htmlFor="age-simple">Group Type</InputLabel>
+          <InputLabel htmlFor="work-type">Work Type</InputLabel>
           <Select
-            value={filter_type || ''}
-            onChange={this.handleTypeChange}
+            value={(filters||{}).filter_type || ''}
+            onChange={this.handleFilterChange('filter_type')}
             inputProps={{
-              name: 'group_type',
-              id: 'group-type',
+              name: 'work_type',
+              id: 'work-type',
             }}
           >
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
-            {settings.type.map(groupType => (
-            <MenuItem value={groupType.id}>{groupType.label}</MenuItem>
+            {settings.type.map(workType => (
+            <MenuItem value={workType.id}>{workType.label}</MenuItem>
             ))}
           </Select>
         </FormControl>
+          <TextField
+          id="work-from-date"
+          label="From Date"
+          type="date"
+          value={(filters||{}).start_date || ''}
+          onChange={this.handleFilterChange('start_date')}
+          className={classes.dateField}
+          InputLabelProps={{
+              shrink: true,
+          }}
+          />
+          <TextField
+          id="work-until-date"
+          label="Until Date"
+          type="date"
+          value={(filters||{}).end_date || ''}
+          onChange={this.handleFilterChange('end_date')}
+          className={classes.dateField}
+          InputLabelProps={{
+              shrink: true,
+          }}
+          />
             </Toolbar>
           </AppBar>
       <Table className={classes.table}>
         <TableHead>
           <TableRow>
-            <TableCell>Name</TableCell>
+            <TableCell>Work</TableCell>
             <TableCell>Type</TableCell>
-            <TableCell numeric>Members</TableCell>
-            <TableCell numeric>Affiliated Works</TableCell>
+            <TableCell>Issued</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -155,10 +167,12 @@ class GroupListing extends Component {
                         onClick={this.handleRowClick(record)}
                         style={{cursor:'pointer'}}
                         hover>
-                <TableCell>{record.name}</TableCell>
+                <TableCell><Citation title={record.title}
+                                     authors={record.contributors}
+                                     affiliations={record.affiliations}/>
+                </TableCell>
                 <TableCell>{record.type}</TableCell>
-                <TableCell numeric style={{width:80}}>{record.members}</TableCell>
-                <TableCell numeric style={{width:80}}>{record.works}</TableCell>
+                <TableCell>{record.issued}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -175,15 +189,16 @@ class GroupListing extends Component {
         </TableFooter>
       </Table>
       <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/group/add')}} >
-          <GroupAddIcon />
+        <Button fab color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/work/add')}} >
+          <AddIcon />
         </Button>
       </div>
       </Paper>
       </div>
-      );
+      </CardContent>
+      </Card>);
 
     }
 }
 
-export default GroupListing;
+export default AffiliationsForm;

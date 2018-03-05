@@ -28,6 +28,9 @@ class CaleidoSDK {
         if (type === 'subgroup'){
             type = 'group';
         }
+        if (type === 'workContributor' || type === 'workAffiliation'){
+            type = 'work';
+        }
         query = encodeURIComponent(query);
         let url = `${this.backendURL}/${type}/records?format=snippet&query=${query}`;
         url = url + `&offset=${offset}&limit=${limit}`;

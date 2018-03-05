@@ -11,6 +11,7 @@ import MenuIcon from 'material-ui-icons/Menu';
 import Drawer from 'material-ui/Drawer';
 import List, { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
+import StyleIcon from 'material-ui-icons/Style';
 import PersonIcon from 'material-ui-icons/Person';
 import GroupIcon from 'material-ui-icons/Group';
 import FaceIcon from 'material-ui-icons/Face';
@@ -21,6 +22,7 @@ import ChevronLeftIcon from 'material-ui-icons/ChevronLeft';
 import OpenInNewIcon from 'material-ui-icons/OpenInNew';
 import Chip from 'material-ui/Chip';
 
+import WorkRecord from './WorkRecord';
 import PersonRecord from './PersonRecord';
 import GroupRecord from './GroupRecord';
 import UserRecord from './UserRecord';
@@ -165,7 +167,8 @@ class App extends Component {
             }
         });
 
-        const headerIcon = {group: <GroupIcon />,
+        const headerIcon = {work: <StyleIcon />,
+                            group: <GroupIcon />,
                             person: <PersonIcon />,
                             user: <FaceIcon />,
                             null: null}[header.icon]
@@ -216,23 +219,29 @@ class App extends Component {
                    onKeyDown={this.toggleSideBar}>
                 <Divider />
                 <List>
+                  <ListItem button to="/record/work" component={Link}>
+                    <ListItemIcon>{<StyleIcon/>}</ListItemIcon>
+                    <ListItemText primary={'Works'} />
+                  </ListItem>
                   <ListItem button to="/record/person" component={Link}>
                     <ListItemIcon>{<PersonIcon/>}</ListItemIcon>
-                    <ListItemText primary={'Person'} />
+                    <ListItemText primary={'Persons'} />
                   </ListItem>
                   <ListItem button to="/record/group" component={Link}>
                     <ListItemIcon>{<GroupIcon/>}</ListItemIcon>
-                    <ListItemText primary={'Group'} />
+                    <ListItemText primary={'Groups'} />
                   </ListItem>
                   <ListItem button to="/record/user" component={Link}>
                     <ListItemIcon>{<FaceIcon/>}</ListItemIcon>
-                    <ListItemText primary={'User'} />
+                    <ListItemText primary={'Users'} />
                   </ListItem>
                 </List>
                 <Divider />
               </div>
             </Drawer>
             <Switch>
+              <Route exact path="/record/work" component={WorkRecord} />
+              <Route path="/record/work/:id" component={WorkRecord} />
               <Route exact path="/record/person" component={PersonRecord} />
               <Route path="/record/person/:id" component={PersonRecord} />
               <Route exact path="/record/group" component={GroupRecord} />

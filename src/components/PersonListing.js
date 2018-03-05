@@ -12,6 +12,7 @@ import PersonAddIcon from 'material-ui-icons/PersonAdd';
 import Button from 'material-ui/Button';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
+import { Link } from 'react-router-dom';
 
 const styles = theme => ({
   formControl: {
@@ -19,6 +20,14 @@ const styles = theme => ({
   },
   table: {
       marginTop: theme.spacing.unit
+  },
+  link: {
+     color: 'black',
+     marginRight: '0.5em',
+     textDecoration: 'none',
+      '&:hover': {
+          textDecoration: 'underline'
+      }
   },
   fabButtonRight: {
       padding: theme.spacing.unit,
@@ -107,7 +116,8 @@ class PersonListing extends Component {
           <TableRow>
             <TableCell>Name</TableCell>
             <TableCell>Group Memberships</TableCell>
-            <TableCell numeric>Total Memberships</TableCell>
+            <TableCell numeric style={{width:80}}>Memberships</TableCell>
+            <TableCell numeric style={{width:80}}>Work Contributions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -118,8 +128,11 @@ class PersonListing extends Component {
                         style={{cursor:'pointer'}}
                         hover>
                 <TableCell>{record.name}</TableCell>
-                <TableCell>{record.groups}</TableCell>
+                <TableCell>
+              {record.groups.map((group) => (<Link className={classes.link} to={`/record/group/${group.id}`} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
+                </TableCell>
                 <TableCell numeric>{record.memberships}</TableCell>
+                <TableCell numeric>{record.works}</TableCell>
               </TableRow>
             ))}
           </TableBody>

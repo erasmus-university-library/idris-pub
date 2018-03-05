@@ -1,10 +1,18 @@
 import React from 'react';
+import { withStyles } from 'material-ui/styles';
 
 import { reduxForm } from 'redux-form'
 
 import UserForm from './forms/UserForm';
 import OwnerForm from './forms/OwnerForm';
 
+const styles = theme => ({
+  tabContent: {
+      margin: theme.spacing.unit * 2
+  }
+});
+
+@withStyles(styles)
 @reduxForm({form: 'user'})
 class UserDetail extends React.Component {
 
@@ -40,14 +48,14 @@ class UserDetail extends React.Component {
     }
 
   render() {
-    const { record, handleSubmit, openedAccordion, submittedErrors, settings } = this.props;
+    const { classes, record, handleSubmit, openedAccordion, submittedErrors, settings } = this.props;
     if (parseInt(this.props.id, 10) > 0){
         if((record || {}).id !== parseInt(this.props.id, 10)){
             return null
         }
     }
     return (
-      <div>
+      <div className={classes.tabContent}>
         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
         <UserForm open={openedAccordion === 'user' || openedAccordion === undefined}
                   name="user"

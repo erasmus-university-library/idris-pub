@@ -85,9 +85,9 @@ class SubGroupsForm extends React.Component {
               <ListItemIcon><SupervisorAccountIcon /></ListItemIcon>
               <ListItemText primary="Sub Groups" />
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+          <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard} style={{boxShadow:'unset'}}>
-          <CardContent style={{padding:0}}>
+          <CardContent style={{padding:'16px 0px 0px 0px'}}>
         <div>
         <Paper>
           <AppBar position="static" color="default">

@@ -1,8 +1,6 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
 import Card, { CardContent } from 'material-ui/Card';
-
-import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
 import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
@@ -14,6 +12,8 @@ import Table, { TableBody, TableCell, TableHead, TableRow,
 
 import TextField from 'material-ui/TextField';
 import MemberAddForm from './MemberAddForm.js'
+import { Link } from 'react-router-dom';
+
 import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
@@ -91,9 +91,8 @@ class MembersForm extends React.Component {
       const { classes, query, total, limit, offset, records, filters} = this.props;
       return (
           <Card className={classes.editorCard}>
-          <CardContent>
+          <CardContent className={classes.noPadding}>
         <div>
-        <Paper>
           <AppBar position="static" color="default">
             <Toolbar>
               <FormControl fullWidth className={classes.formControl}>
@@ -138,6 +137,7 @@ class MembersForm extends React.Component {
             <TableCell>From Date</TableCell>
             <TableCell>Until Date</TableCell>
             <TableCell numeric style={{width:80}}>Memberships</TableCell>
+            <TableCell numeric style={{width:80}}>Work Contributions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -148,10 +148,13 @@ class MembersForm extends React.Component {
                         style={{cursor:'pointer'}}
                         hover>
                 <TableCell>{record.person_name}</TableCell>
-                <TableCell>{record.groups}</TableCell>
+                <TableCell>
+              {record.groups.map((group) => (<Link className={classes.link} to={`/record/group/${group.id}`} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
+                </TableCell>
                 <TableCell>{record.earliest}</TableCell>
                 <TableCell>{record.latest}</TableCell>
                 <TableCell numeric>{record.memberships}</TableCell>
+                <TableCell numeric>{record.works}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -170,7 +173,6 @@ class MembersForm extends React.Component {
       <div>
         <MemberAddForm group={this.props.id} onSubmit={this.props.onMemberAdd}/>
       </div>
-      </Paper>
       </div>
         </CardContent>
         </Card>);

@@ -33,7 +33,14 @@ class PersonRecord extends Component {
                                   history={this.props.history}
                                   onChange={this.props.updateDetailState}
                                   onFetch={this.props.fetchRecordDetail}
-                                  onSubmit={this.props.postRecordDetail} />;
+                                  onSubmit={this.props.postRecordDetail}
+
+                                  workSettings={this.props.workSettings}
+                                  contributorListingState={this.props.contributorListing}
+                                  onContributorChange={this.props.updateContributorListingState}
+                                  onContributorFetch={this.props.fetchContributorListing}
+
+            />;
         }
     }
 }
@@ -42,9 +49,11 @@ class PersonRecord extends Component {
 const mapStateToProps = state => {
     return {
         listing: getListingState('person', state),
+        contributorListing: getListingState('workContributor', state),
         detail: getDetailState('person', state),
         detailErrors: getDetailSubmitErrors('person', state),
         detailSettings: getDetailSettings('person', state),
+        workSettings: getDetailSettings('work', state)
     };
 }
 
@@ -54,6 +63,9 @@ const mapDispatchToProps = dispatch => {
         updateListingState: (state) => {dispatch(updateListingState('person', state))},
         fetchRecordListing: (query, filters, offset, limit) => {dispatch(
             fetchRecordListing('person', query, filters, offset, limit))},
+        fetchContributorListing: (query, filters, offset, limit) => {dispatch(
+            fetchRecordListing('workContributor', query, filters, offset, limit))},
+        updateContributorListingState: (state) => {dispatch(updateListingState('workContributor', state))},
         updateDetailState: (state) => {dispatch(updateDetailState('person', state))},
         fetchRecordDetail: (id) => {dispatch(fetchRecordDetail('person', id))},
         postRecordDetail: (id, data) => {dispatch(postRecordDetail('person', id, data))},

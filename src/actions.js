@@ -69,7 +69,7 @@ export const fetchRecordDetail = (kind, id) => {
                         dispatch(changeAppHeader(data.name, 'group', `/record/group/${data.parent_id}`, data._parent_name));
 
                     } else {
-                        dispatch(changeAppHeader(data.name || data.userid, kind));
+                        dispatch(changeAppHeader(data.title || data.name || data.userid, kind));
                     }
                     dispatch(showProgress(false));
                 } else {
@@ -101,6 +101,7 @@ export const postRecordDetail = (kind, id, values) => {
                         dispatch(flashMessage(`Updated ${kind} ${id}`))
                     }
                     dispatch(updateDetailState(kind, {record: data}));
+                    dispatch(changeAppHeader(data.title || data.name || data.userid, kind));
 
                 } else {
                     const formErrors = {_error: `Error Submitting ${kind} ${id}`};

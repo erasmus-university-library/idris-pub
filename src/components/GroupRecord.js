@@ -44,6 +44,12 @@ class GroupRecord extends Component {
                                   subgroupListingState={this.props.subgroupListing}
                                   onSubgroupChange={this.props.updateSubgroupListingState}
                                   onSubgroupFetch={this.props.fetchSubgroupListing}
+
+                                  workSettings={this.props.workSettings}
+                                  affiliationListingState={this.props.affiliationListing}
+                                  onAffiliationChange={this.props.updateAffiliationListingState}
+                                  onAffiliationFetch={this.props.fetchAffiliationListing}
+
             />;
         }
     }
@@ -55,9 +61,11 @@ const mapStateToProps = state => {
         listing: getListingState('group', state),
         detail: getDetailState('group', state),
         memberListing: getListingState('membership', state),
+        affiliationListing: getListingState('workAffiliation', state),
         subgroupListing: getListingState('subgroup', state),
         detailErrors: getDetailSubmitErrors('group', state),
         detailSettings: getDetailSettings('group', state),
+        workSettings: getDetailSettings('work', state)
     };
 }
 
@@ -74,6 +82,9 @@ const mapDispatchToProps = dispatch => {
         fetchRecordListing: (query, filters, offset, limit) => {dispatch(
             fetchRecordListing('group', query, filters, offset, limit))},
         updateGroupState: (state) => {dispatch(updateDetailState('group', state))},
+        fetchAffiliationListing: (query, filters, offset, limit) => {dispatch(
+            fetchRecordListing('workAffiliation', query, filters, offset, limit))},
+        updateAffiliationListingState: (state) => {dispatch(updateListingState('workAffiliation', state))},
         fetchGroupRecord: (id) => {dispatch(fetchRecordDetail('group', id))},
         postGroupRecord: (id, data) => {dispatch(postRecordDetail('group', id, data))},
         postMembershipRecord: (group_id, person_id) => {dispatch(postRecordDetail('membership', null, {group_id, person_id}))},

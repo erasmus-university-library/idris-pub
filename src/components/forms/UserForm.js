@@ -40,17 +40,17 @@ class UserForm extends React.Component {
               <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><FaceIcon /></Badge>: <FaceIcon />}</ListItemIcon>
               <ListItemText primary="User" />
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+          <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard}>
           <CardContent>
-           <div className={classes.flexContainer}>
+           <div className={classes.formItem}>
              <Field name="user_group"
                     component={mappedSelect}
                     options={typeOptions}
                     label="Group"
                     className={classes.flex} />
            </div>
-           <div className={classes.flexContainer}>
+           <div className={classes.formItem}>
              <Field name="userid"
                     component={mappedTextField}
                     label="Account Name"

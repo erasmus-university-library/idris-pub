@@ -61,9 +61,8 @@ class MembershipsForm extends React.Component {
     renderMemberships = (memberships) => {
         const { classes } = this.props;
         return (<div>
-              <ul className={classes.noPadding}>
               {memberships.fields.map((membership, membershipIndex) =>
-           <li key={membershipIndex} className={classes.flexContainer}>
+           <div key={membershipIndex} className={classes.formItem}>
              <Fields names={[`${membership}.group_id`, `${membership}._group_name`]}
                     component={mappedRelationField}
                     placeholder="Group"
@@ -84,8 +83,7 @@ class MembershipsForm extends React.Component {
                     className={classes.dateField}
                     InputLabelProps={{shrink: true}}/>
              <IconButton aria-label="Delete" onClick={() => memberships.fields.remove(membershipIndex)}><DeleteIcon /></IconButton>
-           </li>)}
-              </ul>
+           </div>)}
               <div className={classes.fabButtonRight}>
               <Button color="primary" aria-label="add" onClick={() => memberships.fields.push({})} >
                 <AddIcon /> Add Membership
@@ -105,7 +103,7 @@ class MembershipsForm extends React.Component {
               <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><CardMembershipIcon /></Badge>: <CardMembershipIcon />}</ListItemIcon>
               <ListItemText primary="Memberships" />
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+          <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard}>
           <CardContent>
           <FieldArray name="memberships" component={this.renderMemberships} />

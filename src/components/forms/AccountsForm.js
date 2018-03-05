@@ -41,15 +41,13 @@ class AccountsForm extends React.Component {
     renderAccounts = (accounts) => {
         const { classes, typeOptions } = this.props;
         return (<div>
-              <ul className={classes.noPadding}>
               {accounts.fields.map((account, accountIndex) =>
-           <li key={accountIndex} className={classes.flexContainer}>
+           <div key={accountIndex} className={classes.formItem}>
              <Field name={`${account}.type`} component={mappedSelect} options={typeOptions} label="Type" className={classes.accountTypeSelect}/>
              <span className={classes.gutter}> </span>
              <Field name={`${account}.value`} component={mappedTextField} label="Value (identifier)" className={classes.flex}/>
              <IconButton aria-label="Delete" onClick={() => accounts.fields.remove(accountIndex)}><DeleteIcon /></IconButton>
-           </li>)}
-              </ul>
+           </div>)}
               <div className={classes.fabButtonRight}>
               <Button color="primary" aria-label="add" onClick={() => accounts.fields.push({})} >
                 <AddIcon /> Add Account
@@ -68,7 +66,7 @@ class AccountsForm extends React.Component {
               <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><FingerprintIcon /></Badge>: <FingerprintIcon />}</ListItemIcon>
               <ListItemText primary="Accounts" />
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+          <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard}>
           <CardContent>
           <FieldArray name="accounts" component={this.renderAccounts} />

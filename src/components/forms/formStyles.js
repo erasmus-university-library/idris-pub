@@ -2,6 +2,17 @@ const styles = theme => ({
   flexContainer: {
     display:'flex'
   },
+  link: {
+     color: 'black',
+     marginRight: '0.5em',
+     textDecoration: 'none',
+      '&:hover': {
+          textDecoration: 'underline'
+      }
+  },
+  formControlSelect: {
+      width: 180
+  },
   flex: {
     flex: 1,
   },
@@ -25,9 +36,16 @@ const styles = theme => ({
   dateField: {
       width: 180,
   },
+  formItem: {
+      minHeight: 68,
+      display: 'flex'
+  },
+  editorPanel: {
+      padding: 0,
+      marginTop: -theme.spacing.unit * 2
+  },
   editorCard: {
     minWidth: `calc(100%)`,
-    padding: 0,
   },
   accordionCard: {
       paddingTop: theme.spacing.unit,

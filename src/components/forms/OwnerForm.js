@@ -36,9 +36,8 @@ class OwnerForm extends React.Component {
     renderOwners = (owners) => {
         const { classes } = this.props;
         return (<div>
-              <ul className={classes.noPadding}>
               {owners.fields.map((owner, ownerIndex) =>
-           <li key={ownerIndex} className={classes.flexContainer}>
+           <div key={ownerIndex} className={classes.formItem}>
              <Fields names={[`${owner}.person_id`, `${owner}._person_name`]}
                     component={mappedRelationField}
                     placeholder="Owner of Person Record"
@@ -51,8 +50,7 @@ class OwnerForm extends React.Component {
                     kind="group"
                     className={classes.flex}/>
              <IconButton aria-label="Delete" onClick={() => owners.fields.remove(ownerIndex)}><DeleteIcon /></IconButton>
-           </li>)}
-              </ul>
+           </div>)}
               <div className={classes.fabButtonRight}>
               <Button color="primary" aria-label="add" onClick={() => owners.fields.push({})} >
                 <AddIcon /> Add Owner
@@ -71,7 +69,7 @@ class OwnerForm extends React.Component {
               <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><CardGiftcardIcon /></Badge>: <CardGiftcardIcon />}</ListItemIcon>
               <ListItemText primary="Person / Group Ownerships" />
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+          <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard}>
           <CardContent>
              <FieldArray name="owns" component={this.renderOwners} />
