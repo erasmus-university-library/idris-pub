@@ -32,7 +32,10 @@ export const setUser = createAction('USER_UPDATE', (user) => {
 
 
 
-export const fetchRecordListing = (kind, query='', filters={}, offset=0, limit=10) => {
+export const fetchRecordListing = (kind, query='', filters={}, offset=0, limit=null) => {
+    if (limit === null){
+        limit = 10;
+    }
     if (filters.group_id === null){
         return dispatch => (dispatch(updateListingState(kind, {records: [], total: 0})))
     }

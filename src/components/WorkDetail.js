@@ -4,6 +4,22 @@ import { withStyles } from 'material-ui/styles';
 import { reduxForm } from 'redux-form'
 import Tabs, { Tab } from 'material-ui/Tabs';
 import WorkForm from './forms/WorkForm';
+import ContributorsForm from './forms/ContributorsForm';
+import RelationsForm from './forms/RelationsForm';
+import DescriptionsForm from './forms/DescriptionsForm';
+import IdentifiersForm from './forms/IdentifiersForm';
+import MeasuresForm from './forms/MeasuresForm';
+import RelationsListing from './forms/RelationsListing';
+
+import { ListItemIcon, ListItemText } from 'material-ui/List';
+import ExpansionPanel, {
+  ExpansionPanelSummary
+} from 'material-ui/ExpansionPanel';
+import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+
+import AttachFileIcon from 'material-ui-icons/AttachFile';
+import BubbleChartIcon from 'material-ui-icons/BubbleChart';
+
 
 const styles = theme => ({
   tabContent: {
@@ -33,32 +49,33 @@ class WorkDetail extends React.Component {
 
   handleAccordionClicked = (name) => (event) => {
       if (this.props.openedAccordion === name){
-          this.props.onChange({openedAccordion: null});
+          this.props.onDetailChange({openedAccordion: null});
       } else {
-          this.props.onChange({openedAccordion: name});
+          this.props.onDetailChange({openedAccordion: name});
       }
   }
 
   handleTabClicked = (event, value) => {
-      this.props.onChange({currentTab: value});
+      this.props.onDetailChange({currentTab: value});
   }
 
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
+            if (this.props.currentTab !== 0){
+                this.props.onDetailChange({currentTab: 0});
+            }
             this.props.onFetch(nextProps.id);
         }
     }
 
   render() {
-    const { classes, record, handleSubmit, openedAccordion, submittedErrors,
-            settings, history, currentTab } = this.props;
-      if (parseInt(this.props.id, 10) > 0){
-        if((record || {}).id !== parseInt(this.props.id, 10)){
-            return null
-        }
+    const { classes, handleSubmit, openedAccordion, submittedErrors,
+            settings, history, currentTab, formActions, formValues,
+            relationListingState, workSettings, onRelationChange, onRelationFetch } = this.props;
+      if (formValues === undefined){
+          return null;
       }
-
     return (
         <div>
       <Tabs value={currentTab || 0}
@@ -67,18 +84,93 @@ class WorkDetail extends React.Component {
             textColor="primary"
             centered>
         <Tab label="Work Information" />
-        <Tab label="Aggregated Works" />
+        <Tab label="Related Works" />
       </Tabs>
       <div className={classes.tabContent}>
         {!currentTab?
          <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
             <WorkForm open={openedAccordion === 'work' || openedAccordion === undefined}
                        name="work"
+                       formValues={formValues}
                        errors={submittedErrors}
                        typeOptions={settings.type}
                        history={history}
                        onAccordionClicked={this.handleAccordionClicked('work')}/>
+
+            <ContributorsForm open={openedAccordion === 'contributors'}
+                       name="contributors"
+                       errors={submittedErrors}
+                       formValues={formValues.contributors}
+                       workDateIssued={formValues.issued}
+                       formActions={formActions}
+                       contributorOptions={settings.contributor_role}
+                       history={history}
+                       onAccordionClicked={this.handleAccordionClicked('contributors')}/>
+
+            <RelationsForm open={openedAccordion === 'relations'}
+                       name="relations"
+                       errors={submittedErrors}
+                       formValues={formValues.relations}
+                       formActions={formActions}
+                       relationOptions={settings.relation_types}
+                       typeOptions={settings.type}
+                       history={history}
+                       onAccordionClicked={this.handleAccordionClicked('relations')}/>
+
+
+            <DescriptionsForm open={openedAccordion === 'descriptions'}
+                       name="descriptions"
+                       errors={submittedErrors}
+                       formValues={formValues.descriptions}
+                       formActions={formActions}
+                       descriptionTypeOptions={settings.description_types}
+                       descriptionFormatOptions={settings.description_formats}
+                       typeOptions={settings.type}
+                       history={history}
+                       onAccordionClicked={this.handleAccordionClicked('descriptions')}/>
+
+            <IdentifiersForm open={openedAccordion === 'identifiers'}
+                       name="identifiers"
+                       errors={submittedErrors}
+                       formValues={formValues.identifiers}
+                       typeOptions={settings.identifier_types}
+                       history={history}
+                       onAccordionClicked={this.handleAccordionClicked('identifiers')}/>
+
+          <ExpansionPanel expanded={openedAccordion === 'topics'}
+                          onChange={this.handleAccordionClicked('topics')}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <ListItemIcon><BubbleChartIcon /></ListItemIcon>
+              <ListItemText primary="Topics" />
+          </ExpansionPanelSummary>
+          </ExpansionPanel>
+
+            <MeasuresForm open={openedAccordion === 'measures'}
+                          name="measures"
+                          errors={submittedErrors}
+                          typeOptions={settings.measure_types}
+                          formValues={formValues.measures}
+                          history={history}
+                          onAccordionClicked={this.handleAccordionClicked('measures')}/>
+
+
+          <ExpansionPanel expanded={openedAccordion === 'expressions'}
+                          onChange={this.handleAccordionClicked('expressions')}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <ListItemIcon><AttachFileIcon /></ListItemIcon>
+              <ListItemText primary="Expressions / Attachments" />
+          </ExpansionPanelSummary>
+          </ExpansionPanel>
+
         </form>: null}
+        {currentTab === 1?
+           <RelationsListing {...relationListingState}
+                                history={history}
+                                id={this.props.id}
+                                settings={workSettings}
+                                onChange={onRelationChange}
+                                onFetch={onRelationFetch} />
+         : null}
         </div>
         </div>
     );

@@ -4,6 +4,7 @@ import { Field, Fields, FieldArray } from 'redux-form'
 import DeleteIcon from 'material-ui-icons/Delete';
 import AddIcon from 'material-ui-icons/Add';
 import Button from 'material-ui/Button';
+import Chip from 'material-ui/Chip';
 import IconButton from 'material-ui/IconButton';
 import { ListItemIcon, ListItemText } from 'material-ui/List';
 import CardMembershipIcon from 'material-ui-icons/CardMembership';
@@ -94,14 +95,26 @@ class MembershipsForm extends React.Component {
     }
 
 
+    shouldComponentUpdate(nextProps, nextState){
+        if (nextProps.open === false &&
+            nextProps.open === this.props.open &&
+            (this.props.formValues || []).length === (nextProps.formValues || []).length){
+            return false
+        }
+        return true;
+    }
+
     render(){
-        const { classes, onAccordionClicked, open } = this.props;
+        const { classes, onAccordionClicked, open, formValues } = this.props;
         const errorCount = this.getErrorCount(this.props.errors);
+        const membershipsCount = formValues.length;
         return (
-          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
+          <ExpansionPanel expanded={open} onChange={onAccordionClicked}  CollapseProps={{ unmountOnExit: true }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
               <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><CardMembershipIcon /></Badge>: <CardMembershipIcon />}</ListItemIcon>
-              <ListItemText primary="Memberships" />
+              <ListItemText primary="Affiliations" />
+            {membershipsCount?<Chip label={membershipsCount} align="right" key={membershipsCount}/>:null}
+            <div/>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard}>

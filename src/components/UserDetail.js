@@ -36,9 +36,9 @@ class UserDetail extends React.Component {
 
   handleAccordionClicked = (name) => (event) => {
       if (this.props.openedAccordion === name){
-          this.props.onChange({openedAccordion: null});
+          this.props.onDetailChange({openedAccordion: null});
       } else {
-          this.props.onChange({openedAccordion: name});
+          this.props.onDetailChange({openedAccordion: name});
       }
   }
     componentWillReceiveProps(nextProps) {

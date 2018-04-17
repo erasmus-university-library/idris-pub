@@ -6,8 +6,8 @@ import Tabs, { Tab } from 'material-ui/Tabs';
 import GroupForm from './forms/GroupForm';
 import SubGroupsForm from './forms/SubGroupsForm';
 import AccountsForm from './forms/AccountsForm';
-import MembersForm from './forms/MembersForm';
-import AffiliationsForm from './forms/AffiliationsForm';
+import MembersListing from './forms/MembersListing';
+import AffiliationsListing from './forms/AffiliationsListing';
 
 const styles = theme => ({
   tabContent: {
@@ -15,7 +15,6 @@ const styles = theme => ({
   }
 });
 
-@withStyles(styles)
 @reduxForm({form: 'group'})
 class GroupDetail extends React.Component {
     componentWillMount(){
@@ -37,14 +36,14 @@ class GroupDetail extends React.Component {
 
   handleAccordionClicked = (name) => (event) => {
       if (this.props.openedAccordion === name){
-          this.props.onChange({openedAccordion: null});
+          this.props.onDetailChange({openedAccordion: null});
       } else {
-          this.props.onChange({openedAccordion: name});
+          this.props.onDetailChange({openedAccordion: name});
       }
   }
 
   handleTabClicked = (event, value) => {
-      this.props.onChange({currentTab: value});
+      this.props.onDetailChange({currentTab: value});
   }
 
 
@@ -55,18 +54,16 @@ class GroupDetail extends React.Component {
     }
 
   render() {
-    const { classes, record, handleSubmit, openedAccordion, submittedErrors,
+    const { classes, handleSubmit, openedAccordion, submittedErrors,
             settings, onMemberChange, onMemberFetch, onMemberSubmit, onMemberAdd,
             onSubgroupChange, onSubgroupFetch, subgroupListingState,
-            memberListingState, history, currentTab,
+            memberListingState, history, currentTab, formValues,
             affiliationListingState, workSettings, onAffiliationChange, onAffiliationFetch
            } = this.props;
 
-      if (parseInt(this.props.id, 10) > 0){
-        if((record || {}).id !== parseInt(this.props.id, 10)){
-            return null
-        }
-      }
+     if (formValues === undefined){
+          return null;
+     }
 
     return (
         <div>
@@ -76,7 +73,6 @@ class GroupDetail extends React.Component {
             textColor="primary"
             centered>
         <Tab label="Group Information" />
-        <Tab label="Members" />
         <Tab label="Affiliated Works" />
       </Tabs>
       <div className={classes.tabContent}>
@@ -91,8 +87,19 @@ class GroupDetail extends React.Component {
             <AccountsForm open={openedAccordion === 'account'}
                           name="account"
                           errors={submittedErrors}
+                          formValues={formValues.accounts}
                           typeOptions={settings.account_types}
                           onAccordionClicked={this.handleAccordionClicked('account')}/>
+            <MembersListing open={openedAccordion === 'members'}
+                            name="members"
+                            id={this.props.id}
+                            history={history}
+                            {...memberListingState}
+                            onAccordionClicked={this.handleAccordionClicked('members')}
+                            onChange={onMemberChange}
+                            onFetch={onMemberFetch}
+                            onSubmit={onMemberSubmit}
+                            onMemberAdd={onMemberAdd} />
             <SubGroupsForm open={openedAccordion === 'subgroups'}
                            name="subgroups"
                            id={this.props.id}
@@ -103,23 +110,12 @@ class GroupDetail extends React.Component {
                            onFetch={onSubgroupFetch} />
         </form>: null}
         {currentTab === 1?
-              <MembersForm open={true}
-                            name="members"
-                            id={this.props.id}
-                            history={history}
-                            {...memberListingState}
-                            onChange={onMemberChange}
-                            onFetch={onMemberFetch}
-                            onSubmit={onMemberSubmit}
-                            onMemberAdd={onMemberAdd} />
-        : null}
-        {currentTab === 2?
-           <AffiliationsForm {...affiliationListingState}
-                             history={history}
-                             id={this.props.id}
-                             settings={workSettings}
-                             onChange={onAffiliationChange}
-                             onFetch={onAffiliationFetch} />
+           <AffiliationsListing {...affiliationListingState}
+                                 history={history}
+                                 id={this.props.id}
+                                 settings={workSettings}
+                                 onChange={onAffiliationChange}
+                                 onFetch={onAffiliationFetch} />
          : null}
         </div>
         </div>
@@ -127,4 +123,4 @@ class GroupDetail extends React.Component {
   }
 }
 
-export default GroupDetail;
+export default withStyles(styles)(GroupDetail);

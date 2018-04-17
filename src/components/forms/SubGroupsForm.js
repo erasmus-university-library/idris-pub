@@ -6,6 +6,7 @@ import SupervisorAccountIcon from 'material-ui-icons/SupervisorAccount';
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
+import Chip from 'material-ui/Chip';
 import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
 import { FormControl } from 'material-ui/Form';
 import SearchIcon from 'material-ui-icons/Search';
@@ -51,6 +52,9 @@ class SubGroupsForm extends React.Component {
 
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.id !== this.props.id){
+            this.props.onChange({offset: 0, filters: {filter_parent: nextProps.id}});
+        }
         if (nextProps.query !== this.props.query ||
             nextProps.offset !== this.props.offset ||
             (nextProps.filters || {}).filter_parent !== (this.props.filters || {}).filter_parent ||
@@ -84,6 +88,8 @@ class SubGroupsForm extends React.Component {
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
               <ListItemIcon><SupervisorAccountIcon /></ListItemIcon>
               <ListItemText primary="Sub Groups" />
+            {total?<Chip label={total} align="right" key={total}/>:null}
+            <div />
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard} style={{boxShadow:'unset'}}>

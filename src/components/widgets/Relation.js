@@ -3,6 +3,7 @@ import Autosuggest from 'react-autosuggest';
 import match from 'autosuggest-highlight/match';
 import parse from 'autosuggest-highlight/parse';
 import TextField from 'material-ui/TextField';
+import Typography from 'material-ui/Typography';
 import Paper from 'material-ui/Paper';
 import { MenuItem } from 'material-ui/Menu';
 import { withStyles } from 'material-ui/styles';
@@ -48,8 +49,20 @@ class RelationField extends React.Component {
         suggestions: [],
     };
 
-    fetchRecordSearch = (kind, query='', offset=0, limit=10) => {
-        sdk.recordSearch(kind, query, offset, limit)
+    fetchRecordSearch = (kind, query='', filters=null, offset=0, limit=10) => {
+        if (query === '-1'){
+            return
+        }
+
+        if (this.timeoutId){
+            // a fetch is in already scheduled with a timeout, cancel it
+            clearTimeout(this.timeoutId);
+
+        }
+
+
+        const fetchCallBack = () => {
+        sdk.recordSearch(kind, query, filters || this.props.filters, offset, limit)
            .then(response => response.json(),
                  error => {console.log('RelationField Error: ' + error)})
            .then(data => {
@@ -62,6 +75,10 @@ class RelationField extends React.Component {
                                   labels: labels});
                };
            });
+        }
+
+        this.timeoutId = setTimeout(fetchCallBack, 400);
+
     }
 
     renderInput = (inputProps) => {
@@ -99,13 +116,14 @@ class RelationField extends React.Component {
     }
 
     renderSuggestion = (suggestion, { query, isHighlighted }) => {
-        const matches = match(suggestion.name, query);
+        const matches = match(suggestion.name, this.state.label);
         const parts = parse(suggestion.name, matches);
         return (
             <MenuItem selected={isHighlighted} component="div">
             <div>
+            <div>
             {parts.map((part, index) => {
-                return part.highlight ? (
+                return !part.highlight ? (
                     <span key={String(index)} style={{ fontWeight: 300 }}>
                     {part.text}
                     </span>
@@ -115,6 +133,9 @@ class RelationField extends React.Component {
                     </strong>
                 );
             })}
+
+            </div>
+            {suggestion.info?<Typography variant="caption">{suggestion.info}</Typography>:null}
             </div>
             </MenuItem>
         );
@@ -138,7 +159,7 @@ class RelationField extends React.Component {
 
 
   handleSuggestionsFetchRequested = ({ value }) => {
-    this.fetchRecordSearch(this.props.kind, value);
+      this.fetchRecordSearch(this.props.kind, value);
   };
 
   handleSuggestionsClearRequested = () => {
@@ -161,6 +182,10 @@ class RelationField extends React.Component {
     });
     this.props.onChange(change.newValue, this.state.labels[change.newValue]);
 
+    if (this.props.onRelationChange !== null){
+        // call extra handler method to perform optional more high level business logic
+        this.props.onRelationChange(change.newValue);
+    }
     }
   };
 
@@ -189,7 +214,7 @@ class RelationField extends React.Component {
           value: (this.props.value || -1).toString(),
           placeholder: this.props.placeholder,
           onChange: this.handleChange,
-          onSubmit: this.props.onChange
+          onSubmit: this.props.onChange,
         }}
       />
     );

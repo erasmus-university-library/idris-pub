@@ -17,12 +17,11 @@ import { MenuItem } from 'material-ui/Menu';
 import Select from 'material-ui/Select';
 import TextField from 'material-ui/TextField';
 import Citation from '../widgets/Citation';
-
 import styles from './formStyles.js';
 
 
 @withStyles(styles)
-class AffiliationsForm extends Component {
+class ContributorsListing extends Component {
 
     handleRowClick = (record) => (event) => {
         this.props.history.push(`/record/work/${record.id}`);
@@ -30,7 +29,7 @@ class AffiliationsForm extends Component {
     }
     handleQueryChange = (event) => {
         const filters = Object.assign({}, this.props.filters);
-        filters.affiliation_group_id = this.props.id;
+        filters.contributor_person_id = this.props.id;
         this.props.onChange({query: event.target.value, offset: 0, filters});
     }
 
@@ -51,9 +50,9 @@ class AffiliationsForm extends Component {
 
     componentWillMount(){
         if (this.props.id === 'add'){
-            this.props.onChange({offset: 0, filters: {affiliation_group_id: null}});
+            this.props.onChange({offset: 0, filters: {contributor_person_id: null}});
         } else if ((this.props.filters||{}).contributor_person_id !== this.props.id) {
-            this.props.onChange({offset: 0, filters: {affiliation_group_id: this.props.id}});
+            this.props.onChange({offset: 0, filters: {contributor_person_id: this.props.id}});
         }
     }
 
@@ -61,7 +60,7 @@ class AffiliationsForm extends Component {
         if (nextProps.query !== this.props.query ||
             (nextProps.filters || {}).filter_type !== (this.props.filters || {}).filter_type ||
             (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
-            (nextProps.filters || {}).affiliation_group_id !== (this.props.filters || {}).affiliation_group_id ||
+            (nextProps.filters || {}).contributor_person_id !== (this.props.filters || {}).contributor_person_id ||
             (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date ||
             nextProps.offset !== this.props.offset ||
             nextProps.limit !== this.props.limit){
@@ -78,7 +77,7 @@ class AffiliationsForm extends Component {
                                  nextProps.limit);
           };
           if (nextProps.query !== this.props.query ||
-              (nextProps.filters || {}).affiliation_group_id !== (this.props.filters || {}).affiliation_group_id ||
+              (nextProps.filters || {}).contributor_person_id !== (this.props.filters || {}).contributor_person_id ||
               (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
               (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date
               ){
@@ -95,7 +94,7 @@ class AffiliationsForm extends Component {
         const { settings, classes, query, filters, total, limit, offset, records } = this.props;
       return (
           <Card className={classes.editorCard}>
-          <CardContent className={classes.noPadding}>
+          <CardContent style={{padding: 0}}>
         <div>
         <Paper>
           <AppBar position="static" color="default">
@@ -156,6 +155,7 @@ class AffiliationsForm extends Component {
         <TableHead>
           <TableRow>
             <TableCell>Work</TableCell>
+            <TableCell>Role</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>Issued</TableCell>
           </TableRow>
@@ -167,12 +167,10 @@ class AffiliationsForm extends Component {
                         onClick={this.handleRowClick(record)}
                         style={{cursor:'pointer'}}
                         hover>
-                <TableCell><Citation title={record.title}
-                                     authors={record.contributors}
-                                     affiliations={record.affiliations}/>
-                </TableCell>
+                <TableCell><Citation citation={record.csl} /></TableCell>
+                <TableCell>{record.roles.join(', ')}</TableCell>
                 <TableCell>{record.type}</TableCell>
-                <TableCell>{record.issued}</TableCell>
+                <TableCell className={classes.nobr}>{record.issued}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -201,4 +199,4 @@ class AffiliationsForm extends Component {
     }
 }
 
-export default AffiliationsForm;
+export default ContributorsListing;

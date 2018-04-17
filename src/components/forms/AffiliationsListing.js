@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withStyles } from 'material-ui/styles';
 
+import Card, { CardContent } from 'material-ui/Card';
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
@@ -15,69 +16,28 @@ import Table, { TableBody, TableCell, TableHead, TableRow,
 import { MenuItem } from 'material-ui/Menu';
 import Select from 'material-ui/Select';
 import TextField from 'material-ui/TextField';
+import Citation from '../widgets/Citation';
 
-import Citation from './widgets/Citation';
+import styles from './formStyles.js';
 
-const styles = theme => ({
-  formControl: {
-    width: '100%',
-  },
-  dateField: {
-      width: 180,
-  },
-  link: {
-     color: 'black',
-     marginRight: '0.5em',
-     textDecoration: 'none',
-      '&:hover': {
-          textDecoration: 'underline'
-      }
-  },
-  formControlSelect: {
-      minWidth: 200,
-      maxWidth: 350,
-  },
-  table: {
-      marginTop: theme.spacing.unit
-  },
-  nobr: {
-      whiteSpace: 'nowrap'
-  },
-  fabButtonRight: {
-      padding: theme.spacing.unit,
-      display: 'flex',
-      justifyContent: 'flex-end',
-  },
-  chips: {
-    display: 'flex',
-    flexWrap: 'wrap',
-  },
-  chip: {
-    margin: theme.spacing.unit / 4,
-  },
-});
 
 @withStyles(styles)
-class WorkListing extends Component {
+class AffiliationsListing extends Component {
 
     handleRowClick = (record) => (event) => {
         this.props.history.push(`/record/work/${record.id}`);
         this.props.onChange({selected: record.id});
     }
     handleQueryChange = (event) => {
-        this.props.onChange({query: event.target.value, offset: 0});
+        const filters = Object.assign({}, this.props.filters);
+        filters.affiliation_group_id = this.props.id;
+        this.props.onChange({query: event.target.value, offset: 0, filters});
     }
 
     handleFilterChange = (name) => (event) => {
         const filters = Object.assign({}, this.props.filters);
         filters[name] = event.target.value;
-
         this.props.onChange({offset: 0, filters})
-    }
-
-
-    handleTypeChange = (event) => {
-        this.props.onChange({filter_type: event.target.value, offset: 0});
     }
 
     handlePageChange = (event, page) => {
@@ -90,17 +50,18 @@ class WorkListing extends Component {
     };
 
     componentWillMount(){
-      this.props.changeAppHeader('Works');
-      if (this.props.offset === undefined){
-          // first run
-          this.props.onChange({offset: 0});
-      }
+        if (this.props.id === 'add'){
+            this.props.onChange({offset: 0, filters: {affiliation_group_id: null}});
+        } else if ((this.props.filters||{}).contributor_person_id !== this.props.id) {
+            this.props.onChange({offset: 0, filters: {affiliation_group_id: this.props.id}});
+        }
     }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.query !== this.props.query ||
             (nextProps.filters || {}).filter_type !== (this.props.filters || {}).filter_type ||
             (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
+            (nextProps.filters || {}).affiliation_group_id !== (this.props.filters || {}).affiliation_group_id ||
             (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date ||
             nextProps.offset !== this.props.offset ||
             nextProps.limit !== this.props.limit){
@@ -117,6 +78,7 @@ class WorkListing extends Component {
                                  nextProps.limit);
           };
           if (nextProps.query !== this.props.query ||
+              (nextProps.filters || {}).affiliation_group_id !== (this.props.filters || {}).affiliation_group_id ||
               (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
               (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date
               ){
@@ -131,8 +93,9 @@ class WorkListing extends Component {
 
     render(){
         const { settings, classes, query, filters, total, limit, offset, records } = this.props;
-        console.log('render work listing')
       return (
+          <Card className={classes.editorCard}>
+          <CardContent style={{padding: 0}}>
         <div>
         <Paper>
           <AppBar position="static" color="default">
@@ -229,9 +192,10 @@ class WorkListing extends Component {
       </div>
       </Paper>
       </div>
-      );
+      </CardContent>
+      </Card>);
 
     }
 }
 
-export default WorkListing;
+export default AffiliationsListing;

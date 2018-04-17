@@ -16,6 +16,8 @@ export const mappedRelationField = (props) => {
                           placeholder={props.placeholder}
                           value={id_input.value}
                           label={label_input.value}
+                          filters={props.filters || {}}
+                          onRelationChange={props.onRelationChange || null}
                           onChange={(id, label) => {id_input.onChange(id); label_input.onChange(label);}}/>
 
 }

@@ -9,6 +9,7 @@ import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErro
 import { updateListingState, fetchRecordListing,
          updateDetailState, fetchRecordDetail, postRecordDetail,
          changeAppHeader } from '../actions';
+import { getFormValues } from 'redux-form';
 
 
 class GroupRecord extends Component {
@@ -30,9 +31,10 @@ class GroupRecord extends Component {
                                   enableReinitialize={true}
                                   submittedErrors={detailErrors}
                                   id={match.params.id}
+                                  formValues={this.props.formValues}
                                   settings={this.props.detailSettings}
                                   history={this.props.history}
-                                  onChange={this.props.updateGroupState}
+                                  onDetailChange={this.props.updateGroupState}
                                   onFetch={this.props.fetchGroupRecord}
                                   onSubmit={this.props.postGroupRecord}
 
@@ -65,7 +67,8 @@ const mapStateToProps = state => {
         subgroupListing: getListingState('subgroup', state),
         detailErrors: getDetailSubmitErrors('group', state),
         detailSettings: getDetailSettings('group', state),
-        workSettings: getDetailSettings('work', state)
+        workSettings: getDetailSettings('work', state),
+        formValues: getFormValues('group')(state)
     };
 }
 

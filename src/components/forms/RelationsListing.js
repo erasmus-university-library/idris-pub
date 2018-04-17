@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { withStyles } from 'material-ui/styles';
+
 import Card, { CardContent } from 'material-ui/Card';
+import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
 import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
@@ -9,33 +11,31 @@ import SearchIcon from 'material-ui-icons/Search';
 import IconButton from 'material-ui/IconButton';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
-
+import { MenuItem } from 'material-ui/Menu';
+import Select from 'material-ui/Select';
 import TextField from 'material-ui/TextField';
-import MemberAddForm from './MemberAddForm.js'
-import { Link } from 'react-router-dom';
-
+import Citation from '../widgets/Citation';
 import styles from './formStyles.js';
 
-@withStyles(styles, { withTheme: true })
-class MembersForm extends React.Component {
-    handleRowClick = (record) => (event) => {
-        this.props.history.push(`/record/person/${record.person_id}`);
-        this.props.onChange({selected: record.id});
 
+@withStyles(styles)
+class RelationsListing extends Component {
+
+    handleRowClick = (record) => (event) => {
+        this.props.history.push(`/record/work/${record.id}`);
+        this.props.onChange({selected: record.id});
     }
     handleQueryChange = (event) => {
         const filters = Object.assign({}, this.props.filters);
-        filters.group_id = this.props.id;
+        filters.related_work_id = this.props.id;
         this.props.onChange({query: event.target.value, offset: 0, filters});
     }
 
     handleFilterChange = (name) => (event) => {
         const filters = Object.assign({}, this.props.filters);
         filters[name] = event.target.value;
-
         this.props.onChange({offset: 0, filters})
     }
-
 
     handlePageChange = (event, page) => {
         this.props.onChange({offset: page * (this.props.limit || 10)});
@@ -48,19 +48,19 @@ class MembersForm extends React.Component {
 
     componentWillMount(){
         if (this.props.id === 'add'){
-            this.props.onChange({offset: 0, filters: {group_id: null}});
-        } else if ((this.props.filters||{}).group_id !== this.props.id) {
-            this.props.onChange({offset: 0, filters: {group_id: this.props.id}});
+            this.props.onChange({offset: 0, filters: {related_work_id: null}});
+        } else if ((this.props.filters||{}).related_work_id !== this.props.id) {
+            this.props.onChange({offset: 0, filters: {related_work_id: this.props.id}});
         }
     }
 
     componentWillReceiveProps(nextProps) {
-
         if (nextProps.query !== this.props.query ||
-            nextProps.offset !== this.props.offset ||
-            (nextProps.filters || {}).group_id !== (this.props.filters || {}).group_id ||
+            (nextProps.filters || {}).filter_type !== (this.props.filters || {}).filter_type ||
             (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
+            (nextProps.filters || {}).related_work_id !== (this.props.filters || {}).related_work_id ||
             (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date ||
+            nextProps.offset !== this.props.offset ||
             nextProps.limit !== this.props.limit){
             // a fetch is needed
           if (this.timeoutId){
@@ -75,6 +75,7 @@ class MembersForm extends React.Component {
                                  nextProps.limit);
           };
           if (nextProps.query !== this.props.query ||
+              (nextProps.filters || {}).related_work_id !== (this.props.filters || {}).related_work_id ||
               (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
               (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date
               ){
@@ -88,15 +89,16 @@ class MembersForm extends React.Component {
     }
 
     render(){
-      const { classes, query, total, limit, offset, records, filters} = this.props;
+        const { settings, classes, query, filters, total, limit, offset, records } = this.props;
       return (
           <Card className={classes.editorCard}>
-          <CardContent className={classes.noPadding}>
+          <CardContent style={{padding: 0}}>
         <div>
+        <Paper>
           <AppBar position="static" color="default">
             <Toolbar>
               <FormControl fullWidth className={classes.formControl}>
-              <InputLabel htmlFor="search">{`Search Members`}</InputLabel>
+              <InputLabel htmlFor="search">Search Works</InputLabel>
               <Input
                 id="search"
                 type="text"
@@ -105,8 +107,26 @@ class MembersForm extends React.Component {
                 endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
               />
               </FormControl>
+        <FormControl className={classes.formControlSelect}>
+          <InputLabel htmlFor="work-type">Work Type</InputLabel>
+          <Select
+            value={(filters||{}).filter_type || ''}
+            onChange={this.handleFilterChange('filter_type')}
+            inputProps={{
+              name: 'work_type',
+              id: 'work-type',
+            }}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {settings.type.map(workType => (
+            <MenuItem value={workType.id}>{workType.label}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
           <TextField
-          id="active-membership-from-date"
+          id="work-from-date"
           label="From Date"
           type="date"
           value={(filters||{}).start_date || ''}
@@ -117,7 +137,7 @@ class MembersForm extends React.Component {
           }}
           />
           <TextField
-          id="active-membership-until-date"
+          id="work-until-date"
           label="Until Date"
           type="date"
           value={(filters||{}).end_date || ''}
@@ -132,12 +152,9 @@ class MembersForm extends React.Component {
       <Table className={classes.table}>
         <TableHead>
           <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Groups</TableCell>
-            <TableCell>From Date</TableCell>
-            <TableCell>Until Date</TableCell>
-            <TableCell numeric style={{width:80}}>Memberships</TableCell>
-            <TableCell numeric style={{width:80}}>Work Contributions</TableCell>
+            <TableCell>Work</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Issued</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -147,14 +164,9 @@ class MembersForm extends React.Component {
                         onClick={this.handleRowClick(record)}
                         style={{cursor:'pointer'}}
                         hover>
-                <TableCell>{record.person_name}</TableCell>
-                <TableCell>
-              {record.groups.map((group) => (<Link className={classes.link} to={`/record/group/${group.id}`} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
-                </TableCell>
-                <TableCell>{record.earliest}</TableCell>
-                <TableCell>{record.latest}</TableCell>
-                <TableCell numeric>{record.memberships}</TableCell>
-                <TableCell numeric>{record.works}</TableCell>
+                <TableCell><Citation citation={record.csl} /></TableCell>
+                <TableCell>{record.type}</TableCell>
+                <TableCell className={classes.nobr}>{record.issued}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -170,13 +182,12 @@ class MembersForm extends React.Component {
           </TableRow>
         </TableFooter>
       </Table>
-      <div>
-        <MemberAddForm group={this.props.id} onSubmit={this.props.onMemberAdd}/>
+      </Paper>
       </div>
-      </div>
-        </CardContent>
-        </Card>);
+      </CardContent>
+      </Card>);
 
     }
 }
-export default MembersForm;
+
+export default RelationsListing;

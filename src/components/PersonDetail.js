@@ -7,7 +7,7 @@ import Tabs, { Tab } from 'material-ui/Tabs';
 import PersonForm from './forms/PersonForm';
 import AccountsForm from './forms/AccountsForm';
 import MembershipsForm from './forms/MembershipsForm';
-import ContributorsForm from './forms/ContributorsForm';
+import ContributorsListing from './forms/ContributorsListing';
 
 const styles = theme => ({
   tabContent: {
@@ -40,14 +40,14 @@ class PersonDetail extends React.Component {
 
   handleAccordionClicked = (name) => (event) => {
       if (this.props.openedAccordion === name){
-          this.props.onChange({openedAccordion: null});
+          this.props.onDetailChange({openedAccordion: null});
       } else {
-          this.props.onChange({openedAccordion: name});
+          this.props.onDetailChange({openedAccordion: name});
       }
   }
 
   handleTabClicked = (event, value) => {
-      this.props.onChange({currentTab: value});
+      this.props.onDetailChange({currentTab: value});
   }
 
     componentWillReceiveProps(nextProps) {
@@ -58,14 +58,13 @@ class PersonDetail extends React.Component {
 
   render() {
     const { classes, record, handleSubmit, openedAccordion, submittedErrors,
-            settings, currentTab, history,
+            settings, currentTab, history, formValues,
             contributorListingState, workSettings,
             onContributorFetch, onContributorChange } = this.props;
-    if (parseInt(this.props.id, 10) > 0){
-        if((record || {}).id !== parseInt(this.props.id, 10)){
-            return null
-        }
-    }
+
+     if (formValues === undefined){
+          return null;
+     }
     return (
       <div>
       <Tabs value={currentTab || 0}
@@ -86,22 +85,24 @@ class PersonDetail extends React.Component {
             <AccountsForm open={openedAccordion === 'account'}
                           name="account"
                           errors={submittedErrors}
+                          formValues={formValues.accounts}
                           typeOptions={settings.account_types}
                           onAccordionClicked={this.handleAccordionClicked('account')}/>
             <MembershipsForm open={openedAccordion === 'memberships'}
                              name="memberships"
                              errors={submittedErrors}
+                             formValues={formValues.memberships}
                              record={record}
                              typeOptions={[]}
                              onAccordionClicked={this.handleAccordionClicked('memberships')}/>
         </form>: null}
         {currentTab === 1?
-           <ContributorsForm {...contributorListingState}
-                             history={history}
-                             id={this.props.id}
-                             settings={workSettings}
-                             onChange={onContributorChange}
-                             onFetch={onContributorFetch} />
+           <ContributorsListing {...contributorListingState}
+                                history={history}
+                                id={this.props.id}
+                                settings={workSettings}
+                                onChange={onContributorChange}
+                                onFetch={onContributorFetch} />
          : null}
         </div>
       </div>

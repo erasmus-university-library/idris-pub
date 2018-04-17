@@ -9,6 +9,7 @@ import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErro
 import { updateListingState, fetchRecordListing,
          updateDetailState, fetchRecordDetail, postRecordDetail,
          changeAppHeader } from '../actions';
+import { getFormValues } from 'redux-form';
 
 
 class PersonRecord extends Component {
@@ -29,9 +30,10 @@ class PersonRecord extends Component {
                                   submittedErrors={detailErrors}
                                   changeAppHeader={this.props.changeAppHeader}
                                   id={match.params.id}
+                                  formValues={this.props.formValues}
                                   settings={this.props.detailSettings}
                                   history={this.props.history}
-                                  onChange={this.props.updateDetailState}
+                                  onDetailChange={this.props.updateDetailState}
                                   onFetch={this.props.fetchRecordDetail}
                                   onSubmit={this.props.postRecordDetail}
 
@@ -53,7 +55,8 @@ const mapStateToProps = state => {
         detail: getDetailState('person', state),
         detailErrors: getDetailSubmitErrors('person', state),
         detailSettings: getDetailSettings('person', state),
-        workSettings: getDetailSettings('work', state)
+        workSettings: getDetailSettings('work', state),
+        formValues: getFormValues('person')(state)
     };
 }
 

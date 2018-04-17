@@ -1,8 +1,77 @@
 import fetch from 'isomorphic-fetch'
+import CSL from 'citeproc';
+import {Parser as HtmlToReactParser} from 'html-to-react';
+const htmlToReactParser = new HtmlToReactParser();
 
 let sdk_client = null;
+let citeproc_client = null;
 
-class CaleidoSDK {
+export class CiteProc {
+    constructor() {
+        if (!citeproc_client){
+            this.engine = null;
+            const citations = {};
+            const sys = {
+                locale: null,
+                style: null,
+                retrieveLocale: function(lang){
+                    if (this.locale === null){
+                        throw Error('Citeproc Locale not loaded.');
+                    }
+                    return this.locale;
+                },
+                retrieveItem: function(id){
+                    return citations[id];
+                }
+
+            }
+            this.citations = citations;
+            fetch('/csl/styles/apa.csl').then(
+                function(response) {
+                    return response.text();
+                }).then(function(body){
+                    sys.style = body;
+                });
+
+            fetch('/csl/locales/locales-en-US.xml').then(
+                function(response) {
+                    return response.text();
+                }).then(function(body){
+                    sys.locale = body;
+                });
+
+            this.sys = sys;
+            citeproc_client = this;
+        }
+        return citeproc_client
+    }
+
+
+
+    getProcessor = function() {
+        if (this.sys.style === null){
+            throw Error('Citeproc Style not loaded.');
+        }
+        if (this.engine === null){
+            this.engine = new CSL.Engine(this.sys, this.sys.style)
+        }
+        return this.engine;
+
+    }
+
+    renderCitation = function(citation){
+        this.citations[citation.id] = citation
+        const processor = this.getProcessor();
+        processor.updateItems([citation.id])
+        const result = processor.makeBibliography();
+        return result[1].map(biblioStr => htmlToReactParser.parse(biblioStr))
+    }
+
+
+}
+
+
+export class CaleidoSDK {
     constructor() {
         if (!sdk_client){
             this.token = null;
@@ -16,6 +85,8 @@ class CaleidoSDK {
         return sdk_client
     }
 
+
+
     login = function(user, password) {
         return fetch(this.backendURL + '/auth/login',
                      {method: 'POST',
@@ -24,7 +95,7 @@ class CaleidoSDK {
                       body: JSON.stringify({user:user, password:password})});
     }
 
-    recordList = function(type, query='', filters={}, offset=0, limit=10) {
+    recordList = function(type, query='', filters=null, offset=0, limit=10) {
         if (type === 'subgroup'){
             type = 'group';
         }
@@ -33,8 +104,11 @@ class CaleidoSDK {
         }
         query = encodeURIComponent(query);
         let url = `${this.backendURL}/${type}/records?format=snippet&query=${query}`;
+        if (type === 'work' || type === 'membership'){
+            url = `${this.backendURL}/${type}/listing?query=${query}`;
+        }
         url = url + `&offset=${offset}&limit=${limit}`;
-        for (const [key, value] of Object.entries(filters)){
+        for (const [key, value] of Object.entries(filters || {})){
             url = url + `&${key}=${encodeURIComponent(value)}`;
         }
         if( type === 'membership') {
@@ -46,10 +120,13 @@ class CaleidoSDK {
                       headers: {'Authorization': `Bearer ${this.token}`}});
     }
 
-    recordSearch = function(type, query='', offset=0, limit=10) {
+    recordSearch = function(type, query='', filters=null, offset=0, limit=10) {
         query = encodeURIComponent(query);
         let url = `${this.backendURL}/${type}/search?query=${query}`;
         url = url + `&offset=${offset}&limit=${limit}`;
+        for (const [key, value] of Object.entries(filters || {})){
+            url = url + `&${key}=${encodeURIComponent(value)}`;
+        }
         return fetch(url,
                      {method: 'GET',
                       mode: 'cors',

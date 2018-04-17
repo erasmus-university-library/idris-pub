@@ -10,8 +10,20 @@ const styles = theme => ({
           textDecoration: 'underline'
       }
   },
+  cslEntry: {
+      fontSize: '0.9rem',
+      fontWeight: 300,
+      lineHeight: 1.5
+  },
+  formFieldRow: {
+      display:'flex',
+      marginBottom: theme.spacing.unit*2
+  },
   formControlSelect: {
       width: 180
+  },
+  nobr: {
+      whiteSpace: 'nowrap'
   },
   flex: {
     flex: 1,

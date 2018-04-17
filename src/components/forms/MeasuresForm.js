@@ -4,11 +4,11 @@ import { Field, FieldArray } from 'redux-form'
 import DeleteIcon from 'material-ui-icons/Delete';
 import AddIcon from 'material-ui-icons/Add';
 import Button from 'material-ui/Button';
-import Chip from 'material-ui/Chip';
 import IconButton from 'material-ui/IconButton';
 import { ListItemIcon, ListItemText } from 'material-ui/List';
-import FingerprintIcon from 'material-ui-icons/Fingerprint';
+import NetworkCheckIcon from 'material-ui-icons/NetworkCheck';
 import Badge from 'material-ui/Badge';
+import Chip from 'material-ui/Chip';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
@@ -21,15 +21,15 @@ import { mappedTextField, mappedSelect } from '../widgets/mapping.js';
 import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
-class AccountsForm extends React.Component {
+class MeasuresForm extends React.Component {
 
 
     getErrorCount() {
-        if (!this.props.errors || !this.props.errors.accounts){
+        if (!this.props.errors || !this.props.errors.measures){
             return 0
         }
         let errorCount = 0;
-        for (const error of Object.values(this.props.errors.accounts)){
+        for (const error of Object.values(this.props.errors.measures)){
           for (const field of ['type', 'value']){
               if (error[field] !== undefined){
                 errorCount += 1;
@@ -39,19 +39,19 @@ class AccountsForm extends React.Component {
         return errorCount
     }
 
-    renderAccounts = (accounts) => {
+    renderMeasures = (measures) => {
         const { classes, typeOptions } = this.props;
         return (<div>
-              {accounts.fields.map((account, accountIndex) =>
-           <div key={accountIndex} className={classes.formItem}>
-             <Field name={`${account}.type`} component={mappedSelect} options={typeOptions} label="Type" className={classes.accountTypeSelect}/>
+              {measures.fields.map((measure, measureIndex) =>
+           <div key={measureIndex} className={classes.formItem}>
+             <Field name={`${measure}.type`} component={mappedSelect} options={typeOptions} label="Type" className={classes.measureTypeSelect}/>
              <span className={classes.gutter}> </span>
-             <Field name={`${account}.value`} component={mappedTextField} label="Value (identifier)" className={classes.flex}/>
-             <IconButton aria-label="Delete" onClick={() => accounts.fields.remove(accountIndex)}><DeleteIcon /></IconButton>
+             <Field name={`${measure}.value`} component={mappedTextField} label="Value (identifier)" className={classes.flex}/>
+             <IconButton aria-label="Delete" onClick={() => measures.fields.remove(measureIndex)}><DeleteIcon /></IconButton>
            </div>)}
               <div className={classes.fabButtonRight}>
-              <Button color="primary" aria-label="add" onClick={() => accounts.fields.push({})} >
-                <AddIcon /> Add Account
+              <Button color="primary" aria-label="add" onClick={() => measures.fields.push({})} >
+                <AddIcon /> Add Measure
               </Button>
               </div>
             </div>)
@@ -70,19 +70,19 @@ class AccountsForm extends React.Component {
     render(){
         const { classes, onAccordionClicked, open, formValues } = this.props;
         const errorCount = this.getErrorCount();
-        const accountCount = formValues.length;
+        const measureCount = (formValues || []).length;
         return (
           <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><FingerprintIcon /></Badge>: <FingerprintIcon />}</ListItemIcon>
-              <ListItemText primary="Accounts" />
-            {accountCount?<Chip label={accountCount} align="right" key={accountCount}/>:null}
+              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><NetworkCheckIcon /></Badge>: <NetworkCheckIcon />}</ListItemIcon>
+              <ListItemText primary="Measures" />
+            {measureCount?<Chip label={measureCount} align="right" key={measureCount}/>:null}
             <div/>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard}>
           <CardContent>
-          <FieldArray name="accounts" component={this.renderAccounts} />
+          <FieldArray name="measures" component={this.renderMeasures} />
         </CardContent>
           <CardActions>
           <Button type="submit" color="primary">
@@ -95,4 +95,4 @@ class AccountsForm extends React.Component {
         );
     }
 }
-export default AccountsForm;
+export default MeasuresForm;

@@ -47,6 +47,7 @@ const styles = {
   menuButton: {
     marginLeft: -12,
     marginRight: 20,
+    color: 'inherit'
   },
   drawerPaper: {
     width: 240
@@ -69,6 +70,8 @@ const styles = {
 
 @withStyles(styles)
 class App extends Component {
+
+    theme = null;
 
     componentDidMount() {
         this.props.initializeApp();
@@ -160,32 +163,32 @@ class App extends Component {
             this.props.history.push(redirectURL);
             this.props.setRedirectURL(null);
         }
-        const theme = createMuiTheme({
+
+        if (this.theme === null){
+            this.theme = createMuiTheme({
             palette: {
                 primary: customTheme.primary,
                 accent: customTheme.accent
-            }
-        });
+            }});
+        };
 
         const headerIcon = {work: <StyleIcon />,
                             group: <GroupIcon />,
                             person: <PersonIcon />,
                             user: <FaceIcon />,
                             null: null}[header.icon]
-
         return (
-          <MuiThemeProvider theme={theme}>
+          <MuiThemeProvider theme={this.theme}>
           <div className={classes.root}>
             { flash !== null ? this.renderFlash() : null}
             { error !== null ? this.renderError() : null}
-            {showProgress? <LinearProgress/>: null}
-            <AppBar position="static" className={showProgress? classes.appBarWithProgress: null}>
+            <AppBar position="sticky" className={showProgress? classes.appBarWithProgress: null}>
               <Toolbar>
-                <IconButton className={classes.menuButton} color="contrast" aria-label="Menu" onClick={this.toggleSideBar}>
+                <IconButton className={classes.menuButton} color="default" aria-label="Menu" onClick={this.toggleSideBar}>
                   <MenuIcon />
                 </IconButton>
-                <Typography type="title" color="inherit" className={classes.toolbarTitle} noWrap>
-                {header.icon? <IconButton className={classes.headerIcon} color="contrast">
+                <Typography variant="title" color="inherit" className={classes.toolbarTitle} noWrap>
+                {header.icon? <IconButton className={classes.headerIcon} color="inherit">
                     {headerIcon}
                     </IconButton>: null}
             {header.title}
@@ -199,8 +202,9 @@ class App extends Component {
                  <LoginForm {...loginState}
                             onChange={this.props.updateLoginState}
                             onLogin={this.props.doLogin} />:
-                 <Button color="contrast" onClick={this.logOut}>Logout</Button>}
+                 <Button color="inherit" onClick={this.logOut}>Logout</Button>}
               </Toolbar>
+              {showProgress? <LinearProgress />: null}
             </AppBar>
             <Drawer open={sideBarOpen}
                     onRequestClose={this.toggleSideBar}
@@ -208,10 +212,13 @@ class App extends Component {
                       paper: classes.drawerPaper,
                     }}>
               <div className={classes.drawerHeader}>
-                  <Typography type="display1" align="right" style={{display:'inline-flex',margin:8}}>Caleido</Typography>
-                <Typography type="caption" align="right" style={{display:'inline-flex'}}>v 0.3.1
-               <IconButton onClick={this.handleDrawerClose} align="right"><ChevronLeftIcon /></IconButton>
-            </Typography>
+                <div>
+                    <img src="/eur_logo.svg" alt="logo" style={{height:48}}/>
+                    <IconButton onClick={this.handleDrawerClose} align="right"><ChevronLeftIcon /></IconButton>
+                </div>
+                <div style={{display:'inline-flex', width:'100%'}}>
+                    <Typography variant="caption" align="right" style={{flex:1}}>contribl.io v 0.3.1</Typography>
+                </div>
               </div>
               <div tabIndex={0}
                    role="button"

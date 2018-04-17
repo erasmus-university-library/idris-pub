@@ -1,71 +1,40 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { withStyles } from 'material-ui/styles';
-
-import Paper from 'material-ui/Paper';
+import Card, { CardContent } from 'material-ui/Card';
+import Chip from 'material-ui/Chip';
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
 import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
 import { FormControl } from 'material-ui/Form';
 import SearchIcon from 'material-ui-icons/Search';
 import IconButton from 'material-ui/IconButton';
-import AddIcon from 'material-ui-icons/Add';
-import Button from 'material-ui/Button';
+import { ListItemIcon, ListItemText } from 'material-ui/List';
+import CardMembershipIcon from 'material-ui-icons/CardMembership';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
-import { MenuItem } from 'material-ui/Menu';
-import Select from 'material-ui/Select';
+import ExpansionPanel, {
+  ExpansionPanelDetails,
+  ExpansionPanelSummary,
+} from 'material-ui/ExpansionPanel';
+import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+
 import TextField from 'material-ui/TextField';
+import MemberAddForm from './MemberAddForm.js'
+import { Link } from 'react-router-dom';
 
-import Citation from './widgets/Citation';
+import styles from './formStyles.js';
 
-const styles = theme => ({
-  formControl: {
-    width: '100%',
-  },
-  dateField: {
-      width: 180,
-  },
-  link: {
-     color: 'black',
-     marginRight: '0.5em',
-     textDecoration: 'none',
-      '&:hover': {
-          textDecoration: 'underline'
-      }
-  },
-  formControlSelect: {
-      minWidth: 200,
-      maxWidth: 350,
-  },
-  table: {
-      marginTop: theme.spacing.unit
-  },
-  nobr: {
-      whiteSpace: 'nowrap'
-  },
-  fabButtonRight: {
-      padding: theme.spacing.unit,
-      display: 'flex',
-      justifyContent: 'flex-end',
-  },
-  chips: {
-    display: 'flex',
-    flexWrap: 'wrap',
-  },
-  chip: {
-    margin: theme.spacing.unit / 4,
-  },
-});
-
-@withStyles(styles)
-class WorkListing extends Component {
-
+@withStyles(styles, { withTheme: true })
+class MembersListing extends React.Component {
     handleRowClick = (record) => (event) => {
-        this.props.history.push(`/record/work/${record.id}`);
-        this.props.onChange({selected: record.id});
+        this.props.history.push(`/record/person/${record.person_id}`);
+        this.props.onChange({selected: record.person_id});
+
     }
     handleQueryChange = (event) => {
-        this.props.onChange({query: event.target.value, offset: 0});
+        const filters = Object.assign({}, this.props.filters);
+        filters.group_id = this.props.id;
+        this.props.onChange({query: event.target.value, offset: 0, filters});
     }
 
     handleFilterChange = (name) => (event) => {
@@ -75,10 +44,6 @@ class WorkListing extends Component {
         this.props.onChange({offset: 0, filters})
     }
 
-
-    handleTypeChange = (event) => {
-        this.props.onChange({filter_type: event.target.value, offset: 0});
-    }
 
     handlePageChange = (event, page) => {
         this.props.onChange({offset: page * (this.props.limit || 10)});
@@ -90,19 +55,23 @@ class WorkListing extends Component {
     };
 
     componentWillMount(){
-      this.props.changeAppHeader('Works');
-      if (this.props.offset === undefined){
-          // first run
-          this.props.onChange({offset: 0});
-      }
+        if (this.props.id === 'add'){
+            this.props.onChange({offset: 0, filters: {group_id: null}});
+        } else if ((this.props.filters||{}).group_id !== this.props.id) {
+            this.props.onChange({offset: 0, filters: {group_id: this.props.id}});
+        }
     }
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.id !== this.props.id){
+            this.props.onChange({offset: 0, filters: {group_id: nextProps.id}});
+        }
+
         if (nextProps.query !== this.props.query ||
-            (nextProps.filters || {}).filter_type !== (this.props.filters || {}).filter_type ||
+            nextProps.offset !== this.props.offset ||
+            (nextProps.filters || {}).group_id !== (this.props.filters || {}).group_id ||
             (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
             (nextProps.filters || {}).end_date !== (this.props.filters || {}).end_date ||
-            nextProps.offset !== this.props.offset ||
             nextProps.limit !== this.props.limit){
             // a fetch is needed
           if (this.timeoutId){
@@ -130,15 +99,24 @@ class WorkListing extends Component {
     }
 
     render(){
-        const { settings, classes, query, filters, total, limit, offset, records } = this.props;
-        console.log('render work listing')
+      const { classes, query, total, limit, offset, records, filters,
+              onAccordionClicked, open} = this.props;
       return (
+          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <ListItemIcon><CardMembershipIcon /></ListItemIcon>
+              <ListItemText primary="Members" />
+            {total?<Chip label={total} align="right" key={total}/>:null}
+            <div />
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails style={{padding: 0}}>
+          <Card className={classes.editorCard}>
+          <CardContent className={classes.noPadding}>
         <div>
-        <Paper>
           <AppBar position="static" color="default">
             <Toolbar>
               <FormControl fullWidth className={classes.formControl}>
-              <InputLabel htmlFor="search">Search Works</InputLabel>
+              <InputLabel htmlFor="search">{`Search Members`}</InputLabel>
               <Input
                 id="search"
                 type="text"
@@ -147,26 +125,8 @@ class WorkListing extends Component {
                 endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
               />
               </FormControl>
-        <FormControl className={classes.formControlSelect}>
-          <InputLabel htmlFor="work-type">Work Type</InputLabel>
-          <Select
-            value={(filters||{}).filter_type || ''}
-            onChange={this.handleFilterChange('filter_type')}
-            inputProps={{
-              name: 'work_type',
-              id: 'work-type',
-            }}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {settings.type.map(workType => (
-            <MenuItem value={workType.id}>{workType.label}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
           <TextField
-          id="work-from-date"
+          id="active-membership-from-date"
           label="From Date"
           type="date"
           value={(filters||{}).start_date || ''}
@@ -177,7 +137,7 @@ class WorkListing extends Component {
           }}
           />
           <TextField
-          id="work-until-date"
+          id="active-membership-until-date"
           label="Until Date"
           type="date"
           value={(filters||{}).end_date || ''}
@@ -192,21 +152,29 @@ class WorkListing extends Component {
       <Table className={classes.table}>
         <TableHead>
           <TableRow>
-            <TableCell>Work</TableCell>
-            <TableCell>Type</TableCell>
-            <TableCell>Issued</TableCell>
+            <TableCell>Name</TableCell>
+            <TableCell>Groups</TableCell>
+            <TableCell>From Date</TableCell>
+            <TableCell>Until Date</TableCell>
+            <TableCell numeric style={{width:80}}>Memberships</TableCell>
+            <TableCell numeric style={{width:80}}>Work Contributions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {(records || []).map(record => (
-              <TableRow key={record.id}
-                        selected={record.id === this.props.selected}
+              <TableRow key={record.person_id}
+                        selected={record.person_id === this.props.selected}
                         onClick={this.handleRowClick(record)}
                         style={{cursor:'pointer'}}
                         hover>
-                <TableCell><Citation citation={record.csl} /></TableCell>
-                <TableCell>{record.type}</TableCell>
-                <TableCell className={classes.nobr}>{record.issued}</TableCell>
+                <TableCell style={{whiteSpace: 'nowrap'}}>{record.person_name}</TableCell>
+                <TableCell>
+              {record.groups.map((group) => (<Link key={group.id} className={classes.link} to={`/record/group/${group.id}`} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
+                </TableCell>
+                <TableCell>{record.earliest}</TableCell>
+                <TableCell>{record.latest}</TableCell>
+                <TableCell numeric>{record.memberships}</TableCell>
+                <TableCell numeric>{record.works}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -222,16 +190,15 @@ class WorkListing extends Component {
           </TableRow>
         </TableFooter>
       </Table>
-      <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/work/add')}} >
-          <AddIcon />
-        </Button>
+      <div>
+        <MemberAddForm group={this.props.id} onSubmit={this.props.onMemberAdd}/>
       </div>
-      </Paper>
       </div>
-      );
-
+        </CardContent>
+        </Card>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+        );
     }
 }
-
-export default WorkListing;
+export default MembersListing;

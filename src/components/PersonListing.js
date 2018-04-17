@@ -127,7 +127,7 @@ class PersonListing extends Component {
                         onClick={this.handleRowClick(record)}
                         style={{cursor:'pointer'}}
                         hover>
-                <TableCell>{record.name}</TableCell>
+                <TableCell style={{whiteSpace: 'nowrap'}}>{record.name}</TableCell>
                 <TableCell>
               {record.groups.map((group) => (<Link className={classes.link} to={`/record/group/${group.id}`} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
                 </TableCell>

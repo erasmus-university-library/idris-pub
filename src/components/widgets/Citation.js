@@ -1,9 +1,8 @@
 import React from 'react';
 import { withStyles } from 'material-ui/styles';
 
-import Typography from 'material-ui/Typography';
-
-import { Link } from 'react-router-dom';
+import { CiteProc } from '../../sdk.js';
+const citeProc = new CiteProc();
 
 const styles = theme => ({
   link: {
@@ -15,28 +14,19 @@ const styles = theme => ({
           textDecoration: 'underline'
       }
   },
+  cslEntry: {
+      fontSize: '0.9rem',
+      fontWeight: 300,
+      lineHeight: 1.5
+  },
+
 });
 
-function Citation(props) {
-    const { classes, title, authors, affiliations } = props;
-    return (<div>
-        <Typography type="caption">
-                {authors.map((author, index) => (
-                    [<Link className={classes.link}
-                             to={`/record/person/${author.id}`}
-                             onClick={(e) => (e.stopPropagation())}>{author.name}</Link>,
-                    authors.length === index+1? null: '⸱ '
-                    ]))}
-        </Typography>
-        <Typography type="body2" >{title}</Typography>
-        <Typography type="body1">
-                {affiliations.map((affiliation, index) => (
-                    [<Link className={classes.link}
-                             to={`/record/group/${affiliation.id}`}
-                             onClick={(e) => (e.stopPropagation())}>{affiliation.name}</Link>,
-                    affiliations.length === index+1? null: '⸱ '
-                    ]))}
-        </Typography>
-        </div>);
+
+class Citation extends React.Component {
+    render(){
+    const { classes, citation } = this.props;
+        return <div className={classes.cslEntry}>{citeProc.renderCitation(citation)}</div>
+    }
 }
-export default withStyles(styles)(Citation);
+export default withStyles(styles)(Citation)

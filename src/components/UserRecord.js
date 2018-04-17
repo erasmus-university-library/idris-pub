@@ -32,7 +32,7 @@ class UserRecord extends Component {
                                   id={match.params.id}
                                   settings={this.props.detailSettings}
                                   history={this.props.history}
-                                  onChange={this.props.updateDetailState}
+                                  onDetailChange={this.props.updateDetailState}
                                   onFetch={this.props.fetchRecordDetail}
                                   onSubmit={this.props.postRecordDetail} />;
         }
