@@ -8,6 +8,7 @@ import PersonForm from './forms/PersonForm';
 import AccountsForm from './forms/AccountsForm';
 import MembershipsForm from './forms/MembershipsForm';
 import ContributorsListing from './forms/ContributorsListing';
+import PositionsForm from './forms/PositionsForm';
 
 const styles = theme => ({
   tabContent: {
@@ -95,6 +96,13 @@ class PersonDetail extends React.Component {
                              record={record}
                              typeOptions={[]}
                              onAccordionClicked={this.handleAccordionClicked('memberships')}/>
+            <PositionsForm open={openedAccordion === 'positions'}
+                       name="positions"
+                       errors={submittedErrors}
+                       formValues={formValues.positions}
+                       positionOptions={settings.position_types}
+                       history={history}
+                       onAccordionClicked={this.handleAccordionClicked('positions')}/>
         </form>: null}
         {currentTab === 1?
            <ContributorsListing {...contributorListingState}

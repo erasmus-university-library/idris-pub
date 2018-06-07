@@ -6,7 +6,7 @@ import AddIcon from 'material-ui-icons/Add';
 import Button from 'material-ui/Button';
 import IconButton from 'material-ui/IconButton';
 import { ListItemIcon, ListItemText } from 'material-ui/List';
-import LanguageIcon from 'material-ui-icons/Language';
+import WorkIcon from 'material-ui-icons/Work';
 import Badge from 'material-ui/Badge';
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
@@ -33,29 +33,28 @@ import styles from './formStyles.js';
 
 
 @withStyles(styles, { withTheme: true })
-class RelationsForm extends React.Component {
+class PositionsForm extends React.Component {
     state = {
         limit: 5,
         offset: 0,
         total: 0,
         selected: null,
         query: '',
-        targetWorkTypeFilter: 'journal',
     };
 
 
-    addRelation = (position=null) => {
-        // note: this.relationFields is set in the renderRelations
+    addPosition = (position=null) => {
+        // note: this.positionFields is set in the renderPositions
         // method, we should figure how to get use the global arrayPush redux-form action
-        const newRelation = {type: 'isPartOf'};
+        const newPosition = {};
         let selected = position
         if (position === null){
-            this.relationFields.push(newRelation);
-            selected = this.relationFields.length
+            this.positionFields.push(newPosition);
+            selected = this.positionFields.length
         } else {
-            this.relationFields.insert(position, newRelation);
+            this.positionFields.insert(position, newPosition);
         }
-        const total = this.relationFields.length;
+        const total = this.positionFields.length;
         this.setState({selected: selected,
                        total: total,
                        query: '',
@@ -63,12 +62,12 @@ class RelationsForm extends React.Component {
     }
 
     getErrorCount(errors) {
-        if (!errors || !errors.relations){
+        if (!errors || !errors.positions){
             return 0
         }
         let errorCount = 0;
-        for (const error of Object.values(errors.relations)){
-          for (const field of ['person_id', 'role', 'start_date', 'end_date', 'location', 'description']){
+        for (const error of Object.values(errors.positions)){
+          for (const field of ['group_id', 'type', 'start_date', 'end_date', 'description']){
               if (error[field] !== undefined){
                 errorCount += 1;
               }
@@ -86,8 +85,8 @@ class RelationsForm extends React.Component {
         // rendering the table rows to set the total pagination count
         // correctly
         let filteredTotal = 0;
-        this.relationFields.getAll().map(relation => {
-            if (query && relation._target_name.toLowerCase().indexOf(query) === -1){
+        this.positionFields.getAll().map(position => {
+            if (query && position._target_name.toLowerCase().indexOf(query) === -1){
                 return null
             }
             filteredTotal += 1;
@@ -119,8 +118,7 @@ class RelationsForm extends React.Component {
     };
 
     renderForm = (fields, field, index, error) => {
-        const { classes, relationOptions, typeOptions } = this.props;
-        const { targetWorkTypeFilter } = this.state;
+        const { classes, positionOptions, typeOptions } = this.props;
         const style = {}
         if (error !== null){
             style.border = '2px dotted red';
@@ -128,75 +126,22 @@ class RelationsForm extends React.Component {
         return (
            <TableRow key={index} selected={true} style={style}>
 
-            <TableCell colSpan="3" style={{padding:24}}>
+            <TableCell colSpan="4" style={{padding:24}}>
             <Card>
             <CardContent>
             <div style={{display:'flex'}}>
              <Field name={`${field}.type`}
                     component={mappedSelect}
-                    options={relationOptions}
-                    label="Relation Type"
+                    options={positionOptions}
+                    label="Position Type"
                     className={classes.dateField}
                     InputLabelProps={{shrink: true}}/>
              <span className={classes.gutter}> </span>
-            <FormControl className={classes.formControlSelect}>
-              <InputLabel htmlFor="target-work-type-filter">Work Type</InputLabel>
-                <Select  value={targetWorkTypeFilter}
-                         onChange={this.handleTargetWorkTypeFilterChange}
-                         inputProps={{id: 'target-work-type-filter'}}>
-                  <MenuItem value="">
-                    <em>All</em>
-                  </MenuItem>
-                  {typeOptions.map(type => (
-                    <MenuItem key={type.id} value={type.id}>{type.label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-             <span className={classes.gutter}> </span>
-             <Fields names={[`${field}.target_id`, `${field}._target_name`]}
+             <Fields names={[`${field}.group_id`, `${field}._group_name`]}
                     component={mappedRelationField}
-                    placeholder="Work"
-                    kind="work"
-                    filters={{type:targetWorkTypeFilter}}
+                    placeholder="Organisation"
+                    kind="group"
                     className={classes.flex} />
-            </div>
-            <div className={classes.formFieldRow}>
-             <Field name={`${field}.volume`}
-                    component={mappedTextField}
-                    label="Volume"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
-             <span className={classes.gutter}> </span>
-             <Field name={`${field}.issue`}
-                    component={mappedTextField}
-                    label="Issue"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
-             <span className={classes.gutter}> </span>
-             <Field name={`${field}.number`}
-                    component={mappedTextField}
-                    label="(Report) Number"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
-            </div>
-            <div className={classes.formFieldRow}>
-            <Field name={`${field}.starting`}
-                    component={mappedTextField}
-                    label="Starting (Page)"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
-             <span className={classes.gutter}> </span>
-             <Field name={`${field}.ending`}
-                    component={mappedTextField}
-                    label="Ending (Page)"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
-             <span className={classes.gutter}> </span>
-             <Field name={`${field}.total`}
-                    component={mappedTextField}
-                    label="Total (Page)"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
             </div>
             <div className={classes.formFieldRow}>
              <Field name={`${field}.description`}
@@ -230,11 +175,11 @@ class RelationsForm extends React.Component {
             </CardContent>
             <CardActions>
               <div className={classes.fabButtonRight}>
-              <Button color="primary" aria-label="delete" onClick={() => this.addRelation(index)} >
-                <AddIcon /> Insert Relation
+              <Button color="primary" aria-label="delete" onClick={() => this.addPosition(index)} >
+                <AddIcon /> Insert Position
               </Button>
               <Button color="primary" aria-label="delete" onClick={() => fields.remove(index)} >
-                <DeleteIcon /> Remove Relation
+                <DeleteIcon /> Remove Position
               </Button>
               </div>
              </CardActions>
@@ -244,13 +189,13 @@ class RelationsForm extends React.Component {
 
     }
 
-    renderRelations = (props) => {
+    renderPositions = (props) => {
         const { fields, offset, limit, selected, query, errors } = props;
         const { classes } = this.props;
-        this.relationFields = fields;
+        this.positionFields = fields;
         let errorMessages = {}
         if (errors !== null){
-            errorMessages = errors.relations;
+            errorMessages = errors.positions;
         }
         let filteredIndex = -1;
         const filteredFields = [];
@@ -272,14 +217,15 @@ class RelationsForm extends React.Component {
                                           style={style}
                                           hover>
                         <TableCell>
-                        <IconButton to={`/record/work/${values.target_id}`}
+                        <IconButton to={`/record/group/${values.group_id}`}
                                     onClick={(e) => (e.stopPropagation())}
-                                    className={classes.listingRelationIconLink}
+                                    className={classes.listingPositionIconLink}
                                     component={Link}><OpenInNewIcon/></IconButton>
-                        {values._target_name}
+                        {values._group_name}
                         </TableCell>
                         <TableCell style={{whiteSpace: 'nowrap'}}>{values.type}</TableCell>
-                        <TableCell>{values._target_type}</TableCell>
+                        <TableCell>{values.start_date}</TableCell>
+                        <TableCell>{values.end_date}</TableCell>
                         </TableRow>);
                     if (index === this.state.selected){
                         frag = this.renderForm(fields, field, index, errorMessages[index] || null)
@@ -303,23 +249,23 @@ class RelationsForm extends React.Component {
         const { classes, onAccordionClicked, open, errors, formValues } = this.props;
         const errorCount = this.getErrorCount(errors);
         const { limit, offset, selected, total, query, targetWorkTypeFilter } = this.state;
-        const relationCount = (formValues || []).length;
+        const positionCount = (formValues || []).length;
         return (
           <ExpansionPanel expanded={open} onChange={onAccordionClicked} CollapseProps={{ unmountOnExit: true }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><LanguageIcon /></Badge>: <LanguageIcon />}</ListItemIcon>
-              <ListItemText primary="Relations" />
-            {relationCount?<Chip label={relationCount} align="right" key={relationCount}/>:null}
+              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><WorkIcon /></Badge>: <WorkIcon />}</ListItemIcon>
+              <ListItemText primary="External employment and side positions" />
+            {positionCount?<Chip label={positionCount} align="right" key={positionCount}/>:null}
             <div/>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.editorPanel}>
           <Card className={classes.editorCard}>
           <CardContent style={{padding: '16px 0px 0px 0px'}}>
-          {relationCount > 5?
+          {positionCount > 5?
           <AppBar position="static" color="default">
             <Toolbar>
               <FormControl fullWidth className={classes.formControl}>
-              <InputLabel htmlFor="search">{`Filter Relations`}</InputLabel>
+              <InputLabel htmlFor="search">{`Filter Positions`}</InputLabel>
               <Input
                 id="search"
                 type="text"
@@ -331,17 +277,18 @@ class RelationsForm extends React.Component {
             </Toolbar>
           </AppBar>:null}
       <Table className={classes.table}>
-        {relationCount > 0?
+        {positionCount > 0?
         <TableHead>
           <TableRow>
-            <TableCell>Work</TableCell>
-            <TableCell>Relation</TableCell>
-            <TableCell className={classes.dateField}>Work Type</TableCell>
+            <TableCell>Organisation</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell className={classes.dateField}>Start Date</TableCell>
+            <TableCell className={classes.dateField}>End Date</TableCell>
           </TableRow>
         </TableHead>:null}
         <TableBody>
-          <FieldArray name="relations"
-                      component={this.renderRelations}
+          <FieldArray name="positions"
+                      component={this.renderPositions}
                       offset={offset}
                       limit={limit}
                       selected={selected}
@@ -349,11 +296,11 @@ class RelationsForm extends React.Component {
                       targetWorkTypeFilter={targetWorkTypeFilter}
                       errors={errors} />
           </TableBody>
-        {relationCount > 5?
+        {positionCount > 5?
         <TableFooter>
           <TableRow>
             <TablePagination
-              count={total || relationCount}
+              count={total || positionCount}
               rowsPerPage={limit}
               page={(offset) / (limit)}
               onChangePage={this.handlePageChange}
@@ -369,8 +316,8 @@ class RelationsForm extends React.Component {
           Update
           </Button>
               <div className={classes.fabButtonRight}>
-              <Button color="primary" aria-label="add" onClick={() => this.addRelation(null)} >
-                <AddIcon /> Add Relation
+              <Button color="primary" aria-label="add" onClick={() => this.addPosition(null)} >
+                <AddIcon /> Add Position
               </Button>
               </div>
 
@@ -381,4 +328,4 @@ class RelationsForm extends React.Component {
         );
     }
 }
-export default RelationsForm;
+export default PositionsForm;

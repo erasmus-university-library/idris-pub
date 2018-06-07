@@ -87,7 +87,7 @@ class GroupDetail extends React.Component {
             <AccountsForm open={openedAccordion === 'account'}
                           name="account"
                           errors={submittedErrors}
-                          formValues={formValues.accounts}
+                          formValues={formValues.accounts || []}
                           typeOptions={settings.account_types}
                           onAccordionClicked={this.handleAccordionClicked('account')}/>
             <MembersListing open={openedAccordion === 'members'}

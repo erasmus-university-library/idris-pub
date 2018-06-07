@@ -156,8 +156,7 @@ class MembersListing extends React.Component {
             <TableCell>Groups</TableCell>
             <TableCell>From Date</TableCell>
             <TableCell>Until Date</TableCell>
-            <TableCell numeric style={{width:80}}>Memberships</TableCell>
-            <TableCell numeric style={{width:80}}>Work Contributions</TableCell>
+            <TableCell numeric>Works</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -173,7 +172,6 @@ class MembersListing extends React.Component {
                 </TableCell>
                 <TableCell>{record.earliest}</TableCell>
                 <TableCell>{record.latest}</TableCell>
-                <TableCell numeric>{record.memberships}</TableCell>
                 <TableCell numeric>{record.works}</TableCell>
               </TableRow>
             ))}

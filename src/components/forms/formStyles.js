@@ -28,6 +28,11 @@ const styles = theme => ({
   flex: {
     flex: 1,
   },
+  refIconLink: {
+      width: 40,
+      height: 40,
+      marginLeft: -10
+  },
   fabButtonRight: {
       display: 'flex',
       justifyContent: 'flex-end',

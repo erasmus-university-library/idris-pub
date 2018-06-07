@@ -23,7 +23,7 @@ class GroupForm extends React.Component {
             return 0
         }
         let errorCount = 0;
-        for (const field of ['international_name', 'native_name', 'abbreviated_name', 'type']){
+        for (const field of ['international_name', 'native_name', 'abbreviated_name', 'type', 'start_date', 'end_date', 'location']){
             if (this.props.errors[field] !== undefined){
                 errorCount += 1;
             }
@@ -45,9 +45,9 @@ class GroupForm extends React.Component {
           <Card className={classes.editorCard}>
           <CardContent>
            <div className={classes.formItem}>
-             <Field name="international_name" component={mappedTextField} label="International Name" className={classes.flex}/>
-             <span className={classes.gutter}> </span>
              <Field name="type" component={mappedSelect} options={typeOptions} label="Type" className={classes.flex}/>
+             <span className={classes.gutter}> </span>
+             <Field name="international_name" component={mappedTextField} label="International Name" className={classes.flex}/>
            </div>
            <div className={classes.formItem}>
              <Field name="native_name" component={mappedTextField} label="Native Name" className={classes.flex}/>
@@ -61,6 +61,26 @@ class GroupForm extends React.Component {
                     kind="group"
                     className={classes.flex}/>
            </div>
+           <div className={classes.formItem}>
+             <Field name="start_date"
+                    component={mappedTextField}
+                    type="date"
+                    label="Start Date"
+                    className={classes.flex}
+                    InputLabelProps={{shrink: true}}/>
+             <span className={classes.gutter}> </span>
+             <Field name="end_date"
+                    component={mappedTextField}
+                    type="date"
+                    label="End Date"
+                    className={classes.flex}
+                    InputLabelProps={{shrink: true}}/>
+             <span className={classes.gutter}> </span>
+             <Field name="location"
+                    component={mappedTextField}
+                    label="Location"
+                    className={classes.flex} />
+          </div>
         </CardContent>
           <CardActions>
           <Button type="submit" color="primary">

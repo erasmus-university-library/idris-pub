@@ -164,7 +164,7 @@ class App extends Component {
             this.props.setRedirectURL(null);
         }
 
-        if (this.theme === null){
+        if (this.theme === null && customTheme !== null){
             this.theme = createMuiTheme({
             palette: {
                 primary: customTheme.primary,
@@ -268,7 +268,7 @@ const mapStateToProps = state => {
         header: getAppHeader(state),
         sideBarOpen: getSideBarOpen(state),
         isInitialized: getAppState(state) === 'initialized',
-        customTheme: getCustomTheme(state),
+        customTheme: getCustomTheme(state) || null,
         showProgress: getShowProgress(state),
         flash: getFlashMessage(state),
         error: getErrorMessage(state),

@@ -55,6 +55,10 @@ class RelationsListing extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.id !== this.props.id){
+            this.props.onChange({offset: 0, filters: {related_work_id: nextProps.id}});
+        }
+
         if (nextProps.query !== this.props.query ||
             (nextProps.filters || {}).filter_type !== (this.props.filters || {}).filter_type ||
             (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||

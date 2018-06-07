@@ -75,7 +75,8 @@ export class CaleidoSDK {
     constructor() {
         if (!sdk_client){
             this.token = null;
-            this.backendURL = 'http://localhost:6543/api/v1';
+            const url = new URL(document.location);
+            this.backendURL = url.protocol + '//' + url.hostname + ':6543/api/v1';
 
             this.login = this.login.bind(this);
             this.recordList = this.recordList.bind(this);

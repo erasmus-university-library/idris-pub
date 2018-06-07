@@ -17,6 +17,7 @@ import SearchIcon from 'material-ui-icons/Search';
 import Table, { TableBody, TableCell, TableHead, TableRow,
                 TableFooter, TablePagination } from 'material-ui/Table';
 import { Link } from 'react-router-dom';
+import OpenInNewIcon from 'material-ui-icons/OpenInNew';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
@@ -70,7 +71,7 @@ class ContributorsForm extends React.Component {
         }
         let errorCount = 0;
         for (const error of Object.values(errors.contributors)){
-          for (const field of ['person_id', 'role', 'start_date', 'end_date']){
+          for (const field of ['person_id', 'role', 'start_date', 'end_date', 'location', 'description']){
               if (error[field] !== undefined){
                 errorCount += 1;
               }
@@ -209,7 +210,15 @@ class ContributorsForm extends React.Component {
                           component={this.renderAffiliations}/>
            </div>
             <div className={classes.formFieldRow}>
-             <Field name={`${field}.total`}
+             <Field name={`${field}.description`}
+                    component={mappedTextField}
+                    label="Description"
+                    multiline
+                    rowsMax="4"
+                    className={classes.flex}/>
+            </div>
+            <div className={classes.formFieldRow}>
+             <Field name={`${field}.location`}
                     component={mappedTextField}
                     label="Location"
                     className={classes.flex}
@@ -248,12 +257,12 @@ class ContributorsForm extends React.Component {
 
     renderContributors = (props) => {
         const { fields, offset, limit, selected, query, affiliationFilter, errors } = props;
+        const { classes } = this.props;
         this.contributorFields = fields;
         let errorMessages = {}
         if (errors !== null){
             errorMessages = errors.contributors;
         }
-        const { classes } = this.props;
         let filteredIndex = -1;
         const filteredFields = [];
         this.affiliationNames = new Set();
@@ -289,7 +298,13 @@ class ContributorsForm extends React.Component {
                                           onClick={this.handleRowClick(index)}
                                           style={style}
                                           hover>
-                        <TableCell style={{whiteSpace: 'nowrap'}}>{values._person_name}</TableCell>
+                        <TableCell className={classes.nobr}>
+                        <IconButton to={`/record/person/${values.person_id}`}
+                                    onClick={(e) => (e.stopPropagation())}
+                                    className={classes.refIconLink}
+                                    component={Link}><OpenInNewIcon/></IconButton>
+                        {values._person_name}
+                        </TableCell>
                         <TableCell>
                 {(values.affiliations||[]).map((affiliation, index) => (
                     [<Link className={classes.link}
