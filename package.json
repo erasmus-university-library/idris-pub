@@ -4,12 +4,12 @@
   "private": true,
   "dependencies": {
     "@manaflair/redux-batch": "^0.1.0",
+    "@material-ui/core": "^1.2.1",
+    "@material-ui/icons": "^1.1.0",
     "autosuggest-highlight": "^3.1.1",
     "custom-react-scripts": "0.2.1",
     "fetch": "^1.1.0",
     "lodash": "^4.17.4",
-    "material-ui": "^1.0.0-beta.20",
-    "material-ui-icons": "^1.0.0-beta.17",
     "raw-loader": "^0.5.1",
     "react": "^16.0.0",
     "react-autosuggest": "^9.3.2",
@@ -20,15 +20,29 @@
     "react-router-dom": "^4.2.2",
     "redux": "^3.7.2",
     "redux-actions": "^2.2.1",
-    "redux-form": "^7.1.2",
+    "redux-form": "^7.4.0",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
     "typeface-roboto": "0.0.43"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "webpack-dev-server --mode=development --hot --inline",
+    "build": "webpack --mode=production",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-plugin-transform-decorators-legacy": "^1.3.5",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.12.0",
+    "webpack-cli": "^3.0.4",
+    "webpack-dev-server": "^3.1.4"
   }
 }
