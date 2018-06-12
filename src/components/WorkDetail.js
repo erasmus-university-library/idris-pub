@@ -1,8 +1,8 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 
 import { reduxForm } from 'redux-form'
-import Tabs, { Tab } from 'material-ui/Tabs';
+import Tabs, { Tab } from '@material-ui/core/Tabs';
 import WorkForm from './forms/WorkForm';
 import ContributorsForm from './forms/ContributorsForm';
 import RelationsForm from './forms/RelationsForm';
@@ -11,14 +11,14 @@ import IdentifiersForm from './forms/IdentifiersForm';
 import MeasuresForm from './forms/MeasuresForm';
 import RelationsListing from './forms/RelationsListing';
 
-import { ListItemIcon, ListItemText } from 'material-ui/List';
+import { ListItemIcon, ListItemText } from '@material-ui/core/List';
 import ExpansionPanel, {
   ExpansionPanelSummary
-} from 'material-ui/ExpansionPanel';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+} from '@material-ui/core/ExpansionPanel';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
-import AttachFileIcon from 'material-ui-icons/AttachFile';
-import BubbleChartIcon from 'material-ui-icons/BubbleChart';
+import AttachFileIcon from '@material-ui/icons/AttachFile';
+import BubbleChartIcon from '@material-ui/icons/BubbleChart';
 
 
 const styles = theme => ({

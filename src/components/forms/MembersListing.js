@@ -1,24 +1,24 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
-import Card, { CardContent } from 'material-ui/Card';
-import Chip from 'material-ui/Chip';
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
-import { FormControl } from 'material-ui/Form';
-import SearchIcon from 'material-ui-icons/Search';
-import IconButton from 'material-ui/IconButton';
-import { ListItemIcon, ListItemText } from 'material-ui/List';
-import CardMembershipIcon from 'material-ui-icons/CardMembership';
+import { withStyles } from '@material-ui/core/styles';
+import Card, { CardContent } from '@material-ui/core/Card';
+import Chip from '@material-ui/core/Chip';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Input, { InputLabel, InputAdornment } from '@material-ui/core/Input';
+import FormControl from '@material-ui/core/FormControl';
+import SearchIcon from '@material-ui/icons/Search';
+import IconButton from '@material-ui/core/IconButton';
+import { ListItemIcon, ListItemText } from '@material-ui/core/List';
+import CardMembershipIcon from '@material-ui/icons/CardMembership';
 import Table, { TableBody, TableCell, TableHead, TableRow,
-                TableFooter, TablePagination } from 'material-ui/Table';
+                TableFooter, TablePagination } from '@material-ui/core/Table';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
-} from 'material-ui/ExpansionPanel';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+} from '@material-ui/core/ExpansionPanel';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
-import TextField from 'material-ui/TextField';
+import TextField from '@material-ui/core/TextField';
 import MemberAddForm from './MemberAddForm.js'
 import { Link } from 'react-router-dom';
 

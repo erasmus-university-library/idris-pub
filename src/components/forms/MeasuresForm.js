@@ -1,20 +1,20 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 import { Field, FieldArray } from 'redux-form'
-import DeleteIcon from 'material-ui-icons/Delete';
-import AddIcon from 'material-ui-icons/Add';
-import Button from 'material-ui/Button';
-import IconButton from 'material-ui/IconButton';
-import { ListItemIcon, ListItemText } from 'material-ui/List';
-import NetworkCheckIcon from 'material-ui-icons/NetworkCheck';
-import Badge from 'material-ui/Badge';
-import Chip from 'material-ui/Chip';
+import DeleteIcon from '@material-ui/icons/Delete';
+import AddIcon from '@material-ui/icons/Add';
+import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import { ListItemIcon, ListItemText } from '@material-ui/core/List';
+import NetworkCheckIcon from '@material-ui/icons/NetworkCheck';
+import Badge from '@material-ui/core/Badge';
+import Chip from '@material-ui/core/Chip';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
-} from 'material-ui/ExpansionPanel';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
-import Card, { CardActions, CardContent } from 'material-ui/Card';
+} from '@material-ui/core/ExpansionPanel';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Card, { CardActions, CardContent } from '@material-ui/core/Card';
 
 
 import { mappedTextField, mappedSelect } from '../widgets/mapping.js';

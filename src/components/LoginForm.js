@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
-import { withStyles } from 'material-ui/styles';
-import Button from 'material-ui/Button';
-import TextField from 'material-ui/TextField';
+import { withStyles } from '@material-ui/core/styles';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
 import Dialog, {
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-} from 'material-ui/Dialog';
+} from '@material-ui/core/Dialog';
 
 const styles = theme => ({
   container: {

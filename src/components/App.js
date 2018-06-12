@@ -1,26 +1,26 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { withStyles, MuiThemeProvider, createMuiTheme } from 'material-ui/styles';
-import { LinearProgress } from 'material-ui/Progress';
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Typography from 'material-ui/Typography';
-import Button from 'material-ui/Button';
-import IconButton from 'material-ui/IconButton';
-import MenuIcon from 'material-ui-icons/Menu';
-import Drawer from 'material-ui/Drawer';
-import List, { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
-import Divider from 'material-ui/Divider';
-import StyleIcon from 'material-ui-icons/Style';
-import PersonIcon from 'material-ui-icons/Person';
-import GroupIcon from 'material-ui-icons/Group';
-import FaceIcon from 'material-ui-icons/Face';
+import { withStyles, MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import { LinearProgress } from '@material-ui/core/LinearProgress';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import MenuIcon from '@material-ui/icons/Menu';
+import Drawer from '@material-ui/core/Drawer';
+import List, { ListItem, ListItemIcon, ListItemText } from '@material-ui/core/List';
+import Divider from '@material-ui/core/Divider';
+import StyleIcon from '@material-ui/icons/Style';
+import PersonIcon from '@material-ui/icons/Person';
+import GroupIcon from '@material-ui/icons/Group';
+import FaceIcon from '@material-ui/icons/Face';
 import { Link, Switch, Route, withRouter } from 'react-router-dom';
-import Snackbar from 'material-ui/Snackbar';
-import CloseIcon from 'material-ui-icons/Close';
-import ChevronLeftIcon from 'material-ui-icons/ChevronLeft';
-import OpenInNewIcon from 'material-ui-icons/OpenInNew';
-import Chip from 'material-ui/Chip';
+import Snackbar from '@material-ui/core/Snackbar';
+import CloseIcon from '@material-ui/icons/Close';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
+import Chip from '@material-ui/core/Chip';
 
 import WorkRecord from './WorkRecord';
 import PersonRecord from './PersonRecord';
@@ -154,33 +154,34 @@ class App extends Component {
     }
 
     render() {
-        const { classes, header, sideBarOpen, isInitialized, customTheme,
-                showProgress, flash, error, redirectURL, loggedInUser, loginState } = this.props;
-        if (!isInitialized){
-            return (<LinearProgress />);
-        }
-        if (redirectURL){
-            this.props.history.push(redirectURL);
-            this.props.setRedirectURL(null);
-        }
+      const { classes, header, sideBarOpen, isInitialized, customTheme,
+              showProgress, flash, error, redirectURL, loggedInUser, loginState } = this.props;
+      if (!isInitialized){
+	return <h1>foo</h1>;
+        return (<LinearProgress />);
+      }
+      if (redirectURL){
+        this.props.history.push(redirectURL);
+        this.props.setRedirectURL(null);
+      }
 
-        if (this.theme === null && customTheme !== null){
-            this.theme = createMuiTheme({
-            palette: {
-                primary: customTheme.primary,
-                accent: customTheme.accent
-            }});
-        };
+      if (this.theme === null && customTheme !== null){
+        this.theme = createMuiTheme({
+          palette: {
+            primary: customTheme.primary,
+            accent: customTheme.accent
+          }});
+      };
 
-        const headerIcon = {work: <StyleIcon />,
-                            group: <GroupIcon />,
-                            person: <PersonIcon />,
-                            user: <FaceIcon />,
-                            null: null}[header.icon]
-        return (
-          <MuiThemeProvider theme={this.theme}>
-          <div className={classes.root}>
-            { flash !== null ? this.renderFlash() : null}
+      const headerIcon = {work: <StyleIcon />,
+                          group: <GroupIcon />,
+                          person: <PersonIcon />,
+                          user: <FaceIcon />,
+                          null: null}[header.icon]
+      return (
+        <MuiThemeProvider theme={this.theme}>
+        <div className={classes.root}>
+        { flash !== null ? this.renderFlash() : null}
             { error !== null ? this.renderError() : null}
             <AppBar position="sticky" className={showProgress? classes.appBarWithProgress: null}>
               <Toolbar>

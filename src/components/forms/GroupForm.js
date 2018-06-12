@@ -1,16 +1,16 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 import { Field, Fields } from 'redux-form'
-import { ListItemIcon, ListItemText } from 'material-ui/List';
-import GroupIcon from 'material-ui-icons/Group';
-import Badge from 'material-ui/Badge';
+import { ListItemIcon, ListItemText } from '@material-ui/core/List';
+import GroupIcon from '@material-ui/icons/Group';
+import Badge from '@material-ui/core/Badge';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
-} from 'material-ui/ExpansionPanel';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
-import Card, { CardActions, CardContent } from 'material-ui/Card';
-import Button from 'material-ui/Button';
+} from '@material-ui/core/ExpansionPanel';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Card, { CardActions, CardContent } from '@material-ui/core/Card';
+import Button from '@material-ui/core/Button';
 
 import { mappedTextField, mappedSelect, mappedRelationField } from '../widgets/mapping.js';
 
@@ -94,4 +94,3 @@ class GroupForm extends React.Component {
     }
 }
 export default GroupForm;
-

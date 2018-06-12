@@ -1,9 +1,10 @@
 import React from 'react';
-import TextField from 'material-ui/TextField';
-import Select from 'material-ui/Select';
-import { MenuItem } from 'material-ui/Menu';
-import Input, { InputLabel } from 'material-ui/Input';
-import { FormControl, FormHelperText } from 'material-ui/Form';
+import TextField from '@material-ui/core/TextField';
+import Select from '@material-ui/core/Select';
+import { MenuItem } from '@material-ui/core/Menu';
+import Input, { InputLabel } from '@material-ui/core/Input';
+import FormControl from '@material-ui/core/FormControl';
+import FormHelperText from '@material-ui/core/FormHelperText';
 
 import _ from 'lodash';
 

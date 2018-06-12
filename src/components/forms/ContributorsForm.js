@@ -1,31 +1,31 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 import { Field, Fields, FieldArray } from 'redux-form'
-import DeleteIcon from 'material-ui-icons/Delete';
-import AddIcon from 'material-ui-icons/Add';
-import Button from 'material-ui/Button';
-import IconButton from 'material-ui/IconButton';
-import { ListItemIcon, ListItemText } from 'material-ui/List';
-import FavoriteIcon from 'material-ui-icons/Favorite';
-import Badge from 'material-ui/Badge';
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
-import { FormControl } from 'material-ui/Form';
-import Chip from 'material-ui/Chip';
-import SearchIcon from 'material-ui-icons/Search';
+import DeleteIcon from '@material-ui/icons/Delete';
+import AddIcon from '@material-ui/icons/Add';
+import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import { ListItemIcon, ListItemText } from '@material-ui/core/List';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import Badge from '@material-ui/core/Badge';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Input, { InputLabel, InputAdornment } from '@material-ui/core/Input';
+import FormControl from '@material-ui/core/FormControl';
+import Chip from '@material-ui/core/Chip';
+import SearchIcon from '@material-ui/icons/Search';
 import Table, { TableBody, TableCell, TableHead, TableRow,
-                TableFooter, TablePagination } from 'material-ui/Table';
+                TableFooter, TablePagination } from '@material-ui/core/Table';
 import { Link } from 'react-router-dom';
-import OpenInNewIcon from 'material-ui-icons/OpenInNew';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
-} from 'material-ui/ExpansionPanel';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
-import Card, { CardActions, CardContent } from 'material-ui/Card';
-import { MenuItem } from 'material-ui/Menu';
-import Select from 'material-ui/Select';
+} from '@material-ui/core/ExpansionPanel';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Card, { CardActions, CardContent } from '@material-ui/core/Card';
+import { MenuItem } from '@material-ui/core/Menu';
+import Select from '@material-ui/core/Select';
 
 import { mappedTextField, mappedSelect, mappedRelationField } from '../widgets/mapping.js';
 import styles from './formStyles.js';

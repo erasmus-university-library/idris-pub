@@ -2,14 +2,14 @@ import React from 'react';
 import Autosuggest from 'react-autosuggest';
 import match from 'autosuggest-highlight/match';
 import parse from 'autosuggest-highlight/parse';
-import TextField from 'material-ui/TextField';
-import Typography from 'material-ui/Typography';
-import Paper from 'material-ui/Paper';
-import { MenuItem } from 'material-ui/Menu';
-import { withStyles } from 'material-ui/styles';
-import IconButton from 'material-ui/IconButton';
-import { InputAdornment } from 'material-ui/Input';
-import OpenInNewIcon from 'material-ui-icons/OpenInNew';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import Paper from '@material-ui/core/Paper';
+import { MenuItem } from '@material-ui/core/Menu';
+import { withStyles } from '@material-ui/core/styles';
+import IconButton from '@material-ui/core/IconButton';
+import { InputAdornment } from '@material-ui/core/Input';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import { Link } from 'react-router-dom';
 
 

@@ -1,24 +1,24 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
-import { ListItemIcon, ListItemText } from 'material-ui/List';
-import SupervisorAccountIcon from 'material-ui-icons/SupervisorAccount';
+import { withStyles } from '@material-ui/core/styles';
+import { ListItemIcon, ListItemText } from '@material-ui/core/List';
+import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 
-import Paper from 'material-ui/Paper';
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Chip from 'material-ui/Chip';
-import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
-import { FormControl } from 'material-ui/Form';
-import SearchIcon from 'material-ui-icons/Search';
-import IconButton from 'material-ui/IconButton';
+import Paper from '@material-ui/core/Paper';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Chip from '@material-ui/core/Chip';
+import Input, { InputLabel, InputAdornment } from '@material-ui/core/Input';
+import FormControl from '@material-ui/core/FormControl';
+import SearchIcon from '@material-ui/icons/Search';
+import IconButton from '@material-ui/core/IconButton';
 import Table, { TableBody, TableCell, TableHead, TableRow,
-                TableFooter, TablePagination } from 'material-ui/Table';
+                TableFooter, TablePagination } from '@material-ui/core/Table';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
-} from 'material-ui/ExpansionPanel';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
-import Card, { CardContent } from 'material-ui/Card';
+} from '@material-ui/core/ExpansionPanel';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Card, { CardContent } from '@material-ui/core/Card';
 
 
 import styles from './formStyles.js';
@@ -152,4 +152,3 @@ class SubGroupsForm extends React.Component {
     }
 }
 export default SubGroupsForm;
-

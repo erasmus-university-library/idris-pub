@@ -1,19 +1,19 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 import { FieldArray, Fields} from 'redux-form'
-import IconButton from 'material-ui/IconButton';
-import { ListItemIcon, ListItemText } from 'material-ui/List';
-import DeleteIcon from 'material-ui-icons/Delete';
-import AddIcon from 'material-ui-icons/Add';
-import Button from 'material-ui/Button';
-import CardGiftcardIcon from 'material-ui-icons/CardGiftcard';
+import IconButton from '@material-ui/core/IconButton';
+import { ListItemIcon, ListItemText } from '@material-ui/core/List';
+import DeleteIcon from '@material-ui/icons/Delete';
+import AddIcon from '@material-ui/icons/Add';
+import Button from '@material-ui/core/Button';
+import CardGiftcardIcon from '@material-ui/icons/CardGiftcard';
 import ExpansionPanel, {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
-} from 'material-ui/ExpansionPanel';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
-import Badge from 'material-ui/Badge';
-import Card, { CardActions, CardContent } from 'material-ui/Card';
+} from '@material-ui/core/ExpansionPanel';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Badge from '@material-ui/core/Badge';
+import Card, { CardActions, CardContent } from '@material-ui/core/Card';
 
 import { mappedRelationField } from '../widgets/mapping.js';
 import styles from './formStyles.js';
@@ -86,4 +86,3 @@ class OwnerForm extends React.Component {
     }
 }
 export default OwnerForm;
-

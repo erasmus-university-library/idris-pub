@@ -1,8 +1,8 @@
 import React from 'react';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 
 import { reduxForm } from 'redux-form'
-import Tabs, { Tab } from 'material-ui/Tabs';
+import Tabs, { Tab } from '@material-ui/core/Tabs';
 
 import PersonForm from './forms/PersonForm';
 import AccountsForm from './forms/AccountsForm';

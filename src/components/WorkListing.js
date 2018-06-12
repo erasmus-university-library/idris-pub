@@ -1,20 +1,20 @@
 import React, { Component } from 'react';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 
-import Paper from 'material-ui/Paper';
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Input, { InputLabel, InputAdornment } from 'material-ui/Input';
-import { FormControl } from 'material-ui/Form';
-import SearchIcon from 'material-ui-icons/Search';
-import IconButton from 'material-ui/IconButton';
-import AddIcon from 'material-ui-icons/Add';
-import Button from 'material-ui/Button';
+import Paper from '@material-ui/core/Paper';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Input, { InputLabel, InputAdornment } from '@material-ui/core/Input';
+import FormControl from '@material-ui/core/FormControl';
+import SearchIcon from '@material-ui/icons/Search';
+import IconButton from '@material-ui/core/IconButton';
+import AddIcon from '@material-ui/icons/Add';
+import Button from '@material-ui/core/Button';
 import Table, { TableBody, TableCell, TableHead, TableRow,
-                TableFooter, TablePagination } from 'material-ui/Table';
-import { MenuItem } from 'material-ui/Menu';
-import Select from 'material-ui/Select';
-import TextField from 'material-ui/TextField';
+                TableFooter, TablePagination } from '@material-ui/core/Table';
+import { MenuItem } from '@material-ui/core/Menu';
+import Select from '@material-ui/core/Select';
+import TextField from '@material-ui/core/TextField';
 
 import Citation from './widgets/Citation';
 
