@@ -24,7 +24,7 @@ const styles = theme => ({
 
 
 class Citation extends React.Component {
-    render(){
+  render(){
     const { classes, citation } = this.props;
         return <div className={classes.cslEntry}>{citeProc.renderCitation(citation)}</div>
     }

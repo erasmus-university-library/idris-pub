@@ -2,7 +2,8 @@ import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
 import { reduxForm } from 'redux-form'
-import Tabs, { Tab } from '@material-ui/core/Tabs';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 
 import PersonForm from './forms/PersonForm';
 import AccountsForm from './forms/AccountsForm';
@@ -86,20 +87,20 @@ class PersonDetail extends React.Component {
             <AccountsForm open={openedAccordion === 'account'}
                           name="account"
                           errors={submittedErrors}
-                          formValues={formValues.accounts}
+                          formValues={formValues.accounts||[]}
                           typeOptions={settings.account_types}
                           onAccordionClicked={this.handleAccordionClicked('account')}/>
             <MembershipsForm open={openedAccordion === 'memberships'}
                              name="memberships"
                              errors={submittedErrors}
-                             formValues={formValues.memberships}
+                             formValues={formValues.memberships||[]}
                              record={record}
                              typeOptions={[]}
                              onAccordionClicked={this.handleAccordionClicked('memberships')}/>
             <PositionsForm open={openedAccordion === 'positions'}
                        name="positions"
                        errors={submittedErrors}
-                       formValues={formValues.positions}
+                       formValues={formValues.positions||[]}
                        positionOptions={settings.position_types}
                        history={history}
                        onAccordionClicked={this.handleAccordionClicked('positions')}/>

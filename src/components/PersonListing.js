@@ -136,7 +136,7 @@ class PersonListing extends Component {
                         hover>
                 <TableCell style={{whiteSpace: 'nowrap'}}>{record.name}</TableCell>
                 <TableCell>
-              {record.groups.map((group) => (<Link className={classes.link} to={`/record/group/${group.id}`} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
+              {record.groups.map((group) => (<Link className={classes.link} to={`/record/group/${group.id}`} key={group.id} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
                 </TableCell>
                 <TableCell numeric>{record.memberships}</TableCell>
                 <TableCell numeric>{record.works}</TableCell>

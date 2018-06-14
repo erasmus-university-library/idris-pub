@@ -100,7 +100,7 @@ class WorkDetail extends React.Component {
             <ContributorsForm open={openedAccordion === 'contributors'}
                        name="contributors"
                        errors={submittedErrors}
-                       formValues={formValues.contributors}
+                       formValues={formValues.contributors||[]}
                        workDateIssued={formValues.issued}
                        formActions={formActions}
                        contributorOptions={settings.contributor_role}
@@ -121,7 +121,7 @@ class WorkDetail extends React.Component {
             <DescriptionsForm open={openedAccordion === 'descriptions'}
                        name="descriptions"
                        errors={submittedErrors}
-                       formValues={formValues.descriptions}
+                       formValues={formValues.descriptions||[]}
                        formActions={formActions}
                        descriptionTypeOptions={settings.description_types}
                        descriptionFormatOptions={settings.description_formats}
@@ -132,7 +132,7 @@ class WorkDetail extends React.Component {
             <IdentifiersForm open={openedAccordion === 'identifiers'}
                        name="identifiers"
                        errors={submittedErrors}
-                       formValues={formValues.identifiers}
+                       formValues={formValues.identifiers||[]}
                        typeOptions={settings.identifier_types}
                        history={history}
                        onAccordionClicked={this.handleAccordionClicked('identifiers')}/>

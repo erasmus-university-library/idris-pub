@@ -57,6 +57,8 @@ module.exports = {
   resolve: {
     extensions: [".js", ".jsx"]
   },
-  devServer: {contentBase: __dirname + '/src'},
+  devServer: {contentBase: __dirname + '/src',
+	      publicPath: '/',
+              allowedHosts: ['.localhost']},
   devtool: 'source-map'
 };

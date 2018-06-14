@@ -108,7 +108,7 @@ class App extends Component {
           open={flash !== null}
           autoHideDuration={3000}
           onClose={this.handleFlashClose}
-          SnackbarContentProps={{
+          ContentProps={{
             'aria-describedby': 'message-id',
           }}
           message={<span id="message-id">{flash}</span>}
@@ -134,7 +134,7 @@ class App extends Component {
           open={error !== null}
           autoHideDuration={3000}
           onClose={this.handleErrorClose}
-          SnackbarContentProps={{
+          ContentProps={{
             'aria-describedby': 'message-id',
           }}
           message={<span id="message-id">{error}</span>}
@@ -173,7 +173,7 @@ class App extends Component {
             primary: customTheme.primary,
             accent: customTheme.accent
           }});
-      } else {
+      } else if (this.theme === null && customTheme === null){
 	this.theme = createMuiTheme();
       }
 
