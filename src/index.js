@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { render } from 'react-dom';
 import { createStore, applyMiddleware, compose, combineReducers } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import { reduxBatch }  from '@manaflair/redux-batch';
@@ -25,11 +25,10 @@ const store = createStore(combineReducers({app: appReducer,
                           preloadedState,
                           composeEnhancers(reduxBatch, applyMiddleware(thunkMiddleware), reduxBatch));
 
-
-ReactDOM.render(<Provider store={store}>
-                 <Router>
-                  <App />
-                 </Router>
-                </Provider>,
-                document.getElementById('root'));
+render(<Provider store={store}>
+         <Router>
+          <App />
+         </Router>
+        </Provider>,
+        document.getElementById('root'));
 registerServiceWorker();

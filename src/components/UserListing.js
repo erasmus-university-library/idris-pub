@@ -4,14 +4,21 @@ import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import Input, { InputLabel, InputAdornment } from '@material-ui/core/Input';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
 import FormControl from '@material-ui/core/FormControl';
 import SearchIcon from '@material-ui/icons/Search';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
-import Table, { TableBody, TableCell, TableHead, TableRow,
-                TableFooter, TablePagination } from '@material-ui/core/Table';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableFooter from '@material-ui/core/TableFooter';
+import TablePagination from '@material-ui/core/TablePagination';
 
 const styles = theme => ({
   formControl: {
@@ -140,7 +147,7 @@ class UserListing extends Component {
         </TableFooter>
       </Table>
       <div className={classes.fabButtonRight}>
-        <Button fab color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/user/add')}} >
+        <Button variant="fab" color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/user/add')}} >
           <AddIcon />
         </Button>
       </div>

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withStyles, MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
-import { LinearProgress } from '@material-ui/core/LinearProgress';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -9,7 +9,10 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import Drawer from '@material-ui/core/Drawer';
-import List, { ListItem, ListItemIcon, ListItemText } from '@material-ui/core/List';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText  from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 import StyleIcon from '@material-ui/icons/Style';
 import PersonIcon from '@material-ui/icons/Person';
@@ -157,8 +160,7 @@ class App extends Component {
       const { classes, header, sideBarOpen, isInitialized, customTheme,
               showProgress, flash, error, redirectURL, loggedInUser, loginState } = this.props;
       if (!isInitialized){
-	return <h1>foo</h1>;
-        return (<LinearProgress />);
+        return <LinearProgress />;
       }
       if (redirectURL){
         this.props.history.push(redirectURL);
@@ -171,7 +173,9 @@ class App extends Component {
             primary: customTheme.primary,
             accent: customTheme.accent
           }});
-      };
+      } else {
+	this.theme = createMuiTheme();
+      }
 
       const headerIcon = {work: <StyleIcon />,
                           group: <GroupIcon />,
@@ -208,7 +212,6 @@ class App extends Component {
               {showProgress? <LinearProgress />: null}
             </AppBar>
             <Drawer open={sideBarOpen}
-                    onRequestClose={this.toggleSideBar}
                     classes={{
                       paper: classes.drawerPaper,
                     }}>
@@ -218,7 +221,7 @@ class App extends Component {
                     <IconButton onClick={this.handleDrawerClose} align="right"><ChevronLeftIcon /></IconButton>
                 </div>
                 <div style={{display:'inline-flex', width:'100%'}}>
-                    <Typography variant="caption" align="right" style={{flex:1}}>contribl.io v 0.3.1</Typography>
+                    <Typography variant="caption" align="right" style={{flex:1}}>Idris v 0.4.0</Typography>
                 </div>
               </div>
               <div tabIndex={0}

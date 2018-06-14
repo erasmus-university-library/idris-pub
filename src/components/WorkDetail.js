@@ -2,7 +2,8 @@ import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
 import { reduxForm } from 'redux-form'
-import Tabs, { Tab } from '@material-ui/core/Tabs';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 import WorkForm from './forms/WorkForm';
 import ContributorsForm from './forms/ContributorsForm';
 import RelationsForm from './forms/RelationsForm';
@@ -10,11 +11,10 @@ import DescriptionsForm from './forms/DescriptionsForm';
 import IdentifiersForm from './forms/IdentifiersForm';
 import MeasuresForm from './forms/MeasuresForm';
 import RelationsListing from './forms/RelationsListing';
-
-import { ListItemIcon, ListItemText } from '@material-ui/core/List';
-import ExpansionPanel, {
-  ExpansionPanelSummary
-} from '@material-ui/core/ExpansionPanel';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 import AttachFileIcon from '@material-ui/icons/AttachFile';
