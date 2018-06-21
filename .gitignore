@@ -3,8 +3,8 @@ api/lib
 api/include
 api/share
 api/.pytest_cache
-api/caleido.egg-info
-api/caleido/__pycache__
+api/idris.egg-info
+api/idris/__pycache__
 api/tests/__pycache__
 api/.tox
 api/.cache
@@ -13,3 +13,5 @@ web/node_modules
 web/dist
 web/.env*
 web/package-lock.json
+api/idris/views/__pycache__/
+api/pip-selfcheck.json
