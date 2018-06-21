@@ -3,9 +3,9 @@ from operator import itemgetter
 import colander
 from cornice import Service
 
-from caleido.security import authenticator_factory
-from caleido.utils import OKStatus
-from caleido.resources import TypeResource
+from idris.security import authenticator_factory
+from idris.utils import OKStatus
+from idris.resources import TypeResource
 
 class ClientSchema(colander.MappingSchema):
     status = OKStatus
@@ -131,7 +131,7 @@ def client_config(request):
                    'types': []},
                   ]
         }
-    dev_user_id = request.registry.settings.get('caleido.debug_dev_user')
+    dev_user_id = request.registry.settings.get('idris.debug_dev_user')
     if dev_user_id:
         auth_context = authenticator_factory(request)
         principals = auth_context.principals(dev_user_id)

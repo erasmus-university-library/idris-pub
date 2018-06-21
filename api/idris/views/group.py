@@ -1,5 +1,5 @@
 import colander
-
+import sqlalchemy as sql
 from sqlalchemy import func
 from sqlalchemy.orm import Load
 
@@ -7,11 +7,11 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from caleido.models import Person, Membership, Group, Contributor
-from caleido.resources import ResourceFactory, PersonResource
+from idris.models import Group, Membership, Affiliation
+from idris.resources import ResourceFactory, GroupResource
 
-from caleido.exceptions import StorageError
-from caleido.utils import (ErrorResponseSchema,
+from idris.exceptions import StorageError
+from idris.utils import (ErrorResponseSchema,
                            StatusResponseSchema,
                            OKStatusResponseSchema,
                            OKStatus,
@@ -19,38 +19,35 @@ from caleido.utils import (ErrorResponseSchema,
                            colander_bound_repository_body_validator)
 
 @colander.deferred
-def deferred_account_type_validator(node, kw):
-    types = kw['repository'].type_config('person_account_type')
+def deferred_group_type_validator(node, kw):
+    types = kw['repository'].type_config('group_type')
     return colander.OneOf([t['key'] for t in types])
 
 @colander.deferred
-def deferred_position_type_validator(node, kw):
-    types = kw['repository'].type_config('position_type')
+def deferred_account_type_validator(node, kw):
+    types = kw['repository'].type_config('group_account_type')
     return colander.OneOf([t['key'] for t in types])
 
-
-def person_validator(node, kw):
-    if not kw.get('given_name') and not kw.get('initials'):
-        node.name = '%s.given_name' % node.name
-        raise colander.Invalid(
-            node, "Required: supply either 'initials' or 'given_name'")
-
-class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
-    def __init__(self, *args, **kwargs):
-        kwargs['validator'] = person_validator
-        super(PersonSchema, self).__init__(*args, **kwargs)
-
+class GroupSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     id = colander.SchemaNode(colander.Int())
+    type = colander.SchemaNode(colander.String(),
+                               validator=deferred_group_type_validator)
     name = colander.SchemaNode(colander.String(),
                                 missing=colander.drop)
-    family_name = colander.SchemaNode(colander.String())
-    family_name_prefix = colander.SchemaNode(colander.String(),
-                                             missing=None)
-    given_name = colander.SchemaNode(colander.String(), missing=None)
-    initials = colander.SchemaNode(colander.String(), missing=None)
-    alternative_name = colander.SchemaNode(colander.String(), missing=None)
-    honorary = colander.SchemaNode(colander.String(), missing=None)
-
+    international_name = colander.SchemaNode(colander.String())
+    native_name = colander.SchemaNode(colander.String(),
+                                      missing=colander.drop)
+    abbreviated_name = colander.SchemaNode(colander.String(),
+                                           missing=colander.drop)
+    location = colander.SchemaNode(colander.String(),
+                                   missing=colander.drop)
+    start_date = colander.SchemaNode(colander.Date(),
+                                     missing=colander.drop)
+    end_date = colander.SchemaNode(colander.Date(),
+                                   missing=colander.drop)
+    parent_id = colander.SchemaNode(colander.Int(), missing=colander.drop)
+    _parent_name = colander.SchemaNode(colander.String(),
+                                       missing=colander.drop)
 
     @colander.instantiate(missing=colander.drop)
     class accounts(colander.SequenceSchema):
@@ -60,44 +57,14 @@ class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                                        validator=deferred_account_type_validator)
             value = colander.SchemaNode(colander.String())
 
-    @colander.instantiate(missing=colander.drop)
-    class memberships(colander.SequenceSchema):
-        @colander.instantiate()
-        class membership(colander.MappingSchema):
-            group_id = colander.SchemaNode(colander.Integer())
-            _group_name = colander.SchemaNode(colander.String(),
-                                              missing=colander.drop)
-            start_date = colander.SchemaNode(colander.Date(),
-                                             missing=colander.drop)
-            end_date = colander.SchemaNode(colander.Date(),
-                                           missing=colander.drop)
-
-
-    @colander.instantiate(missing=colander.drop)
-    class positions(colander.SequenceSchema):
-        @colander.instantiate()
-        class position(colander.MappingSchema):
-            group_id = colander.SchemaNode(colander.Integer())
-            _group_name = colander.SchemaNode(colander.String(),
-                                              missing=colander.drop)
-            type = colander.SchemaNode(colander.String(),
-                                       validator=deferred_position_type_validator)
-            description = colander.SchemaNode(colander.String(),
-                                              missing=colander.drop)
-
-            start_date = colander.SchemaNode(colander.Date(),
-                                             missing=colander.drop)
-            end_date = colander.SchemaNode(colander.Date(),
-                                           missing=colander.drop)
-
-class PersonPostSchema(PersonSchema):
-    # similar to person schema, but id is optional
+class GroupPostSchema(GroupSchema):
+    # similar to group schema, but id is optional
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
 
-class PersonResponseSchema(colander.MappingSchema):
-    body = PersonSchema()
+class GroupResponseSchema(colander.MappingSchema):
+    body = GroupSchema()
 
-class PersonListingResponseSchema(colander.MappingSchema):
+class GroupListingResponseSchema(colander.MappingSchema):
     @colander.instantiate()
     class body(colander.MappingSchema):
         status = OKStatus
@@ -107,7 +74,7 @@ class PersonListingResponseSchema(colander.MappingSchema):
 
         @colander.instantiate()
         class records(colander.SequenceSchema):
-            person = PersonSchema()
+            group = GroupSchema()
 
         @colander.instantiate()
         class snippets(colander.SequenceSchema):
@@ -115,22 +82,19 @@ class PersonListingResponseSchema(colander.MappingSchema):
             class snippet(colander.MappingSchema):
                 id = colander.SchemaNode(colander.Int())
                 name = colander.SchemaNode(colander.String())
-                memberships = colander.SchemaNode(colander.Int())
+                type = colander.SchemaNode(colander.String())
+                members = colander.SchemaNode(colander.Int())
                 works = colander.SchemaNode(colander.Int())
 
-                @colander.instantiate()
-                class groups(colander.SequenceSchema):
-                    @colander.instantiate()
-                    class group(colander.MappingSchema):
-                        id = colander.SchemaNode(colander.Int())
-                        name = colander.SchemaNode(colander.String())
-
-
-class PersonListingRequestSchema(colander.MappingSchema):
+class GroupListingRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
         query = colander.SchemaNode(colander.String(),
                                     missing=colander.drop)
+        filter_type = colander.SchemaNode(colander.String(),
+                                          missing=colander.drop)
+        filter_parent = colander.SchemaNode(colander.Int(),
+                                            missing=colander.drop)
         offset = colander.SchemaNode(colander.Int(),
                                    default=0,
                                    validator=colander.Range(min=0),
@@ -144,7 +108,7 @@ class PersonListingRequestSchema(colander.MappingSchema):
             validator=colander.OneOf(['record', 'snippet']),
             missing=colander.drop)
 
-class PersonSearchRequestSchema(colander.MappingSchema):
+class GroupSearchRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
         query = colander.SchemaNode(colander.String(),
@@ -158,46 +122,45 @@ class PersonSearchRequestSchema(colander.MappingSchema):
                                     validator=colander.Range(0, 100),
                                     missing=20)
 
-class PersonBulkRequestSchema(colander.MappingSchema):
+class GroupBulkRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class records(colander.SequenceSchema):
-        person = PersonSchema()
+        group = GroupSchema()
 
-@resource(name='Person',
-          collection_path='/api/v1/person/records',
-          path='/api/v1/person/records/{id}',
-          tags=['person'],
+@resource(name='Group',
+          collection_path='/api/v1/group/records',
+          path='/api/v1/group/records/{id}',
+          tags=['group'],
           cors_origins=('*', ),
           api_security=[{'jwt':[]}],
-          factory=ResourceFactory(PersonResource))
-class PersonRecordAPI(object):
+          factory=ResourceFactory(GroupResource))
+class GroupRecordAPI(object):
     def __init__(self, request, context):
         self.request = request
         self.context = context
 
     @view(permission='view',
           response_schemas={
-        '200': PersonResponseSchema(description='Ok'),
+        '200': GroupResponseSchema(description='Ok'),
         '401': ErrorResponseSchema(description='Unauthorized'),
         '403': ErrorResponseSchema(description='Forbidden'),
         '404': ErrorResponseSchema(description='Not Found'),
         })
     def get(self):
-        "Retrieve a Person"
-        return PersonSchema().to_json(self.context.model.to_dict())
+        "Retrieve a Group"
+        return GroupSchema().to_json(self.context.model.to_dict())
 
     @view(permission='edit',
-          schema=PersonSchema(),
+          schema=GroupSchema(),
           validators=(colander_bound_repository_body_validator,),
-          cors_origins=('*', ),
           response_schemas={
-        '200': PersonResponseSchema(description='Ok'),
+        '200': GroupResponseSchema(description='Ok'),
         '401': ErrorResponseSchema(description='Unauthorized'),
         '403': ErrorResponseSchema(description='Forbidden'),
         '404': ErrorResponseSchema(description='Not Found'),
         })
     def put(self):
-        "Modify a Person"
+        "Modify an Group"
         body = self.request.validated
         body['id'] = int(self.request.matchdict['id'])
         self.context.model.update_dict(body)
@@ -207,7 +170,7 @@ class PersonRecordAPI(object):
             self.request.errors.status = 400
             self.request.errors.add('body', err.location, str(err))
             return
-        return PersonSchema().to_json(self.context.model.to_dict())
+        return GroupSchema().to_json(self.context.model.to_dict())
 
 
     @view(permission='delete',
@@ -218,73 +181,89 @@ class PersonRecordAPI(object):
         '404': ErrorResponseSchema(description='Not Found'),
         })
     def delete(self):
-        "Delete an Person"
+        "Delete an Group"
         self.context.delete()
         return {'status': 'ok'}
 
     @view(permission='add',
-          schema=PersonPostSchema(),
+          schema=GroupPostSchema(),
           validators=(colander_bound_repository_body_validator,),
-          cors_origins=('*', ),
           response_schemas={
-        '201': PersonResponseSchema(description='Created'),
+        '201': GroupResponseSchema(description='Created'),
         '400': ErrorResponseSchema(description='Bad Request'),
         '401': ErrorResponseSchema(description='Unauthorized'),
         '403': ErrorResponseSchema(description='Forbidden'),
         })
     def collection_post(self):
-        "Create a new Person"
-        person = Person.from_dict(self.request.validated)
+        "Create a new Group"
+        group = Group.from_dict(self.request.validated)
         try:
-            self.context.put(person)
+            self.context.put(group)
         except StorageError as err:
             self.request.errors.status = 400
             self.request.errors.add('body', err.location, str(err))
             return
-
         self.request.response.status = 201
-        return PersonSchema().to_json(person.to_dict())
+        return GroupSchema().to_json(group.to_dict())
 
 
     @view(permission='view',
-          schema=PersonListingRequestSchema(),
+          schema=GroupListingRequestSchema(),
           validators=(colander_validator),
           cors_origins=('*', ),
           response_schemas={
-        '200': PersonListingResponseSchema(description='Ok'),
+        '200': GroupListingResponseSchema(description='Ok'),
         '400': ErrorResponseSchema(description='Bad Request'),
         '401': ErrorResponseSchema(description='Unauthorized')})
     def collection_get(self):
         offset = self.request.validated['querystring']['offset']
         limit = self.request.validated['querystring']['limit']
-        order_by = [Person.family_name.asc(), Person.name.asc()]
+        order_by = [Group.name.asc()]
         format = self.request.validated['querystring'].get('format')
         if format == 'record':
             format = None
         query = self.request.validated['querystring'].get('query')
         filters = []
         if query:
-            filters.append(Person.search_terms.match(query))
+            filters.append(Group.name.ilike('%%%s%%' % query))
+        filter_type = self.request.validated['querystring'].get('filter_type')
+        if filter_type:
+            filter_types = filter_type.split(',')
+            filters.append(sql.or_(*[Group.type == f for f in filter_types]))
+        filter_parent = self.request.validated['querystring'].get('filter_parent')
+        if filter_parent:
+            filters.append(Group.parent_id == filter_parent)
+
         from_query=None
         query_callback = None
         if format == 'snippet':
-            from_query = self.context.session.query(Person)
+            from_query = self.context.session.query(Group)
             from_query = from_query.options(
-                Load(Person).load_only('id', 'name')).group_by(Person.id,
-                                                               Person.name)
+                Load(Group).load_only('id',
+                                      'type',
+                                      'name')).group_by(Group.id,
+                                                        Group.type,
+                                                        Group.name)
+
+
 
             def query_callback(from_query):
-                filtered_persons = from_query.cte('filtered_persons')
+                filtered_groups = from_query.cte('filtered_groups')
                 with_memberships = self.context.session.query(
-                    filtered_persons,
-                    func.count(Membership.id.distinct()).label('membership_count'),
-                    func.array_agg(Group.id.distinct()).label('group_ids'),
-                    func.array_agg(Group.name.distinct()).label('group_names'),
-                    func.count(Contributor.work_id.distinct()).label('work_count')
-                    ).outerjoin(Contributor).outerjoin(Membership).outerjoin(
-                    Group).group_by(filtered_persons.c.id,
-                                    filtered_persons.c.name)
-                return with_memberships.order_by(filtered_persons.c.name)
+                    filtered_groups,
+                    func.count(Membership.id.distinct()).label('membership_count')
+                    ).outerjoin(Membership).group_by(filtered_groups.c.id,
+                                                     filtered_groups.c.type,
+                                                     filtered_groups.c.name)
+                filtered_memberships = with_memberships.order_by(
+                    filtered_groups.c.name).cte('memberships')
+                with_work_counts = self.context.session.query(
+                    filtered_memberships,
+                    func.count(Affiliation.work_id.distinct()).label('work_count'),
+                    ).outerjoin(Affiliation).group_by(filtered_memberships)
+                return with_work_counts
+
+
 
         listing = self.context.search(
             filters=filters,
@@ -295,7 +274,7 @@ class PersonRecordAPI(object):
             from_query=from_query,
             post_query_callback=query_callback,
             principals=self.request.effective_principals)
-        schema = PersonSchema()
+        schema = GroupSchema()
         result = {'total': listing['total'],
                   'records': [],
                   'snippets': [],
@@ -306,38 +285,33 @@ class PersonRecordAPI(object):
         if format == 'snippet':
             snippets = []
             for hit in listing['hits']:
-                groups = [{'id': i[0], 'name': i[1]} for i in
-                           zip(hit.group_ids, hit.group_names)]
-                snippets.append(
-                    {'id': hit.id,
-                     'name': hit.name,
-                     'groups': groups,
-                     'works': hit.work_count,
-                     'memberships': hit.membership_count})
+                snippets.append({'id': hit.id,
+                                 'name': hit.name,
+                                 'type': hit.type,
+                                 'works': hit.work_count,
+                                 'members': hit.membership_count})
             result['snippets'] = snippets
         else:
-            result['records'] = [schema.to_json(person.to_dict())
-                                 for person in listing['hits']]
+            result['records'] = [schema.to_json(group.to_dict())
+                                 for group in listing['hits']]
 
         return result
 
-
-
-person_bulk = Service(name='PersonBulk',
-                     path='/api/v1/person/bulk',
-                     factory=ResourceFactory(PersonResource),
+group_bulk = Service(name='GroupBulk',
+                     path='/api/v1/group/bulk',
+                     factory=ResourceFactory(GroupResource),
                      api_security=[{'jwt':[]}],
-                     tags=['person'],
+                     tags=['group'],
                      cors_origins=('*', ),
-                     schema=PersonBulkRequestSchema(),
+                     schema=GroupBulkRequestSchema(),
                      validators=(colander_bound_repository_body_validator,),
                      response_schemas={
     '200': OKStatusResponseSchema(description='Ok'),
     '400': ErrorResponseSchema(description='Bad Request'),
     '401': ErrorResponseSchema(description='Unauthorized')})
 
-@person_bulk.post(permission='import')
-def person_bulk_import_view(request):
+@group_bulk.post(permission='import')
+def group_bulk_import_view(request):
     # get existing resources from submitted bulk
     keys = [r['id'] for r in request.validated['records'] if r.get('id')]
     existing_records = {r.id:r for r in request.context.get_many(keys) if r}
@@ -353,39 +327,39 @@ def person_bulk_import_view(request):
     request.response.status = 201
     return {'status': 'ok'}
 
-person_search = Service(name='PersonSearch',
-                     path='/api/v1/person/search',
-                     factory=ResourceFactory(PersonResource),
+group_search = Service(name='GroupSearch',
+                     path='/api/v1/group/search',
+                     factory=ResourceFactory(GroupResource),
                      api_security=[{'jwt':[]}],
-                     tags=['person'],
+                     tags=['group'],
                      cors_origins=('*', ),
-                     schema=PersonSearchRequestSchema(),
+                     schema=GroupSearchRequestSchema(),
                      validators=(colander_validator,),
                      response_schemas={
     '200': OKStatusResponseSchema(description='Ok'),
     '400': ErrorResponseSchema(description='Bad Request'),
     '401': ErrorResponseSchema(description='Unauthorized')})
 
-@person_search.get(permission='search')
-def person_search_view(request):
+@group_search.get(permission='search')
+def group_search_view(request):
     offset = request.validated['querystring']['offset']
     limit = request.validated['querystring']['limit']
-    order_by = [Person.name.asc()]
+    order_by = [Group.name.asc()]
     query = request.validated['querystring'].get('query')
     filters = []
     if query:
-        filters.append(Person.search_terms.match(query))
-    from_query = request.context.session.query(Person)
+        filters.append(Group.name.ilike('%%%s%%' % query))
+    from_query = request.context.session.query(Group)
     from_query = from_query.options(
-        Load(Person).load_only('id', 'name'))
+        Load(Group).load_only('id', 'name'))
 
     def query_callback(from_query):
-        filtered_persons = from_query.cte('filtered_persons')
+        filtered_groups = from_query.cte('filtered_groups')
         with_memberships = request.context.session.query(
-            filtered_persons,
+            filtered_groups,
             func.count(Membership.id).label('membership_count')
-            ).outerjoin(Membership).group_by(filtered_persons.c.id,
-                                             filtered_persons.c.name)
+            ).outerjoin(Membership).group_by(filtered_groups.c.id,
+                                             filtered_groups.c.name)
         return with_memberships
 
     # allow search listing with editor principals
@@ -400,20 +374,11 @@ def person_search_view(request):
         principals=['group:editor'])
     snippets = []
     for hit in listing['hits']:
-        if hit.membership_count == 0:
-            info = ''
-        elif hit.membership_count == 1:
-            info = '1 membership'
-        else:
-            info = '%s memberships' % hit.membership_count
-
         snippets.append({'id': hit.id,
                          'name': hit.name,
-                         'info': info,
                          'members': hit.membership_count})
     return {'total': listing['total'],
             'snippets': snippets,
             'limit': limit,
             'offset': offset,
             'status': 'ok'}
-

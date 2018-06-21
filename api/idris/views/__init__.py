@@ -7,7 +7,7 @@ from cornice.service import get_services
 from pyramid.view import view_config
 from cornice_swagger import CorniceSwagger
 from cornice_swagger.converters import TypeConversionDispatcher
-from caleido.utils import colander_bound_repository_body_validator
+from idris.utils import colander_bound_repository_body_validator
 
 # Create a service to serve our OpenAPI spec
 swagger = Service(name='OpenAPI',
@@ -30,7 +30,7 @@ class TypeConverterWithDeferredSupport(TypeConversionDispatcher):
 
     The deferreds get access to the repository config object in the
     validator similar to the arguments used when being bound by
-    `caleido.utils.colander_bound_repository_body_validator`
+    `idris.utils.colander_bound_repository_body_validator`
     """
 
     deferred_args = {}
@@ -61,13 +61,13 @@ def openAPI_v1_spec(request):
                 'in': 'header',
                 'name': 'Authorization'}}
         }
-    my_spec = doc.generate('Caleido API',
+    my_spec = doc.generate('Idris API',
                            '1.0.0',
                            swagger=extra_fields)
     return my_spec
 
 
 @view_config(route_name='swagger_ui',
-             renderer='caleido:templates/swagger.pt')
+             renderer='idris:templates/swagger.pt')
 def swagger_ui_view(request):
     return {'swagger_api_url': request.route_url('OpenAPI')}

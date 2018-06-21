@@ -2,11 +2,11 @@ import colander
 from cornice.resource import resource, view
 from cornice.validators import colander_body_validator, colander_validator
 
-from caleido.models import User
-from caleido.resources import ResourceFactory, UserResource
+from idris.models import User
+from idris.resources import ResourceFactory, UserResource
 
-from caleido.exceptions import StorageError
-from caleido.utils import (ErrorResponseSchema,
+from idris.exceptions import StorageError
+from idris.utils import (ErrorResponseSchema,
                            StatusResponseSchema,
                            OKStatus,
                            JsonMappingSchemaSerializerMixin)

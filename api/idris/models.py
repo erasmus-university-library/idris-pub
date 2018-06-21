@@ -26,7 +26,7 @@ from sqlalchemy.dialects.postgresql import JSON, TSVECTOR
 from sqlalchemy.orm.attributes import set_attribute
 Base = declarative_base()
 
-from caleido.utils import parse_duration
+from idris.utils import parse_duration
 
 class WorkType(Base):
     __tablename__ = 'work_type_schemes'

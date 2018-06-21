@@ -3,8 +3,8 @@ from cornice.resource import resource, view
 from cornice.validators import colander_body_validator, colander_validator
 from pyramid.httpexceptions import HTTPNotFound
 
-from caleido.utils import ErrorResponseSchema
-from caleido.resources import TypeResource
+from idris.utils import ErrorResponseSchema
+from idris.resources import TypeResource
 
 def type_factory(request):
     if not 'id' in request.matchdict:
@@ -128,4 +128,3 @@ class SettingsAPI(object):
         settings = self.request.json
         self.request.repository.update_settings(settings)
         return self.request.repository.settings
-

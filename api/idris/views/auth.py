@@ -9,8 +9,8 @@ from pyramid.interfaces import IAuthenticationPolicy
 from cornice import Service
 from cornice.validators import colander_body_validator
 
-from caleido.security import authenticator_factory
-from caleido.utils import ErrorResponseSchema, OKStatus
+from idris.security import authenticator_factory
+from idris.utils import ErrorResponseSchema, OKStatus
 
 class AuthLoginSchema(colander.MappingSchema):
     user = colander.SchemaNode(colander.String())
@@ -123,4 +123,3 @@ def notfound_view(request):
                                 'description': description or 'Not Found',
                                 'location': 'request'}]}).encode('utf8'))
     return response
-

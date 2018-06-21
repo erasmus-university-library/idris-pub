@@ -1,5 +1,5 @@
-from caleido.models import User
-from caleido.resources import GroupResource
+from idris.models import User
+from idris.resources import GroupResource
 
 def add_role_principals(userid, request):
     return request.jwt_claims.get('principals') or []

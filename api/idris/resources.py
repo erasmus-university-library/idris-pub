@@ -12,12 +12,12 @@ from sqlalchemy import func
 import sqlalchemy.exc
 import transaction
 
-from caleido.models import (
+from idris.models import (
     User, Person, Group, GroupType, GroupAccountType, PersonAccountType,
     Membership, Work, WorkType, Contributor, ContributorRole, Affiliation,
     IdentifierType, MeasureType, DescriptionType, DescriptionFormat, Blob,
     RelationType, Relation, PositionType)
-from caleido.exceptions import StorageError
+from idris.exceptions import StorageError
 
 class ResourceFactory(object):
     def __init__(self, resource_class):

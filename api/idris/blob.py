@@ -7,7 +7,7 @@ import base64
 
 from zope.interface import implementer
 
-from caleido.interfaces import IBlobStoreBackend, IBlobTransform
+from idris.interfaces import IBlobStoreBackend, IBlobTransform
 
 class BlobStore(object):
     def __init__(self, backend):
@@ -63,7 +63,7 @@ class LocalBlobStore(object):
     def __init__(self, repo_config):
         self.repository = repo_config
         self._path = self._get_root_path(
-            repo_config.registry.settings['caleido.blob_path'])
+            repo_config.registry.settings['idris.blob_path'])
 
     def _get_root_path(self, path):
         if path.startswith('/'):

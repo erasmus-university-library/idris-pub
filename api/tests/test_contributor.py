@@ -3,7 +3,7 @@ import os
 import transaction
 
 from core import BaseTest
-from caleido.models import User
+from idris.models import User
 
 class ContributorWebTest(BaseTest):
     def setUp(self):

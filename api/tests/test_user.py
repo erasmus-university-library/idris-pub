@@ -5,8 +5,8 @@ import pytest
 import transaction
 from pyramid.httpexceptions import HTTPForbidden
 
-from caleido.models import User
-from caleido.resources import UserResource
+from idris.models import User
+from idris.resources import UserResource
 
 from core import BaseTest
 
@@ -81,7 +81,7 @@ class UserAuthWebTest(BaseTest):
         decoded_token['exp'] = 0
         # encode the token again
         token = jwt.encode(decoded_token,
-                           self.app_settings()['caleido.secret'],
+                           self.app_settings()['idris.secret'],
                            algorithm='HS512').decode('utf8')
         # now let's try to retrieve the admin user, it should result in 403
         self.api.get('/api/v1/user/records/1',

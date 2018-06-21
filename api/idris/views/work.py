@@ -10,11 +10,11 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from caleido.models import Work, Contributor, Affiliation, Person, Group
-from caleido.resources import ResourceFactory, WorkResource, GroupResource
+from idris.models import Work, Contributor, Affiliation, Person, Group
+from idris.resources import ResourceFactory, WorkResource, GroupResource
 
-from caleido.exceptions import StorageError
-from caleido.utils import (ErrorResponseSchema,
+from idris.exceptions import StorageError
+from idris.utils import (ErrorResponseSchema,
                            StatusResponseSchema,
                            OKStatusResponseSchema,
                            OKStatus,
@@ -560,4 +560,3 @@ def work_search_view(request):
             'limit': limit,
             'offset': offset,
             'status': 'ok'}
-

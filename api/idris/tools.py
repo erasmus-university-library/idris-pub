@@ -3,8 +3,8 @@ import os
 import json
 
 from pyramid.paster import get_appsettings
-from caleido import main
-from caleido.models import Person, Group, Work
+from idris import main
+from idris.models import Person, Group, Work
 import transaction
 import sqlalchemy as sql
 import sqlalchemy.dialects.postgresql  as postgresql
@@ -108,5 +108,3 @@ def bigquery_schema():
     schema.append({'name': 'modified', 'type': 'datetime'})
 
     print(json.dumps(schema))
-
-

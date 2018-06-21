@@ -8,11 +8,11 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from caleido.models import Blob
-from caleido.resources import ResourceFactory, BlobResource
+from idris.models import Blob
+from idris.resources import ResourceFactory, BlobResource
 
-from caleido.exceptions import StorageError
-from caleido.utils import (ErrorResponseSchema,
+from idris.exceptions import StorageError
+from idris.utils import (ErrorResponseSchema,
                            StatusResponseSchema,
                            OKStatus,
                            JsonMappingSchemaSerializerMixin,

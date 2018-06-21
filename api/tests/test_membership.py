@@ -4,7 +4,7 @@ import unittest
 import transaction
 
 from core import BaseTest
-from caleido.models import User
+from idris.models import User
 
 class MembershipWebTest(BaseTest):
     def setUp(self):

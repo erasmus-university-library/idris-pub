@@ -1,7 +1,7 @@
 import transaction
 
 from core import BaseTest
-from caleido.models import User
+from idris.models import User
 
 class PersonWebTest(BaseTest):
 
@@ -355,4 +355,3 @@ class PersonRetrievalWebTest(PersonWebTest):
             headers=headers, status=200)
         assert out.json['total'] == 1
         assert len(out.json.get('snippets', [])) == 1
-

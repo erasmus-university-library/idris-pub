@@ -8,39 +8,75 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from caleido.models import Membership, Person, Group, Contributor
-from caleido.resources import ResourceFactory, MembershipResource, GroupResource
+from idris.models import Contributor, Person, Group
+from idris.resources import ResourceFactory, ContributorResource, GroupResource
 
-from caleido.exceptions import StorageError
-from caleido.utils import (ErrorResponseSchema,
+from idris.exceptions import StorageError
+from idris.utils import (ErrorResponseSchema,
                            StatusResponseSchema,
                            OKStatusResponseSchema,
                            OKStatus,
                            JsonMappingSchemaSerializerMixin,
                            colander_bound_repository_body_validator,
                            )
+@colander.deferred
+def deferred_contributor_role_validator(node, kw):
+    types = kw['repository'].type_config('contributor_role')
+    return colander.OneOf([t['key'] for t in types])
 
-class MembershipSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
+def contributor_validator(node, kw):
+    if not kw.get('group_id') and not kw.get('person_id'):
+        node.name = '%s.person_id' % node.name
+        raise colander.Invalid(
+            node, "Required: supply either 'person_id' or 'group_id'")
+
+
+class ContributorSchema(colander.MappingSchema,
+                        JsonMappingSchemaSerializerMixin):
+    def __init__(self, *args, **kwargs):
+        kwargs['validator'] = contributor_validator
+        super(ContributorSchema, self).__init__(*args, **kwargs)
+
     id = colander.SchemaNode(colander.Int())
-    person_id = colander.SchemaNode(colander.Int())
+    role = colander.SchemaNode(colander.String(),
+                               validator=deferred_contributor_role_validator)
+
+    person_id = colander.SchemaNode(colander.Int(), missing=None)
     _person_name = colander.SchemaNode(colander.String(),
                                        missing=colander.drop)
-    group_id = colander.SchemaNode(colander.Int())
+    group_id = colander.SchemaNode(colander.Int(), missing=None)
     _group_name = colander.SchemaNode(colander.String(),
                                       missing=colander.drop)
+    work_id = colander.SchemaNode(colander.Int())
+    _work_name = colander.SchemaNode(colander.String(),
+                                     missing=colander.drop)
     start_date = colander.SchemaNode(colander.Date(),
                                      missing=colander.drop)
     end_date = colander.SchemaNode(colander.Date(),
                                    missing=colander.drop)
+    location = colander.SchemaNode(colander.String(), missing=None)
+    position = colander.SchemaNode(colander.Int())
 
-class MembershipPostSchema(MembershipSchema):
-    # similar to membership schema, but id is optional
+
+    @colander.instantiate(missing=colander.drop)
+    class affiliations(colander.SequenceSchema):
+        @colander.instantiate()
+        class affiliation(colander.MappingSchema):
+            id = colander.SchemaNode(colander.Int())
+            group_id = colander.SchemaNode(colander.Int())
+            _group_name = colander.SchemaNode(colander.String(),
+                                      missing=colander.drop)
+            position = colander.SchemaNode(colander.Int())
+
+
+class ContributorPostSchema(ContributorSchema):
+    # similar to contributor schema, but id is optional
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
 
-class MembershipResponseSchema(colander.MappingSchema):
-    body = MembershipSchema()
+class ContributorResponseSchema(colander.MappingSchema):
+    body = ContributorSchema()
 
-class MembershipListingResponseSchema(colander.MappingSchema):
+class ContributorListingResponseSchema(colander.MappingSchema):
     @colander.instantiate()
     class body(colander.MappingSchema):
         status = OKStatus
@@ -50,29 +86,21 @@ class MembershipListingResponseSchema(colander.MappingSchema):
 
         @colander.instantiate()
         class records(colander.SequenceSchema):
-            membership = MembershipSchema()
+            contributor = ContributorSchema()
 
         @colander.instantiate()
         class snippets(colander.SequenceSchema):
             @colander.instantiate()
             class snippet(colander.MappingSchema):
                 person_id = colander.SchemaNode(colander.Int())
+                role = colander.SchemaNode(colander.String())
                 person_name = colander.SchemaNode(colander.String())
-                works = colander.SchemaNode(colander.Int())
+                group_id = colander.SchemaNode(colander.Int())
+                group_name = colander.SchemaNode(colander.String())
+                work_id = colander.SchemaNode(colander.Int())
+                work_name = colander.SchemaNode(colander.String())
 
-                @colander.instantiate()
-                class groups(colander.SequenceSchema):
-                    @colander.instantiate()
-                    class group(colander.MappingSchema):
-                        group_id = colander.SchemaNode(colander.Int())
-                        group_name = colander.SchemaNode(colander.String())
-
-                earliest = colander.SchemaNode(colander.Date(),
-                                                 missing=colander.drop)
-                latest = colander.SchemaNode(colander.Date(),
-                                             missing=colander.drop)
-
-class MembershipListingRequestSchema(colander.MappingSchema):
+class ContributorListingRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
         offset = colander.SchemaNode(colander.Int(),
@@ -89,56 +117,52 @@ class MembershipListingRequestSchema(colander.MappingSchema):
                                         missing=colander.drop)
         group_id = colander.SchemaNode(colander.Int(),
                                        missing=colander.drop)
-        transitive = colander.SchemaNode(colander.Boolean(),
-                                       missing=False)
-        start_date = colander.SchemaNode(colander.Date(),
-                                         missing=colander.drop)
-        end_date = colander.SchemaNode(colander.Date(),
-                                       missing=colander.drop)
+        work_id = colander.SchemaNode(colander.Int(),
+                                      missing=colander.drop)
         format = colander.SchemaNode(
             colander.String(),
             validator=colander.OneOf(['record', 'snippet']),
             missing=colander.drop)
 
-class MembershipBulkRequestSchema(colander.MappingSchema):
+class ContributorBulkRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class records(colander.SequenceSchema):
-        membership = MembershipSchema()
+        contributor = ContributorSchema()
 
-@resource(name='Membership',
-          collection_path='/api/v1/membership/records',
-          path='/api/v1/membership/records/{id}',
-          tags=['membership'],
+@resource(name='Contributor',
+          collection_path='/api/v1/contributor/records',
+          path='/api/v1/contributor/records/{id}',
+          tags=['contributor'],
           cors_origins=('*', ),
           api_security=[{'jwt':[]}],
-          factory=ResourceFactory(MembershipResource))
-class MembershipRecordAPI(object):
+          factory=ResourceFactory(ContributorResource))
+class ContributorRecordAPI(object):
     def __init__(self, request, context):
         self.request = request
         self.context = context
 
     @view(permission='view',
           response_schemas={
-        '200': MembershipResponseSchema(description='Ok'),
+        '200': ContributorResponseSchema(description='Ok'),
         '401': ErrorResponseSchema(description='Unauthorized'),
         '403': ErrorResponseSchema(description='Forbidden'),
         '404': ErrorResponseSchema(description='Not Found'),
         })
     def get(self):
-        "Retrieve a Membership"
-        return MembershipSchema().to_json(self.context.model.to_dict())
+        "Retrieve a Contributor"
+        return ContributorSchema().to_json(self.context.model.to_dict())
 
     @view(permission='edit',
-          schema=MembershipSchema(),
+          schema=ContributorSchema(),
           validators=(colander_bound_repository_body_validator,),
           response_schemas={
-        '200': MembershipResponseSchema(description='Ok'),
+        '200': ContributorResponseSchema(description='Ok'),
         '401': ErrorResponseSchema(description='Unauthorized'),
         '403': ErrorResponseSchema(description='Forbidden'),
         '404': ErrorResponseSchema(description='Not Found'),
         })
     def put(self):
-        "Modify a Membership"
+        "Modify a Contributor"
         body = self.request.validated
         body['id'] = int(self.request.matchdict['id'])
         self.context.model.update_dict(body)
@@ -148,7 +172,7 @@ class MembershipRecordAPI(object):
             self.request.errors.status = 400
             self.request.errors.add('body', err.location, str(err))
             return
-        return MembershipSchema().to_json(self.context.model.to_dict())
+        return ContributorSchema().to_json(self.context.model.to_dict())
 
 
     @view(permission='delete',
@@ -159,39 +183,39 @@ class MembershipRecordAPI(object):
         '404': ErrorResponseSchema(description='Not Found'),
         })
     def delete(self):
-        "Delete an Membership"
+        "Delete a Contributor"
         self.context.delete()
         return {'status': 'ok'}
 
     @view(permission='add',
-          schema=MembershipPostSchema(),
+          schema=ContributorPostSchema(),
           validators=(colander_bound_repository_body_validator,),
           response_schemas={
-        '201': MembershipResponseSchema(description='Created'),
+        '201': ContributorResponseSchema(description='Created'),
         '400': ErrorResponseSchema(description='Bad Request'),
         '401': ErrorResponseSchema(description='Unauthorized'),
         '403': ErrorResponseSchema(description='Forbidden'),
         })
     def collection_post(self):
-        "Create a new Membership"
-        membership = Membership.from_dict(self.request.validated)
+        "Create a new Contributor"
+        contributor = Contributor.from_dict(self.request.validated)
         try:
-            self.context.put(membership)
+            self.context.put(contributor)
         except StorageError as err:
             self.request.errors.status = 400
             self.request.errors.add('body', err.location, str(err))
             return
 
         self.request.response.status = 201
-        return MembershipSchema().to_json(membership.to_dict())
+        return ContributorSchema().to_json(contributor.to_dict())
 
 
     @view(permission='view',
-          schema=MembershipListingRequestSchema(),
+          schema=ContributorListingRequestSchema(),
           validators=(colander_validator),
           cors_origins=('*', ),
           response_schemas={
-        '200': MembershipListingResponseSchema(description='Ok'),
+        '200': ContributorListingResponseSchema(description='Ok'),
         '400': ErrorResponseSchema(description='Bad Request'),
         '401': ErrorResponseSchema(description='Unauthorized')})
     def collection_get(self):
@@ -200,17 +224,15 @@ class MembershipRecordAPI(object):
         limit = qs['limit']
         person_id = qs.get('person_id')
         group_id = qs.get('group_id')
+        work_id = qs.get('group_id')
         format = qs.get('format')
         order_by = []
         query = qs.get('query')
         filters = []
         if person_id:
-            filters.append(Membership.person_id == person_id)
-        if qs.get('start_date') or qs.get('end_date'):
-            duration = DateInterval([qs.get('start_date'),
-                                     qs.get('end_date')])
-            filters.append(Membership.during.op('&&')(duration))
-
+            filters.append(Contributor.person_id == person_id)
+        if work_id:
+            filters.append(Contributor.work_id == work_id)
         if group_id:
             if qs['transitive']:
                 # find
@@ -218,9 +240,9 @@ class MembershipRecordAPI(object):
                 group_ids.extend(ResourceFactory(GroupResource)(
                     self.request, group_id).child_groups())
                 filters.append(
-                    sql.or_(*[Membership.group_id == g for g in group_ids]))
+                    sql.or_(*[Contributor.group_id == g for g in group_ids]))
             else:
-                filters.append(Membership.group_id == group_id)
+                filters.append(Contributor.group_id == group_id)
 
 
         cte_total = None
@@ -229,28 +251,7 @@ class MembershipRecordAPI(object):
         if format == 'record':
             format = None
         elif format == 'snippet':
-            from_query = self.context.session.query(Membership)
-            def query_callback(from_query):
-                filtered_members = from_query.cte('filtered_members')
-                with_members = self.context.session.query(
-                    func.min(func.coalesce(func.lower(filtered_members.c.during),
-                                           datetime.date(1900, 1, 1))).label('earliest'),
-                    func.max(func.coalesce(func.upper(filtered_members.c.during),
-                                           datetime.date(2100, 1, 1))).label('latest'),
-                    func.count(filtered_members.c.id.distinct()).label('memberships'),
-                    func.count(Contributor.work_id.distinct()).label('works'),
-                    func.array_agg(Group.id.distinct()).label('group_ids'),
-                    func.array_agg(Group.name.distinct()).label('group_names'),
-                    func.max(filtered_members.c.id).label('id'),
-                    Person.id.label('person_id'),
-                    Person.name.label('person_name')).join(
-                    Person).join(Group).outerjoin(Person.contributors)
-                if query and group_id:
-                    with_members = with_members.filter(
-                        Person.family_name.ilike('%%%s%%' % query))
-                with_members = with_members.group_by(Person.id,
-                                                     Person.name)
-                return with_members.order_by(Person.name)
+            from_query = self.context.session.query(Contributor)
 
         listing = self.context.search(
             from_query=from_query,
@@ -261,7 +262,7 @@ class MembershipRecordAPI(object):
             post_query_callback=query_callback,
             apply_limits_post_query={'snippet': True}.get(format, False),
             principals=self.request.effective_principals)
-        schema = MembershipSchema()
+        schema = ContributorSchema()
         result = {'total': listing['total'] or cte_total,
                   'records': [],
                   'snippets': [],
@@ -272,92 +273,37 @@ class MembershipRecordAPI(object):
         if format == 'snippet':
             snippets = []
             for hit in listing['hits']:
-                #start_date, end_date = parse_duration(hit.during,
-                #                                      format='%Y-%m-%d')
-                earliest = hit.earliest
-                if earliest:
-                    if earliest.year == 1900:
-                        earliest = None
-                    else:
-                        earliest = earliest.strftime('%Y-%m-%d')
-
-                latest = hit.latest
-                if latest:
-                    if latest.year == 2100:
-                        latest = None
-                    else:
-                        latest = latest.strftime('%Y-%m-%d')
-
-                groups = [{'id': i[0], 'name': i[1]} for i in
-                          zip(hit.group_ids, hit.group_names)]
-
                 snippets.append({'id': hit.id,
                                  'person_id': hit.person_id,
                                  'person_name': hit.person_name,
-                                 'groups': groups,
-                                 'earliest': earliest,
-                                 'latest': latest,
-                                 'works': hit.works,
-                                 'memberships': hit.memberships})
+                                 'group_id': hit.group_id,
+                                 'group_name': hit.group_name,
+                                 'work_id': hit.work_id,
+                                 'work_name': hit.work_name})
             result['snippets'] = snippets
         else:
-            result['records'] = [schema.to_json(person.to_dict())
-                                 for person in listing['hits']]
+            result['records'] = [schema.to_json(contributor.to_dict())
+                                 for contributor in listing['hits']]
 
         return result
 
-membership_listing = Service(name='MembershipListing',
-                     path='/api/v1/membership/listing',
-                     factory=ResourceFactory(MembershipResource),
+
+
+contributor_bulk = Service(name='ContributorBulk',
+                     path='/api/v1/contributor/bulk',
+                     factory=ResourceFactory(ContributorResource),
                      api_security=[{'jwt':[]}],
-                     tags=['membership'],
+                     tags=['contributor'],
                      cors_origins=('*', ),
-                     schema=MembershipListingRequestSchema(),
-                     validators=(colander_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
-
-@membership_listing.get(permission='view')
-def membership_listing_view(request):
-    qs = request.validated['querystring']
-    params = dict(offset = qs['offset'],
-                  limit = qs['limit'],
-                  text_query = qs.get('query'),
-                  order_by = qs.get('order_by'),
-                  start_date = qs.get('start_date'),
-                  end_date = qs.get('end_date'),
-                  principals=request.effective_principals)
-
-    if qs.get('person_id'):
-        params['person_ids'] = [qs['person_id']]
-    if qs.get('group_id'):
-        params['group_ids'] = [qs['group_id']]
-        params['group_ids'].extend(ResourceFactory(GroupResource)(
-            request, qs['group_id']).child_groups())
-
-    result = request.context.listing(**params)
-    result['snippets'] = result.pop('hits')
-    result['status'] = 'ok'
-    return result
-
-
-membership_bulk = Service(name='MembershipBulk',
-                     path='/api/v1/membership/bulk',
-                     factory=ResourceFactory(MembershipResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['membership'],
-                     cors_origins=('*', ),
-                     schema=MembershipBulkRequestSchema(),
+                     schema=ContributorBulkRequestSchema(),
                      validators=(colander_bound_repository_body_validator,),
                      response_schemas={
     '200': OKStatusResponseSchema(description='Ok'),
     '400': ErrorResponseSchema(description='Bad Request'),
     '401': ErrorResponseSchema(description='Unauthorized')})
 
-@membership_bulk.post(permission='import')
-def membership_bulk_import_view(request):
+@contributor_bulk.post(permission='import')
+def contributor_bulk_import_view(request):
     # get existing resources from submitted bulk
     keys = [r['id'] for r in request.validated['records'] if r.get('id')]
     existing_records = {r.id:r for r in request.context.get_many(keys) if r}

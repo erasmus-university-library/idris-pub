@@ -5,9 +5,9 @@ from sqlalchemy.schema import CreateSchema, DropSchema
 import zope.sqlalchemy
 import transaction
 
-from caleido.interfaces import IBlobStoreBackend
-from caleido.blob import BlobStore
-from caleido.models import (Base,
+from idris.interfaces import IBlobStoreBackend
+from idris.blob import BlobStore
+from idris.models import (Base,
                             Repository,
                             User, UserGroup,
                             GroupType,
@@ -64,7 +64,7 @@ DEFAULTS = {
     'group_account_types': {'email': 'email',
                             'local': 'Local',
                             'wikipedia': 'Wikipedia'},
-    'repository_settings': {'title': 'Caleido'}}
+    'repository_settings': {'title': 'Idris'}}
 
 class Storage(object):
     schema_version = '0.1'
@@ -225,7 +225,7 @@ class RepositoryConfig(object):
     def blob(self):
         backend = self.registry.queryUtility(
             IBlobStoreBackend,
-            self.registry.settings['caleido.blob_storage'])
+            self.registry.settings['idris.blob_storage'])
         return BlobStore(backend(self))
 
     def update_settings(self, settings):
@@ -272,7 +272,7 @@ def includeme(config):
     """
     Initialize the model for a Pyramid app.
 
-    Activate this setup using ``config.include('caleido.models')``.
+    Activate this setup using ``config.include('idris.models')``.
 
     """
     settings = config.get_settings()
@@ -300,21 +300,21 @@ def includeme(config):
         repository = session.query(Repository).filter(Repository.vhost_name == host).first()
         if repository:
             request.environ[
-                'caleido.repository.namespace'] = repository.namespace
+                'idris.repository.namespace'] = repository.namespace
             request.environ[
-                'caleido.repository.config_revision'] = repository.config_revision
+                'idris.repository.config_revision'] = repository.config_revision
             request.environ[
-                'caleido.repository.settings'] = repository.settings
+                'idris.repository.settings'] = repository.settings
             session.execute(
                 'SET search_path TO %s, public' % repository.namespace);
         return session
 
     def new_repository(request):
         session = request.dbsession
-        namespace = request.environ['caleido.repository.namespace']
-        rev = request.environ['caleido.repository.config_revision']
+        namespace = request.environ['idris.repository.namespace']
+        rev = request.environ['idris.repository.config_revision']
 
-        repo_settings = request.environ['caleido.repository.settings']
+        repo_settings = request.environ['idris.repository.settings']
 
         api_host_url = '%s://%s' % (request.scheme, request.host)
         if request.server_port != 80:

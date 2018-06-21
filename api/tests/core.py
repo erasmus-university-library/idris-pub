@@ -4,21 +4,21 @@ import transaction
 from pyramid import testing
 from webtest import TestApp as WebTestApp
 
-from caleido import main
-from caleido.storage import Storage
-from caleido.models import User, Owner
-from caleido.resources import UserResource
+from idris import main
+from idris.storage import Storage
+from idris.models import User, Owner
+from idris.resources import UserResource
 
 class BaseTest(unittest.TestCase):
 
     def app_settings(self):
         return {
-            'caleido.secret': 'sekret',
-            'caleido.blob_path': '/tmp/caleido.files',
-            'caleido.blob_storage': 'local',
-            'caleido.blob_api': 'http://unittest.localhost/api/v1/blob/upload/',
+            'idris.secret': 'sekret',
+            'idris.blob_path': '/tmp/idris.files',
+            'idris.blob_storage': 'local',
+            'idris.blob_api': 'http://unittest.localhost/api/v1/blob/upload/',
             'sqlalchemy.url': (
-                'postgresql://caleido:c4l31d0@localhost/caleido')
+                'postgresql://idris:c4l31d0@localhost/idris')
         }
 
     def setUp(self):
@@ -70,5 +70,3 @@ class BaseTest(unittest.TestCase):
     def tearDown(self):
         testing.tearDown()
         transaction.abort()
-
-
