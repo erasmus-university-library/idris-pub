@@ -1,16 +1,21 @@
 import os
 from setuptools import setup, find_packages
 
+VERSION = 0.1
+
 here = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(os.path.dirname(here), 'README.rst')) as f:
-    README = f.read()
+try:
+    with open(os.path.join(os.path.dirname(here), 'README.rst')) as f:
+        README = f.read()
+except FileNotFoundError:
+    README = 'Idris v%s' % VERSION
 with open(os.path.join(here, 'requirements.txt')) as f:
     REQUIREMENTS = f.read().splitlines()
 
 
 setup(name='idris',
-      version=0.1,
+      version=VERSION,
       description='Idris',
       long_description=README,
       classifiers=[
