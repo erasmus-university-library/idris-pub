@@ -26,6 +26,15 @@ module.exports = {
         }
       },
       {
+	test: /\.(png|svg|csl|xml)$/,
+	use: [
+	  {
+	    loader: 'file-loader',
+	    options: {}
+	  }
+	]
+      },
+      {
         test: /\.html$/,
         use: ["html-loader"]
       },
@@ -58,7 +67,7 @@ module.exports = {
     extensions: [".js", ".jsx"]
   },
   devServer: {contentBase: __dirname + '/src',
-	      publicPath: '/',
+	      publicPath: '/edit/',
               allowedHosts: ['.localhost']},
   devtool: 'source-map'
 };

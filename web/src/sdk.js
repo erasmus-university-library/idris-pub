@@ -6,6 +6,10 @@ const htmlToReactParser = new HtmlToReactParser();
 let sdk_client = null;
 let citeproc_client = null;
 
+import locale_file from '../public/csl/locales/locales-en-US.xml';
+import style_file from '../public/csl/styles/apa.csl';
+
+
 export class CiteProc {
     constructor() {
         if (!citeproc_client){
@@ -26,14 +30,14 @@ export class CiteProc {
 
             }
             this.citations = citations;
-            fetch('/csl/styles/apa.csl').then(
+            fetch(style_file).then(
                 function(response) {
                     return response.text();
                 }).then(function(body){
                     sys.style = body;
                 });
 
-            fetch('/csl/locales/locales-en-US.xml').then(
+            fetch(locale_file).then(
                 function(response) {
                     return response.text();
                 }).then(function(body){

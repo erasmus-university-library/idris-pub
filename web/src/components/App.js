@@ -36,6 +36,8 @@ import { getAppHeader, getSideBarOpen, getFlashMessage, getErrorMessage, getAppS
 import { openSideBar, closeSideBar, initializeApp, flashMessage, errorMessage, setRedirectURL,
          setUser, updateLoginState, doLogin } from '../actions';
 
+import logo_img from '../../public/eur_logo.svg';
+
 
 const styles = {
   root: {
@@ -217,7 +219,7 @@ class App extends Component {
                     }}>
               <div className={classes.drawerHeader}>
                 <div>
-                    <img src="/eur_logo.svg" alt="logo" style={{height:48}}/>
+                    <img src={logo_img} alt="logo" style={{height:48}}/>
                     <IconButton onClick={this.handleDrawerClose} align="right"><ChevronLeftIcon /></IconButton>
                 </div>
                 <div style={{display:'inline-flex', width:'100%'}}>
