@@ -21,6 +21,10 @@ You can start the client using::
 
     npm start
 
+Create a build with::
+
+    npm run-script build
+
 Note that there are no further dependencies on Node.js, the resulting javascript is pure client side.
 
 Running the Backend API
