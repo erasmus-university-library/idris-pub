@@ -1,8 +1,8 @@
 import { createAction } from 'redux-actions';
 import { stopSubmit } from 'redux-form';
 
-import CaleidoSDK from './sdk.js';
-const sdk = new CaleidoSDK();
+import IdrisSDK from './sdk.js';
+const sdk = new IdrisSDK();
 
 export const changeAppHeader = createAction('UI_UPDATE', (title, icon, seeAlsoURL, seeAlsoName) => ({title,
                                                                                                     icon: icon || null,

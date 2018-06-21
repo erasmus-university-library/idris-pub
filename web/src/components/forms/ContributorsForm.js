@@ -39,8 +39,8 @@ import Select from '@material-ui/core/Select';
 import { mappedTextField, mappedSelect, mappedRelationField } from '../widgets/mapping.js';
 import styles from './formStyles.js';
 
-import CaleidoSDK from '../../sdk.js';
-const sdk = new CaleidoSDK();
+import IdrisSDK from '../../sdk.js';
+const sdk = new IdrisSDK();
 
 
 @withStyles(styles, { withTheme: true })

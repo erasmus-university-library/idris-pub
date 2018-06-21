@@ -13,8 +13,8 @@ import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import { Link } from 'react-router-dom';
 
 
-import CaleidoSDK from '../../sdk.js';
-const sdk = new CaleidoSDK();
+import IdrisSDK from '../../sdk.js';
+const sdk = new IdrisSDK();
 
 
 const styles = theme => ({

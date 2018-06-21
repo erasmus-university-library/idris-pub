@@ -1,20 +1,17 @@
 .. highlight:: rst
 
-Caleido, a Research Intelligence platform
+Idris, a Research Intelligence platform
 =========================================
-
-.. image:: https://travis-ci.org/jascoul/caleido-client.svg?branch=master
-    :target: https://travis-ci.org/jascoul/caleido-client
 
 This is a work-in-progress, research project from Erasmus University Library Rotterdam.
 
-Setting up Caleido-Client
+Setting up Idris-Client
 -------------------------
 
 * Install npm
 * Clone the repository, install dependencies::
 
-    git clone https://github.com/jascoul/caleido-client.git
+    git clone https://github.com/jascoul/idris-client.git
     npm install
 
 Running the Client
@@ -29,12 +26,11 @@ Note that there are no further dependencies on Node.js, the resulting javascript
 Running the Backend API
 -----------------------
 
-The client connects to the Caleido backend API: https://github.com/jascoul/caleido
+The client connects to the Idris backend API: https://github.com/jascoul/idris-pub/api
 
 
 * Start the development webserver::
 
-    pserve caleido.ini
+    pserve idris.ini
 
 * Visit the API browser at http://localhost:6543/api/swagger.html
-

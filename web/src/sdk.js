@@ -71,7 +71,7 @@ export class CiteProc {
 }
 
 
-export class CaleidoSDK {
+export class IdrisSDK {
     constructor() {
         if (!sdk_client){
             this.token = null;
@@ -169,4 +169,4 @@ export class CaleidoSDK {
     }
 }
 
-export default CaleidoSDK
+export default IdrisSDK
