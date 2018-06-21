@@ -3,20 +3,20 @@
 Idris, a Research Intelligence platform
 =========================================
 
-.. image:: https://travis-ci.org/jascoul/idris.svg?branch=master
-    :target: https://travis-ci.org/jascoul/idris
+.. image:: https://travis-ci.org/jascoul/idris-pub.svg?branch=master
+    :target: https://travis-ci.org/jascoul/idris-pub
 
 This is a work-in-progress, research project from Erasmus University Library Rotterdam.
 
-Setting up Idris
-------------------
+Setting up Idris API
+--------------------
 
 * Install Python3.4 or newer
 * Install PostgreSQL 9.5 or newer
 * Clone the repository, create a virtualenv, install dependencies::
 
     git clone https://github.com/jascoul/idris.git
-    cd idris
+    cd idris/api
     virtualenv --python=python3 .
     source bin/activate
     pip install -e .
