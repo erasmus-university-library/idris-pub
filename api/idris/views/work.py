@@ -110,8 +110,6 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             _target_name = colander.SchemaNode(colander.String(),
                                                missing=colander.drop)
 
-
-
     @colander.instantiate(missing=colander.drop)
     class relations(colander.SequenceSchema):
         @colander.instantiate()
@@ -137,7 +135,6 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             description = colander.SchemaNode(colander.String(), missing=None)
             location = colander.SchemaNode(colander.String(), missing=None)
             number = colander.SchemaNode(colander.String(), missing=None)
-
 
     @colander.instantiate(missing=colander.drop)
     class contributors(colander.SequenceSchema):
@@ -170,13 +167,14 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                                                    missing=colander.drop)
 
 
-
 class WorkPostSchema(WorkSchema):
     # similar to group schema, but id is optional
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
 
+
 class WorkResponseSchema(colander.MappingSchema):
     body = WorkSchema()
+
 
 class WorkListingResponseSchema(colander.MappingSchema):
     @colander.instantiate()
@@ -213,6 +211,7 @@ class WorkListingResponseSchema(colander.MappingSchema):
                         id = colander.SchemaNode(colander.Int())
                         name = colander.SchemaNode(colander.String())
 
+
 class WorkListingRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
@@ -243,6 +242,7 @@ class WorkListingRequestSchema(colander.MappingSchema):
             validator=colander.OneOf(['snippet', 'csl']),
             missing=colander.drop)
 
+
 class WorkSearchRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
@@ -259,42 +259,46 @@ class WorkSearchRequestSchema(colander.MappingSchema):
                                     validator=colander.Range(0, 100),
                                     missing=20)
 
+
 class WorkBulkRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class records(colander.SequenceSchema):
         work = WorkSchema()
+
 
 @resource(name='Work',
           collection_path='/api/v1/work/records',
           path='/api/v1/work/records/{id}',
           tags=['work'],
           cors_origins=('*', ),
-          api_security=[{'jwt':[]}],
+          api_security=[{'jwt': []}],
           factory=ResourceFactory(WorkResource))
 class WorkRecordAPI(object):
     def __init__(self, request, context):
         self.request = request
         self.context = context
 
-    @view(permission='view',
-          response_schemas={
-        '200': WorkResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
+    @view(
+        permission='view',
+        response_schemas={
+            '200': WorkResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found'),
         })
     def get(self):
         "Retrieve a Work"
         return WorkSchema().to_json(self.context.model.to_dict())
 
-    @view(permission='edit',
-          schema=WorkSchema(),
-          validators=(colander_bound_repository_body_validator,),
-          response_schemas={
-        '200': WorkResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
+    @view(
+        permission='edit',
+        schema=WorkSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        response_schemas={
+            '200': WorkResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found'),
         })
     def put(self):
         "Modify a Work"
@@ -309,28 +313,29 @@ class WorkRecordAPI(object):
             return
         return WorkSchema().to_json(self.context.model.to_dict())
 
-
-    @view(permission='delete',
-          response_schemas={
-        '200': StatusResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
+    @view(
+        permission='delete',
+        response_schemas={
+            '200': StatusResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found'),
         })
     def delete(self):
         "Delete a Work"
         self.context.delete()
         return {'status': 'ok'}
 
-    @view(permission='add',
-          schema=WorkPostSchema(),
-          validators=(colander_bound_repository_body_validator,),
-          response_schemas={
-        '201': WorkResponseSchema(description='Created'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        })
+    @view(
+        permission='add',
+        schema=WorkPostSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        response_schemas={
+            '201': WorkResponseSchema(description='Created'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden')}
+    )
     def collection_post(self):
         "Create a new Work"
         work = Work.from_dict(self.request.validated)
@@ -344,15 +349,15 @@ class WorkRecordAPI(object):
         self.request.response.status = 201
         return WorkSchema().to_json(work.to_dict())
 
-
-    @view(permission='view',
-          schema=WorkListingRequestSchema(),
-          validators=(colander_validator),
-          cors_origins=('*', ),
-          response_schemas={
-        '200': WorkListingResponseSchema(description='Ok'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized')})
+    @view(
+        permission='view',
+        schema=WorkListingRequestSchema(),
+        validators=(colander_validator),
+        cors_origins=('*', ),
+        response_schemas={
+            '200': WorkListingResponseSchema(description='Ok'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
     def collection_get(self):
         qs = self.request.validated['querystring']
         offset = qs['offset']
@@ -372,7 +377,7 @@ class WorkRecordAPI(object):
             filter_types = filter_type.split(',')
             filters.append(sql.or_(*[Work.type == f for f in filter_types]))
 
-        from_query=None
+        from_query = None
         listing = self.context.search(
             filters=filters,
             offset=offset,
@@ -391,24 +396,26 @@ class WorkRecordAPI(object):
                   'status': 'ok'}
         return result
 
-work_bulk = Service(name='WorkBulk',
-                     path='/api/v1/work/bulk',
-                     factory=ResourceFactory(WorkResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['work'],
-                     cors_origins=('*', ),
-                     schema=WorkBulkRequestSchema(),
-                     validators=(colander_bound_repository_body_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
+work_bulk = Service(
+    name='WorkBulk',
+    path='/api/v1/work/bulk',
+    factory=ResourceFactory(WorkResource),
+    api_security=[{'jwt': []}],
+    tags=['work'],
+    cors_origins=('*', ),
+    schema=WorkBulkRequestSchema(),
+    validators=(colander_bound_repository_body_validator,),
+    response_schemas={'200': OKStatusResponseSchema(description='Ok'),
+                      '400': ErrorResponseSchema(description='Bad Request'),
+                      '401': ErrorResponseSchema(description='Unauthorized')})
+
 
 @work_bulk.post(permission='import')
 def work_bulk_import_view(request):
     # get existing resources from submitted bulk
     keys = [r['id'] for r in request.validated['records'] if r.get('id')]
-    existing_records = {r.id:r for r in request.context.get_many(keys) if r}
+    existing_records = {
+        r.id: r for r in request.context.get_many(keys) if r}
     models = []
     for record in request.validated['records']:
         if record['id'] in existing_records:
@@ -421,29 +428,32 @@ def work_bulk_import_view(request):
     request.response.status = 201
     return {'status': 'ok'}
 
-work_listing = Service(name='WorkListing',
-                     path='/api/v1/work/listing',
-                     factory=ResourceFactory(WorkResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['work'],
-                     cors_origins=('*', ),
-                     schema=WorkListingRequestSchema(),
-                     validators=(colander_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
+
+work_listing = Service(
+    name='WorkListing',
+    path='/api/v1/work/listing',
+    factory=ResourceFactory(WorkResource),
+    api_security=[{'jwt': []}],
+    tags=['work'],
+    cors_origins=('*', ),
+    schema=WorkListingRequestSchema(),
+    validators=(colander_validator,),
+    response_schemas={
+        '200': OKStatusResponseSchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
+
 
 @work_listing.get(permission='view')
 def work_listing_view(request):
     qs = request.validated['querystring']
-    params = dict(offset = qs['offset'],
-                  limit = qs['limit'],
-                  text_query = qs.get('query'),
-                  order_by = qs.get('order_by'),
-                  start_date = qs.get('start_date'),
-                  end_date = qs.get('end_date'),
-                  type = qs.get('filter_type'),
+    params = dict(offset=qs['offset'],
+                  limit=qs['limit'],
+                  text_query=qs.get('query'),
+                  order_by=qs.get('order_by'),
+                  start_date=qs.get('start_date'),
+                  end_date=qs.get('end_date'),
+                  type=qs.get('filter_type'),
                   principals=request.effective_principals)
     if qs.get('contributor_person_id'):
         params['contributor_person_ids'] = [qs['contributor_person_id']]
@@ -485,7 +495,8 @@ def work_listing_view(request):
             type = 'book'
         elif 'article' in item['type'].lower():
             type = 'article-journal'
-        elif 'paper' in item['type'].lower() or 'report' in item['type'].lower():
+        elif ('paper' in item['type'].lower() or
+              'report' in item['type'].lower()):
             type = 'report'
 
         journal = {}
@@ -520,18 +531,20 @@ def work_listing_view(request):
     result['status'] = 'ok'
     return result
 
-work_search = Service(name='WorkSearch',
-                     path='/api/v1/work/search',
-                     factory=ResourceFactory(WorkResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['work'],
-                     cors_origins=('*', ),
-                     schema=WorkSearchRequestSchema(),
-                     validators=(colander_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
+work_search = Service(
+    name='WorkSearch',
+    path='/api/v1/work/search',
+    factory=ResourceFactory(WorkResource),
+    api_security=[{'jwt': []}],
+    tags=['work'],
+    cors_origins=('*', ),
+    schema=WorkSearchRequestSchema(),
+    validators=(colander_validator,),
+    response_schemas={
+        '200': OKStatusResponseSchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
+
 
 @work_search.get(permission='search')
 def work_search_view(request):
