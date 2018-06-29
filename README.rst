@@ -42,6 +42,6 @@ Starting the API server
 
 * Start the development webserver::
 
-    pserve idris.ini
+    gunicorn --paste idris.ini
 
 * Visit the API browser at http://localhost:6543/api/swagger.html
