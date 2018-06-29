@@ -49,7 +49,7 @@ Starting the API server
 Building the Editor Client
 --------------------------
 
-* Go to the web directory, install dependencies, build the dist folder::
+* Go to the web directory, install dependencies, build a distributable version::
 
     cd web
     npm install
