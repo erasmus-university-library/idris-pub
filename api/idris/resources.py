@@ -563,6 +563,11 @@ class WorkResource(BaseResource):
             for contributor in hit.contributors:
                 if contributor['person_id'] in contributor_role_ids:
                     roles.add(contributor['role'])
+                if contributors and contributors[-1]['position'] == contributor['position']:
+                    # same contributor as previous one, (but other affiliation
+                    # it's hard to remove this with a distinct clause in the json agg,
+                    # so we remove it here
+                    continue
                 contributors.append(contributor)
             affiliations = []
             for affiliation in hit.affiliations:

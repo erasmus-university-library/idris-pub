@@ -21,40 +21,48 @@ from idris.utils import (ErrorResponseSchema,
                            JsonMappingSchemaSerializerMixin,
                            colander_bound_repository_body_validator)
 
+
 @colander.deferred
 def deferred_work_type_validator(node, kw):
     types = kw['repository'].type_config('work_type')
     return colander.OneOf([t['key'] for t in types])
+
 
 @colander.deferred
 def deferred_identifier_type_validator(node, kw):
     types = kw['repository'].type_config('identifier_type')
     return colander.OneOf([t['key'] for t in types])
 
+
 @colander.deferred
 def deferred_contributor_role_validator(node, kw):
     types = kw['repository'].type_config('contributor_role')
     return colander.OneOf([t['key'] for t in types])
+
 
 @colander.deferred
 def deferred_relation_type_validator(node, kw):
     types = kw['repository'].type_config('relation_type')
     return colander.OneOf([t['key'] for t in types])
 
+
 @colander.deferred
 def deferred_description_type_validator(node, kw):
     types = kw['repository'].type_config('description_type')
     return colander.OneOf([t['key'] for t in types])
+
 
 @colander.deferred
 def deferred_description_format_validator(node, kw):
     types = kw['repository'].type_config('description_format')
     return colander.OneOf([t['key'] for t in types])
 
+
 @colander.deferred
 def deferred_measure_type_validator(node, kw):
     types = kw['repository'].type_config('measure_type')
     return colander.OneOf([t['key'] for t in types])
+
 
 class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     id = colander.SchemaNode(colander.Int())
