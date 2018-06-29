@@ -9,6 +9,7 @@ from zope.interface import implementer
 
 from idris.interfaces import IBlobStoreBackend, IBlobTransform
 
+
 class BlobStore(object):
     def __init__(self, backend):
         self.backend = backend
@@ -36,7 +37,8 @@ class BlobStore(object):
         if not self.backend.blob_exists(blob.model.blob_key):
             return False
         if not blob.model.checksum:
-            blob.model.checksum = self.backend.blob_checksum(blob.model.blob_key)
+            blob.model.checksum = self.backend.blob_checksum(
+                blob.model.blob_key)
             blob.model.finalize = True
             blob.put()
         return True
@@ -56,6 +58,7 @@ class BlobStore(object):
         transformer(blob).execute(self.backend.local_path(blob.model.blob_key))
         blob.model.transform_name = transformer.name
         blob.put()
+
 
 @implementer(IBlobStoreBackend)
 class LocalBlobStore(object):
@@ -84,7 +87,6 @@ class LocalBlobStore(object):
             os.makedirs(directory)
         return os.path.join(directory, blob_key)
 
-
     def blob_exists(self, blob_key):
         "Determine if a blob exists in the filesystem"
         return os.path.isfile(self._blob_key_path(blob_key))
@@ -105,7 +107,6 @@ class LocalBlobStore(object):
             response.body = fp.read()
         return response
 
-
     def receive_blob(self, request, blob):
         path = self._blob_key_path(blob.model.blob_key, makedirs=True)
         with open(path, 'wb') as fp:
@@ -113,9 +114,11 @@ class LocalBlobStore(object):
         blob.model.checksum = hashlib.md5(request.body).hexdigest()
         blob.put()
 
+
 @implementer(IBlobTransform)
 class PDFTransform(object):
     name = 'PDFTransform 1.0'
+
     def __init__(self, blob):
         self.blob = blob
 
@@ -139,7 +142,7 @@ class PDFTransform(object):
                                  jpg_file, thumb_file])
         output = open(jpg_file, 'rb').read()
         os.remove(jpg_file)
-        thumb =  open(thumb_file, 'rb').read()
+        thumb = open(thumb_file, 'rb').read()
         os.remove(thumb_file)
         return output, thumb
 
@@ -152,7 +155,7 @@ class PDFTransform(object):
         result = {}
         output = self._call_with_timeout('pdfinfo', [path]).decode('utf8')
         for line in output.splitlines():
-            if not ':' in line:
+            if ':' not in line:
                 continue
             key, value = line.split(':', 1)
             key = key.strip()
@@ -174,11 +177,14 @@ class PDFTransform(object):
         retval = p.wait()
         if retval != 0:
             raise ValueError('Running "%s" returned status %s: %s' % (
-                command,retval, p.stderr.read()))
+                command, retval, p.stderr.read()))
         return output
 
+
 def includeme(config):
-    config.registry.registerUtility(LocalBlobStore, IBlobStoreBackend, 'local')
+    config.registry.registerUtility(LocalBlobStore,
+                                    IBlobStoreBackend,
+                                    'local')
     config.registry.registerUtility(PDFTransform,
                                     IBlobTransform,
                                     'application/pdf')

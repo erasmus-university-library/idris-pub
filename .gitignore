@@ -15,3 +15,4 @@ web/.env*
 web/package-lock.json
 api/idris/views/__pycache__/
 api/pip-selfcheck.json
+web/src/components/.tern-port

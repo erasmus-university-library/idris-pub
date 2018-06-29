@@ -76,87 +76,89 @@ const styles = {
 @withStyles(styles)
 class App extends Component {
 
-    theme = null;
+  theme = null;
 
-    componentDidMount() {
-        this.props.initializeApp();
-    }
+  componentDidMount() {
+    this.props.initializeApp();
+  }
 
-    toggleSideBar = () => {
-        if (this.props.sideBarOpen) {
-            this.props.closeSideBar();
-        } else {
-            this.props.openSideBar();
-        }
+  toggleSideBar = () => {
+    if (this.props.sideBarOpen) {
+      this.props.closeSideBar();
+    } else {
+      this.props.openSideBar();
     }
+  }
 
   handleDrawerClose = () => {
-      this.props.closeSideBar();
+    this.props.closeSideBar();
   }
 
   handleFlashClose = () => {
-      this.props.flashMessage(null);
+    this.props.flashMessage(null);
   }
   handleErrorClose = () => {
-      this.props.errorMessage(null);
+    this.props.errorMessage(null);
   }
 
   renderFlash(){
-      const { classes, flash} = this.props;
-      return <Snackbar anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-          }}
-          open={flash !== null}
-          autoHideDuration={3000}
-          onClose={this.handleFlashClose}
-          ContentProps={{
-            'aria-describedby': 'message-id',
-          }}
-          message={<span id="message-id">{flash}</span>}
-          action={[
-            <IconButton
-              key="close"
-              aria-label="Close"
-              color="inherit"
-              className={classes.close}
-              onClick={this.handleFlashClose}
-            >
-              <CloseIcon />
-            </IconButton>,
-          ]}
-        />
-  }
-  renderError(){
-      const { classes, error} = this.props;
-      return <Snackbar anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-          }}
-          open={error !== null}
-          autoHideDuration={3000}
-          onClose={this.handleErrorClose}
-          ContentProps={{
-            'aria-describedby': 'message-id',
-          }}
-          message={<span id="message-id">{error}</span>}
-          action={[
-            <IconButton
-              key="close"
-              aria-label="Close"
-              color="inherit"
-              className={classes.close}
-              onClick={this.handleErrorClose}
-            >
-              <CloseIcon />
-            </IconButton>,
-          ]}
-        />
+    const { classes, flash} = this.props;
+    return (
+      <Snackbar anchorOrigin={{vertical: 'bottom',
+			       horizontal: 'left',
+		}}
+                open={flash !== null}
+		autoHideDuration={3000}
+		onClose={this.handleFlashClose}
+		ContentProps={{
+		  'aria-describedby': 'message-id',
+		}}
+		message={<span id="message-id">{flash}</span>}
+		action={[
+		    <IconButton
+			 key="close"
+			 aria-label="Close"
+			 color="inherit"
+			 className={classes.close}
+			 onClick={this.handleFlashClose}
+			 >
+			<CloseIcon />
+		      </IconButton>,
+		]}
+        />);
   }
 
-    logOut = () => {
-        this.props.setUser({user:null, token:null});
-    }
+  renderError(){
+    const { classes, error} = this.props;
+    return (
+      <Snackbar anchorOrigin={{
+		  vertical: 'top',
+		  horizontal: 'center',
+		}}
+		open={error !== null}
+		autoHideDuration={3000}
+		onClose={this.handleErrorClose}
+		ContentProps={{
+		  'aria-describedby': 'message-id',
+		}}
+		message={<span id="message-id">{error}</span>}
+		action={[
+		    <IconButton
+			 key="close"
+			 aria-label="Close"
+			 color="inherit"
+			 className={classes.close}
+			 onClick={this.handleErrorClose}
+			 >
+			<CloseIcon />
+		      </IconButton>,
+		]}
+        />);
+  }
+
+  logOut = () => {
+    this.props.setUser({user:null, token:null});
+  }
 
     render() {
       const { classes, header, sideBarOpen, isInitialized, customTheme,
