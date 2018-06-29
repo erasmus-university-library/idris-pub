@@ -1,17 +1,25 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
-import Card, { CardContent } from '@material-ui/core/Card';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
 import Paper from '@material-ui/core/Paper';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import Input, { InputLabel, InputAdornment } from '@material-ui/core/Input';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
 import FormControl from '@material-ui/core/FormControl';
 import SearchIcon from '@material-ui/icons/Search';
 import IconButton from '@material-ui/core/IconButton';
-import Table, { TableBody, TableCell, TableHead, TableRow,
-                TableFooter, TablePagination } from '@material-ui/core/Table';
-import { MenuItem } from '@material-ui/core/Menu';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableFooter from '@material-ui/core/TableFooter';
+import TablePagination from '@material-ui/core/TablePagination';
+import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
 import Citation from '../widgets/Citation';
@@ -125,7 +133,7 @@ class RelationsListing extends Component {
               <em>None</em>
             </MenuItem>
             {settings.type.map(workType => (
-            <MenuItem value={workType.id}>{workType.label}</MenuItem>
+              <MenuItem key={workType.id} value={workType.id}>{workType.label}</MenuItem>
             ))}
           </Select>
         </FormControl>
