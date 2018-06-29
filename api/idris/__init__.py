@@ -1,5 +1,6 @@
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
+from pyramid.httpexceptions import HTTPFound
 
 from idris.security import add_role_principals
 
@@ -21,7 +22,15 @@ def main(global_config, **settings):
                                          callback=add_role_principals)
 
     config.scan("idris.views")
+
+    config.add_route('api_without_slash', '/api')
+    config.add_view(lambda _, __: HTTPFound('/api/'),
+                    route_name='api_without_slash')
     config.add_static_view('api', path='idris:static/dist/swagger')
+
+    config.add_route('edit_without_slash', '/edit')
+    config.add_view(lambda _, __: HTTPFound('/edit/'),
+                route_name='edit_without_slash')
     config.add_static_view('edit', path='idris:static/dist/web')
 
     return config.make_wsgi_app()
