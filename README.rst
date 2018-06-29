@@ -44,4 +44,15 @@ Starting the API server
 
     gunicorn --paste idris.ini
 
-* Visit the API browser at http://localhost:6543/api/swagger.html
+* Visit the API browser at http://localhost:6543/api/
+
+Building the Editor Client
+--------------------------
+
+* Go to the web directory, install dependencies, build the dist folder::
+
+    cd web
+    npm install
+    npm run-script build
+
+* Visit the Editor client at http://localhost:6543/edit/

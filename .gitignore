@@ -16,3 +16,4 @@ web/package-lock.json
 api/idris/views/__pycache__/
 api/pip-selfcheck.json
 *.tern-port
+api/idris/static/dist/web

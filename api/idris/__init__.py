@@ -20,8 +20,8 @@ def main(global_config, **settings):
                                          expiration=3600,
                                          callback=add_role_principals)
 
-    config.add_route('swagger_ui', '/api/swagger.html')
     config.scan("idris.views")
     config.add_static_view('api', path='idris:static/dist/swagger')
+    config.add_static_view('edit', path='idris:static/dist/web')
 
     return config.make_wsgi_app()

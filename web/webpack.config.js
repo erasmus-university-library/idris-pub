@@ -9,7 +9,7 @@ const htmlWebpackPlugin = new HtmlWebpackPlugin({
 module.exports = {
   entry: path.join(__dirname, "src/index.js"),
   output: {
-    path: path.join(__dirname, "dist"),
+    path: path.join(__dirname, "../api/idris/static/dist/web"),
     filename: "bundle.js"
   },
   module: {

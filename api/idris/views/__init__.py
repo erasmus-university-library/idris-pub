@@ -65,9 +65,3 @@ def openAPI_v1_spec(request):
                            '1.0.0',
                            swagger=extra_fields)
     return my_spec
-
-
-@view_config(route_name='swagger_ui',
-             renderer='idris:templates/swagger.pt')
-def swagger_ui_view(request):
-    return {'swagger_api_url': request.route_url('OpenAPI')}
