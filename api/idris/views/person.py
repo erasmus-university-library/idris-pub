@@ -18,10 +18,12 @@ from idris.utils import (ErrorResponseSchema,
                            JsonMappingSchemaSerializerMixin,
                            colander_bound_repository_body_validator)
 
+
 @colander.deferred
 def deferred_account_type_validator(node, kw):
     types = kw['repository'].type_config('person_account_type')
     return colander.OneOf([t['key'] for t in types])
+
 
 @colander.deferred
 def deferred_position_type_validator(node, kw):
@@ -34,6 +36,7 @@ def person_validator(node, kw):
         node.name = '%s.given_name' % node.name
         raise colander.Invalid(
             node, "Required: supply either 'initials' or 'given_name'")
+
 
 class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     def __init__(self, *args, **kwargs):
@@ -51,13 +54,13 @@ class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     alternative_name = colander.SchemaNode(colander.String(), missing=None)
     honorary = colander.SchemaNode(colander.String(), missing=None)
 
-
     @colander.instantiate(missing=colander.drop)
     class accounts(colander.SequenceSchema):
         @colander.instantiate()
         class account(colander.MappingSchema):
-            type = colander.SchemaNode(colander.String(),
-                                       validator=deferred_account_type_validator)
+            type = colander.SchemaNode(
+                colander.String(),
+                validator=deferred_account_type_validator)
             value = colander.SchemaNode(colander.String())
 
     @colander.instantiate(missing=colander.drop)
@@ -72,7 +75,6 @@ class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             end_date = colander.SchemaNode(colander.Date(),
                                            missing=colander.drop)
 
-
     @colander.instantiate(missing=colander.drop)
     class positions(colander.SequenceSchema):
         @colander.instantiate()
@@ -80,8 +82,9 @@ class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             group_id = colander.SchemaNode(colander.Integer())
             _group_name = colander.SchemaNode(colander.String(),
                                               missing=colander.drop)
-            type = colander.SchemaNode(colander.String(),
-                                       validator=deferred_position_type_validator)
+            type = colander.SchemaNode(
+                colander.String(),
+                validator=deferred_position_type_validator)
             description = colander.SchemaNode(colander.String(),
                                               missing=colander.drop)
 
@@ -90,12 +93,15 @@ class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             end_date = colander.SchemaNode(colander.Date(),
                                            missing=colander.drop)
 
+
 class PersonPostSchema(PersonSchema):
     # similar to person schema, but id is optional
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
 
+
 class PersonResponseSchema(colander.MappingSchema):
     body = PersonSchema()
+
 
 class PersonListingResponseSchema(colander.MappingSchema):
     @colander.instantiate()
@@ -131,10 +137,11 @@ class PersonListingRequestSchema(colander.MappingSchema):
     class querystring(colander.MappingSchema):
         query = colander.SchemaNode(colander.String(),
                                     missing=colander.drop)
-        offset = colander.SchemaNode(colander.Int(),
-                                   default=0,
-                                   validator=colander.Range(min=0),
-                                   missing=0)
+        offset = colander.SchemaNode(
+            colander.Int(),
+            default=0,
+            validator=colander.Range(min=0),
+            missing=0)
         limit = colander.SchemaNode(colander.Int(),
                                     default=20,
                                     validator=colander.Range(0, 100),
@@ -144,57 +151,63 @@ class PersonListingRequestSchema(colander.MappingSchema):
             validator=colander.OneOf(['record', 'snippet']),
             missing=colander.drop)
 
+
 class PersonSearchRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
         query = colander.SchemaNode(colander.String(),
                                     missing=colander.drop)
-        offset = colander.SchemaNode(colander.Int(),
-                                   default=0,
-                                   validator=colander.Range(min=0),
-                                   missing=0)
+        offset = colander.SchemaNode(
+            colander.Int(),
+            default=0,
+            validator=colander.Range(min=0),
+            missing=0)
         limit = colander.SchemaNode(colander.Int(),
                                     default=20,
                                     validator=colander.Range(0, 100),
                                     missing=20)
+
 
 class PersonBulkRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class records(colander.SequenceSchema):
         person = PersonSchema()
 
+
 @resource(name='Person',
           collection_path='/api/v1/person/records',
           path='/api/v1/person/records/{id}',
           tags=['person'],
           cors_origins=('*', ),
-          api_security=[{'jwt':[]}],
+          api_security=[{'jwt': []}],
           factory=ResourceFactory(PersonResource))
 class PersonRecordAPI(object):
     def __init__(self, request, context):
         self.request = request
         self.context = context
 
-    @view(permission='view',
-          response_schemas={
-        '200': PersonResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
+    @view(
+        permission='view',
+        response_schemas={
+            '200': PersonResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found'),
         })
     def get(self):
         "Retrieve a Person"
         return PersonSchema().to_json(self.context.model.to_dict())
 
-    @view(permission='edit',
-          schema=PersonSchema(),
-          validators=(colander_bound_repository_body_validator,),
-          cors_origins=('*', ),
-          response_schemas={
-        '200': PersonResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
+    @view(
+        permission='edit',
+        schema=PersonSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        cors_origins=('*', ),
+        response_schemas={
+            '200': PersonResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found'),
         })
     def put(self):
         "Modify a Person"
@@ -209,28 +222,29 @@ class PersonRecordAPI(object):
             return
         return PersonSchema().to_json(self.context.model.to_dict())
 
-
-    @view(permission='delete',
-          response_schemas={
-        '200': StatusResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
+    @view(
+        permission='delete',
+        response_schemas={
+            '200': StatusResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found'),
         })
     def delete(self):
         "Delete an Person"
         self.context.delete()
         return {'status': 'ok'}
 
-    @view(permission='add',
-          schema=PersonPostSchema(),
-          validators=(colander_bound_repository_body_validator,),
-          cors_origins=('*', ),
-          response_schemas={
-        '201': PersonResponseSchema(description='Created'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
+    @view(
+        permission='add',
+        schema=PersonPostSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        cors_origins=('*', ),
+        response_schemas={
+            '201': PersonResponseSchema(description='Created'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
         })
     def collection_post(self):
         "Create a new Person"
@@ -246,14 +260,15 @@ class PersonRecordAPI(object):
         return PersonSchema().to_json(person.to_dict())
 
 
-    @view(permission='view',
-          schema=PersonListingRequestSchema(),
-          validators=(colander_validator),
-          cors_origins=('*', ),
-          response_schemas={
-        '200': PersonListingResponseSchema(description='Ok'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized')})
+    @view(
+        permission='view',
+        schema=PersonListingRequestSchema(),
+        validators=(colander_validator),
+        cors_origins=('*', ),
+        response_schemas={
+            '200': PersonListingResponseSchema(description='Ok'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
     def collection_get(self):
         offset = self.request.validated['querystring']['offset']
         limit = self.request.validated['querystring']['limit']
@@ -265,7 +280,7 @@ class PersonRecordAPI(object):
         filters = []
         if query:
             filters.append(Person.search_terms.match(query))
-        from_query=None
+        from_query = None
         query_callback = None
         if format == 'snippet':
             from_query = self.context.session.query(Person)
@@ -277,10 +292,12 @@ class PersonRecordAPI(object):
                 filtered_persons = from_query.cte('filtered_persons')
                 with_memberships = self.context.session.query(
                     filtered_persons,
-                    func.count(Membership.id.distinct()).label('membership_count'),
+                    func.count(Membership.id.distinct()).label(
+                        'membership_count'),
                     func.array_agg(Group.id.distinct()).label('group_ids'),
                     func.array_agg(Group.name.distinct()).label('group_names'),
-                    func.count(Contributor.work_id.distinct()).label('work_count')
+                    func.count(Contributor.work_id.distinct()).label(
+                        'work_count')
                     ).outerjoin(Contributor).outerjoin(Membership).outerjoin(
                     Group).group_by(filtered_persons.c.id,
                                     filtered_persons.c.name)
@@ -306,8 +323,9 @@ class PersonRecordAPI(object):
         if format == 'snippet':
             snippets = []
             for hit in listing['hits']:
-                groups = [{'id': i[0], 'name': i[1]} for i in
-                           zip(hit.group_ids, hit.group_names)]
+                groups = [
+                    {'id': i[0], 'name': i[1]} for i in zip(hit.group_ids,
+                                                            hit.group_names)]
                 snippets.append(
                     {'id': hit.id,
                      'name': hit.name,
@@ -322,25 +340,27 @@ class PersonRecordAPI(object):
         return result
 
 
+person_bulk = Service(
+    name='PersonBulk',
+    path='/api/v1/person/bulk',
+    factory=ResourceFactory(PersonResource),
+    api_security=[{'jwt': []}],
+    tags=['person'],
+    cors_origins=('*', ),
+    schema=PersonBulkRequestSchema(),
+    validators=(colander_bound_repository_body_validator,),
+    response_schemas={
+        '200': OKStatusResponseSchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
 
-person_bulk = Service(name='PersonBulk',
-                     path='/api/v1/person/bulk',
-                     factory=ResourceFactory(PersonResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['person'],
-                     cors_origins=('*', ),
-                     schema=PersonBulkRequestSchema(),
-                     validators=(colander_bound_repository_body_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
 
 @person_bulk.post(permission='import')
 def person_bulk_import_view(request):
     # get existing resources from submitted bulk
     keys = [r['id'] for r in request.validated['records'] if r.get('id')]
-    existing_records = {r.id:r for r in request.context.get_many(keys) if r}
+    existing_records = {
+        r.id: r for r in request.context.get_many(keys) if r}
     models = []
     for record in request.validated['records']:
         if record['id'] in existing_records:
@@ -353,18 +373,20 @@ def person_bulk_import_view(request):
     request.response.status = 201
     return {'status': 'ok'}
 
-person_search = Service(name='PersonSearch',
-                     path='/api/v1/person/search',
-                     factory=ResourceFactory(PersonResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['person'],
-                     cors_origins=('*', ),
-                     schema=PersonSearchRequestSchema(),
-                     validators=(colander_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
+person_search = Service(
+    name='PersonSearch',
+    path='/api/v1/person/search',
+    factory=ResourceFactory(PersonResource),
+    api_security=[{'jwt': []}],
+    tags=['person'],
+    cors_origins=('*', ),
+    schema=PersonSearchRequestSchema(),
+    validators=(colander_validator,),
+    response_schemas={
+        '200': OKStatusResponseSchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
+
 
 @person_search.get(permission='search')
 def person_search_view(request):

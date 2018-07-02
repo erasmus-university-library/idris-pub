@@ -6,11 +6,9 @@ import sqlalchemy as sql
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.security import Allow, ALL_PERMISSIONS
 from pyramid.interfaces import IAuthorizationPolicy
-from sqlalchemy_utils.functions import get_primary_keys
-from sqlalchemy.orm import load_only, Load, aliased
+from sqlalchemy.orm import load_only, aliased
 from sqlalchemy import func
 import sqlalchemy.exc
-import transaction
 
 from idris.models import (
     User, Person, Group, GroupType, GroupAccountType, PersonAccountType,
@@ -18,6 +16,7 @@ from idris.models import (
     IdentifierType, MeasureType, DescriptionType, DescriptionFormat, Blob,
     RelationType, Relation, PositionType)
 from idris.exceptions import StorageError
+
 
 class ResourceFactory(object):
     def __init__(self, resource_class):
@@ -34,10 +33,10 @@ class ResourceFactory(object):
             raise HTTPForbidden()
         return resource
 
+
 class BaseResource(object):
     orm_class = None
     key_col_name = None
-
 
     def __init__(self, registry, session, key=None, model=None):
         self.session = session
@@ -51,7 +50,6 @@ class BaseResource(object):
 
     def __acl__(self):
         return []
-
 
     def get(self, key=None, principals=None):
         if key is None:
@@ -87,7 +85,7 @@ class BaseResource(object):
                                                       'view'):
                 raise HTTPForbidden(
                     'Failed ACL check: permission "view" on %s %s' % (
-                    self.orm_class.__name__, key))
+                        self.orm_class.__name__, key))
             else:
                 models.append(model)
         return models
@@ -100,14 +98,12 @@ class BaseResource(object):
     def pre_put_hook(self, model):
         return model
 
-
     def put(self, model=None, principals=None):
         if model is None:
             if self.model is None:
                 raise ValueError('No model to put')
             model = self.model
         return self.put_many([model], principals=principals)[0]
-
 
     def put_many(self, models, principals=None):
         if not models:
@@ -121,9 +117,10 @@ class BaseResource(object):
             model = self.pre_put_hook(model)
             self.session.add(model)
             if principals and not self.is_permitted(
-                model, principals, permission):
-                raise HTTPForbidden('Failed ACL check: permission "%s" on %s %s' % (
-                    permission, self.orm_class.__name__, key))
+                    model, principals, permission):
+                raise HTTPForbidden(
+                    'Failed ACL check: permission "%s" on %s %s' % (
+                        permission, self.orm_class.__name__, key))
         try:
             self.session.flush()
         except sqlalchemy.exc.IntegrityError as err:
@@ -138,7 +135,7 @@ class BaseResource(object):
             model = self.model
         self.session.delete(model)
         if principals and not self.is_permitted(
-            model, principals, 'delete'):
+                model, principals, 'delete'):
             raise HTTPForbidden('Failed ACL check for permission "delete"')
         self.session.flush()
 
@@ -163,7 +160,8 @@ class BaseResource(object):
         if filters:
             query = query.filter(sql.and_(*filters))
         acl_filters = []
-        acl_joined_tables = [t.__table__.name for t in (from_query_joined_tables or []) ]
+        acl_joined_tables = [t.__table__.name
+                             for t in (from_query_joined_tables or [])]
         for filter in self.acl_filters(principals):
             first_clause = filter
             if not hasattr(first_clause, 'left'):
@@ -177,7 +175,6 @@ class BaseResource(object):
 
         if acl_filters:
             query = query.filter(sql.or_(*acl_filters))
-
 
         if not apply_limits_post_query:
             total = query.count()
@@ -202,17 +199,17 @@ class BaseResource(object):
         policy = self.registry.queryUtility(IAuthorizationPolicy)
         context = self.__class__(self.registry, self.session, model=model)
         permitted = policy.permits(context, principals, permission)
-        if permitted == False:
+        if permitted is False:
             return False
         return True
 
     def acl_filters(self, principals):
         return []
 
+
 class UserResource(BaseResource):
     orm_class = User
     key_col_name = 'id'
-
 
     def __acl__(self):
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
@@ -222,7 +219,6 @@ class UserResource(BaseResource):
         elif self.model is None:
             # no model loaded yet, allow container view
             yield (Allow, 'system.Authenticated', 'view')
-
 
     def acl_filters(self, principals):
         filters = []
@@ -240,10 +236,10 @@ class UserResource(BaseResource):
         model.search_terms = sql.func.to_tsvector(' '.join(search_terms))
         return model
 
+
 class PersonResource(BaseResource):
     orm_class = Person
     key_col_name = 'id'
-
 
     def __acl__(self):
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
@@ -255,7 +251,9 @@ class PersonResource(BaseResource):
             yield (Allow, 'owner:person:%s' % self.model.id, ['view', 'edit'])
             for membership in self.model.memberships:
                 # group owners can view and edit persons
-                yield (Allow, 'owner:group:%s' % membership.group_id, ['view', 'edit'])
+                yield (Allow,
+                       'owner:group:%s' % membership.group_id,
+                       ['view', 'edit'])
 
         elif self.model is None:
             # no model loaded yet, allow container view
@@ -299,10 +297,10 @@ class PersonResource(BaseResource):
             filters.append(Person.id == -1)
         return filters
 
+
 class GroupResource(BaseResource):
     orm_class = Group
     key_col_name = 'id'
-
 
     def __acl__(self):
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
@@ -315,7 +313,6 @@ class GroupResource(BaseResource):
         elif self.model is None:
             # no model loaded yet, allow container view
             yield (Allow, 'system.Authenticated', 'view')
-
 
     def pre_put_hook(self, model):
         model.name = model.international_name
@@ -377,7 +374,6 @@ class WorkResource(BaseResource):
     orm_class = Work
     key_col_name = 'id'
 
-
     def __acl__(self):
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
         yield (Allow, 'system.Authenticated', 'search')
@@ -387,11 +383,17 @@ class WorkResource(BaseResource):
             # owners can view and edit groups
             for contributor in self.model.contributors:
                 if contributor.person_id:
-                    yield (Allow, 'owner:person:%s' % contributor.person_id, ['view', 'edit'])
+                    yield (Allow,
+                           'owner:person:%s' % contributor.person_id,
+                           ['view', 'edit'])
                 elif contributor.group_id:
-                    yield (Allow, 'owner:group:%s' % contributor.group_id, ['view', 'edit'])
+                    yield (Allow,
+                           'owner:group:%s' % contributor.group_id,
+                           ['view', 'edit'])
             for affiliation in self.model.affiliations:
-                yield (Allow, 'owner:group:%s' % affiliation.group_id, ['view', 'edit'])
+                yield (Allow,
+                       'owner:group:%s' % affiliation.group_id,
+                       ['view', 'edit'])
         elif self.model is None:
             # no model loaded yet, allow container view
             yield (Allow, 'system.Authenticated', 'view')
@@ -467,8 +469,10 @@ class WorkResource(BaseResource):
 
         acl_filters = self.acl_filters(principals)
         if acl_filters:
-            group_filters = [f for f in acl_filters if f.left.table.name == 'affiliations']
-            person_filters = [f for f in acl_filters if f.left.table.name == 'contributors']
+            group_filters = [f for f in acl_filters
+                             if f.left.table.name == 'affiliations']
+            person_filters = [f for f in acl_filters
+                              if f.left.table.name == 'contributors']
             if group_filters:
                 query = self.session.query(Affiliation.work_id.label('id'))
                 query = query.filter(sql.or_(*group_filters))
@@ -509,43 +513,49 @@ class WorkResource(BaseResource):
             Work.id.label('id'),
             Work.type.label('type'),
             Work.issued.label('issued'),
-            Work.title).join(filtered_work_ids,
-                             filtered_work_ids.c.id == Work.id).cte('listed_works')
+            Work.title).join(
+                filtered_work_ids,
+                filtered_work_ids.c.id == Work.id).cte('listed_works')
         Target = aliased(Work)
 
         full_listing = self.session.query(
             listed_works,
-            func.json_agg(func.json_build_object('id', Contributor.id,
-                                                 'position', Contributor.position,
-                                                 'name', Person.name,
-                                                 'person_id', Person.id,
-                                                 'initials', Person.initials,
-                                                 'prefix', Person.family_name_prefix,
-                                                 'given_name', Person.given_name,
-                                                 'family_name', Person.family_name,
-                                                 'role', Contributor.role)
+            func.json_agg(
+                func.json_build_object('id', Contributor.id,
+                                       'position', Contributor.position,
+                                       'name', Person.name,
+                                       'person_id', Person.id,
+                                       'initials', Person.initials,
+                                       'prefix', Person.family_name_prefix,
+                                       'given_name', Person.given_name,
+                                       'family_name', Person.family_name,
+                                       'role', Contributor.role)
                           ).label('contributors'),
-            func.json_agg(func.json_build_object('id', Relation.id,
-                                                 'relation_type', Relation.type,
-                                                 'type', Target.type,
-                                                 'location', Relation.location,
-                                                 'starting', Relation.starting,
-                                                 'ending', Relation.ending,
-                                                 'volume', Relation.volume,
-                                                 'issue', Relation.issue,
-                                                 'number', Relation.number,
-                                                 'title', Target.title,
-                                                 )
+            func.json_agg(
+                func.json_build_object('id', Relation.id,
+                                       'relation_type', Relation.type,
+                                       'type', Target.type,
+                                       'location', Relation.location,
+                                       'starting', Relation.starting,
+                                       'ending', Relation.ending,
+                                       'volume', Relation.volume,
+                                       'issue', Relation.issue,
+                                       'number', Relation.number,
+                                       'title', Target.title)
                           ).label('relations'),
             func.array_agg(
-              sql.distinct(func.concat(Group.id, ':', Group.name))).label('affiliations')
+              sql.distinct(
+                  func.concat(Group.id,
+                              ':',
+                              Group.name))).label('affiliations')
             )
 
         full_listing = full_listing.outerjoin(
             Contributor, listed_works.c.id == Contributor.work_id).outerjoin(
               Person, Person.id == Contributor.person_id)
         full_listing = full_listing.outerjoin(
-            Affiliation, Contributor.id == Affiliation.contributor_id).outerjoin(
+            Affiliation,
+            Contributor.id == Affiliation.contributor_id).outerjoin(
               Group, Group.id == Affiliation.group_id)
         full_listing = full_listing.outerjoin(
             Relation, listed_works.c.id == Relation.work_id).outerjoin(
@@ -563,10 +573,11 @@ class WorkResource(BaseResource):
             for contributor in hit.contributors:
                 if contributor['person_id'] in contributor_role_ids:
                     roles.add(contributor['role'])
-                if contributors and contributors[-1]['position'] == contributor['position']:
+                if (contributors and
+                    contributors[-1]['position'] == contributor['position']):
                     # same contributor as previous one, (but other affiliation
-                    # it's hard to remove this with a distinct clause in the json agg,
-                    # so we remove it here
+                    # it's hard to remove this with a distinct clause
+                    # in the json agg, so we remove it here
                     continue
                 contributors.append(contributor)
             affiliations = []
