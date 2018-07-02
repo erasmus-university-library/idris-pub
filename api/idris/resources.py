@@ -260,19 +260,22 @@ class PersonResource(BaseResource):
             yield (Allow, 'system.Authenticated', 'view')
 
     def pre_put_hook(self, model):
-        name = model.family_name
-        search_terms = [name]
-        if model.family_name_prefix:
-            name = '%s %s' % (model.family_name_prefix, name)
-            search_terms.append(model.family_name_prefix)
-        if model.initials:
-            name = '%s, %s' % (name, model.initials)
-            search_terms.append(model.initials)
-        if model.given_name:
-            name = '%s (%s)' % (name, model.given_name)
-            search_terms.append(model.given_name)
+        if model.family_name:
+            name = model.family_name
+            search_terms = [name]
+            if model.family_name_prefix:
+                name = '%s %s' % (model.family_name_prefix, name)
+                search_terms.append(model.family_name_prefix)
+            if model.initials:
+                name = '%s, %s' % (name, model.initials)
+                search_terms.append(model.initials)
+            if model.given_name:
+                name = '%s (%s)' % (name, model.given_name)
+                search_terms.append(model.given_name)
+        else:
+            name = model.alternative_name
+            search_terms = [model.alternative_name]
         model.name = name
-
         model.search_terms = sql.func.to_tsvector(' '.join(search_terms))
         return model
 

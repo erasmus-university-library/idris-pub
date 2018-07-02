@@ -32,7 +32,12 @@ def deferred_position_type_validator(node, kw):
 
 
 def person_validator(node, kw):
-    if not kw.get('given_name') and not kw.get('initials'):
+    if not kw.get('family_name') and not kw.get('alternative_name'):
+        raise colander.Invalid(
+            node, "Required: either 'family_name' or 'alternative_name'")
+
+    if (kw.get('family_name') and not (kw.get('given_name') or
+                                       kw.get('initials'))):
         node.name = '%s.given_name' % node.name
         raise colander.Invalid(
             node, "Required: supply either 'initials' or 'given_name'")
@@ -45,8 +50,9 @@ class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
 
     id = colander.SchemaNode(colander.Int())
     name = colander.SchemaNode(colander.String(),
-                                missing=colander.drop)
-    family_name = colander.SchemaNode(colander.String())
+                               missing=colander.drop)
+    family_name = colander.SchemaNode(colander.String(),
+                                      missing=None)
     family_name_prefix = colander.SchemaNode(colander.String(),
                                              missing=None)
     given_name = colander.SchemaNode(colander.String(), missing=None)

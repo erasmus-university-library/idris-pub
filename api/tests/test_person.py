@@ -52,17 +52,23 @@ class PersonWebTest(BaseTest):
         assert out.json['name'] == 'Doe (Joe)'
         self.api.put_json('/api/v1/person/records/%s' % john_id,
                           {'id': john_id,
-                           'family_name': 'Doe',
-                           'family_name_prefix': 'van der',
-                           'given_name': 'John',
-                           'initials': 'J.',
+                           'family_name': 'Rossem',
+                           'family_name_prefix': 'van',
+                           'given_name': 'Guido',
+                           'initials': 'G.',
                            'type': 'individual'},
                           headers=headers,
                           status=200)
         out = self.api.get('/api/v1/person/records/%s' % john_id,
                            headers=headers,
                            status=200)
-        assert out.json['name'] == 'van der Doe, J. (John)'
+        assert out.json['name'] == 'van Rossem, G. (Guido)'
+        # use alternative_name instead of family_name
+        out = self.api.post_json('/api/v1/person/records',
+                                 {'alternative_name': 'Billy the Kid'},
+                                 headers=headers,
+                                 status=201)
+        assert out.json['name'] == 'Billy the Kid'
 
     def test_adding_person_accounts(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
