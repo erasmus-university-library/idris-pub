@@ -3,6 +3,7 @@ import transaction
 from core import BaseTest
 from idris.models import User
 
+
 class PersonWebTest(BaseTest):
 
     def test_crud_as_admin(self):
@@ -21,15 +22,15 @@ class PersonWebTest(BaseTest):
                           headers=headers,
                           status=200)
         out = self.api.get('/api/v1/person/records/%s' % john_id,
-                          headers=headers,
-                          status=200)
+                           headers=headers,
+                           status=200)
         assert out.json['given_name'] == 'Johnny'
         self.api.delete('/api/v1/person/records/%s' % john_id,
                         headers=headers,
                         status=200)
         self.api.get('/api/v1/person/records/%s' % john_id,
-                          headers=headers,
-                          status=404)
+                     headers=headers,
+                     status=404)
 
     def test_person_name_generator(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
@@ -46,8 +47,8 @@ class PersonWebTest(BaseTest):
                                  status=201)
         john_id = out.json['id']
         out = self.api.get('/api/v1/person/records/%s' % john_id,
-                          headers=headers,
-                          status=200)
+                           headers=headers,
+                           status=200)
         assert out.json['name'] == 'Doe (Joe)'
         self.api.put_json('/api/v1/person/records/%s' % john_id,
                           {'id': john_id,
@@ -59,8 +60,8 @@ class PersonWebTest(BaseTest):
                           headers=headers,
                           status=200)
         out = self.api.get('/api/v1/person/records/%s' % john_id,
-                          headers=headers,
-                          status=200)
+                           headers=headers,
+                           status=200)
         assert out.json['name'] == 'van der Doe, J. (John)'
 
     def test_adding_person_accounts(self):
@@ -71,8 +72,8 @@ class PersonWebTest(BaseTest):
              'given_name': 'John',
              'type': 'individual',
              'accounts': [{'type': 'local', 'value': '1234'}]},
-             headers=headers,
-             status=201)
+            headers=headers,
+            status=201)
         john_id = out.json['id']
         assert out.json['accounts'] == [{'type': 'local', 'value': '1234'}]
         out = self.api.get('/api/v1/person/records/%s' % john_id,
@@ -85,12 +86,11 @@ class PersonWebTest(BaseTest):
              'given_name': 'John',
              'type': 'individual',
              'accounts': [{'type': 'local', 'value': 'XXXX'}]},
-             headers=headers,
-             status=200)
+            headers=headers,
+            status=200)
         out = self.api.get('/api/v1/person/records/%s' % john_id,
                            headers=headers)
         assert out.json['accounts'] == [{'type': 'local', 'value': 'XXXX'}]
-
 
     def test_insert_empty_account_or_no_account(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
@@ -100,8 +100,8 @@ class PersonWebTest(BaseTest):
              'given_name': 'John',
              'type': 'individual',
              'accounts': [{'type': 'local', 'value': '1234'}]},
-             headers=headers,
-             status=201)
+            headers=headers,
+            status=201)
         last_id = out.json['id']
         # let's change a field without specifying the accounts
         out = self.api.put_json(
@@ -110,8 +110,8 @@ class PersonWebTest(BaseTest):
              'family_name': 'Doe',
              'initials': 'J.',
              'type': 'individual'},
-             headers=headers,
-             status=200)
+            headers=headers,
+            status=200)
         # the accounts should be intact
         assert out.json['accounts'] == [{'type': 'local', 'value': '1234'}]
         # we can clear the accounts by supllying an empty list/array
@@ -122,9 +122,10 @@ class PersonWebTest(BaseTest):
              'initials': 'J.',
              'type': 'individual',
              'accounts': []},
-             headers=headers,
-             status=200)
+            headers=headers,
+            status=200)
         assert out.json['accounts'] == []
+
 
 class PersonAuthorzationWebTest(BaseTest):
     def test_crud_persons_by_user_groups(self):
@@ -141,8 +142,8 @@ class PersonAuthorzationWebTest(BaseTest):
         transaction.commit()
         for user, user_group in test_users:
             token = self.api.post_json(
-            '/api/v1/auth/login',
-            {'user': user, 'password': user}).json['token']
+                '/api/v1/auth/login',
+                {'user': user, 'password': user}).json['token']
             headers = dict(Authorization='Bearer %s' % token)
             out = self.api.post_json(
                 '/api/v1/person/records', {'family_name': user,
@@ -150,7 +151,8 @@ class PersonAuthorzationWebTest(BaseTest):
                 headers=headers,
                 status=201)
             last_id = out.json['id']
-            out = self.api.get('/api/v1/person/records/%s' % last_id, headers=headers)
+            out = self.api.get('/api/v1/person/records/%s' % last_id,
+                               headers=headers)
             assert out.json['family_name'] == user
             out = self.api.put_json(
                 '/api/v1/person/records/%s' % last_id,
@@ -172,8 +174,8 @@ class PersonAuthorzationWebTest(BaseTest):
              'given_name': 'John',
              'type': 'individual',
              'accounts': [{'type': 'local', 'value': '1234'}]},
-             headers=headers,
-             status=201)
+            headers=headers,
+            status=201)
         person_id = out.json['id']
         out = self.api.post_json(
             '/api/v1/user/records',
@@ -199,14 +201,12 @@ class PersonAuthorzationWebTest(BaseTest):
              'initials': 'J.',
              'type': 'individual',
              'accounts': []},
-             headers=john_headers,
-             status=200)
+            headers=john_headers,
+            status=200)
         # but not allowed to delete
         self.api.delete(
             '/api/v1/person/records/%s' % person_id,
-             headers=john_headers, status=403)
-
-
+            headers=john_headers, status=403)
 
     def test_person_bulk_import(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
@@ -240,6 +240,7 @@ class PersonAuthorzationWebTest(BaseTest):
         out = self.api.get('/api/v1/person/records/2', headers=headers)
         assert out.json['initials'] == 'J.'
 
+
 class PersonMembersTest(PersonWebTest):
     def setUp(self):
         super(PersonMembersTest, self).setUp()
@@ -260,12 +261,12 @@ class PersonMembersTest(PersonWebTest):
     def test_adding_inline_membership(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.put_json('/api/v1/person/records/%s' % self.john_id,
-                                 {'family_name': 'Doe',
-                                  'given_name': 'John',
-                                  'id': self.john_id,
-                                  'memberships': [{'group_id': self.corp_id}]},
-                                 headers=headers,
-                                 status=200)
+                                {'family_name': 'Doe',
+                                 'given_name': 'John',
+                                 'id': self.john_id,
+                                 'memberships': [{'group_id': self.corp_id}]},
+                                headers=headers,
+                                status=200)
         assert len(out.json['memberships']) == 1
 
     def test_adding_inline_membership_as_owner(self):
@@ -275,26 +276,27 @@ class PersonMembersTest(PersonWebTest):
         headers = dict(Authorization='Bearer %s' % self.generate_test_token(
             'owner', owners=[{'person_id': self.john_id}]))
         out = self.api.put_json('/api/v1/person/records/%s' % self.john_id,
-                                 {'family_name': 'Doe',
-                                  'given_name': 'John',
-                                  'id': self.john_id,
-                                  'memberships': [{'group_id': self.corp_id}]},
-                                 headers=headers,
-                                 status=200)
+                                {'family_name': 'Doe',
+                                 'given_name': 'John',
+                                 'id': self.john_id,
+                                 'memberships': [{'group_id': self.corp_id}]},
+                                headers=headers,
+                                status=200)
         assert len(out.json['memberships']) == 1
 
     def test_adding_inline_position(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.put_json('/api/v1/person/records/%s' % self.john_id,
-                                 {'family_name': 'Doe',
-                                  'given_name': 'John',
-                                  'id': self.john_id,
-                                  'positions': [{'group_id': self.corp_id,
-                                                 'type': 'academic',
-                                                 'description': 'Full Professor'}]},
-                                 headers=headers,
-                                 status=200)
+                                {'family_name': 'Doe',
+                                 'given_name': 'John',
+                                 'id': self.john_id,
+                                 'positions': [{'group_id': self.corp_id,
+                                                'type': 'academic',
+                                                'description': 'Full Professor'}]},
+                                headers=headers,
+                                status=200)
         assert len(out.json['positions']) == 1
+
 
 class PersonRetrievalWebTest(PersonWebTest):
     def setUp(self):
@@ -346,9 +348,9 @@ class PersonRetrievalWebTest(PersonWebTest):
         assert len(out.json.get('snippets', [])) == 1
         assert out.json['snippets'][0]['memberships'] == 1
 
-
     def test_owner_person_search(self):
-        headers = dict(Authorization='Bearer %s' % self.generate_test_token('owner'))
+        headers = dict(
+            Authorization='Bearer %s' % self.generate_test_token('owner'))
         # all users have search permission on all persons
         out = self.api.get(
             '/api/v1/person/search?query=Doe&format=snippet',
