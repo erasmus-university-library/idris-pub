@@ -1,6 +1,4 @@
-import datetime
 from intervals import DateInterval
-
 from sqlalchemy import (
     Column,
     Integer,
@@ -12,8 +10,6 @@ from sqlalchemy import (
     Date,
     Sequence,
     ForeignKey,
-    ForeignKeyConstraint,
-    UniqueConstraint,
     CheckConstraint
     )
 from sqlalchemy.orm import relationship, configure_mappers
@@ -21,18 +17,18 @@ from sqlalchemy.schema import Index
 from sqlalchemy.orm.attributes import instance_dict
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy_utils import DateRangeType, LtreeType, PasswordType
+from sqlalchemy_utils import DateRangeType, PasswordType
 from sqlalchemy.dialects.postgresql import JSON, TSVECTOR
 from sqlalchemy.orm.attributes import set_attribute
+from idris.utils import parse_duration
+
 Base = declarative_base()
 
-from idris.utils import parse_duration
 
 class WorkType(Base):
     __tablename__ = 'work_type_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
-
 
 
 class UserGroup(Base):
@@ -41,21 +37,23 @@ class UserGroup(Base):
     label = Column(Unicode(128))
 
 
-
 class ContributorRole(Base):
     __tablename__ = 'contributor_role_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
+
 
 class PositionType(Base):
     __tablename__ = 'position_type_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class RelationType(Base):
     __tablename__ = 'relation_type_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
+
 
 class Relation(Base):
     """
@@ -64,7 +62,6 @@ class Relation(Base):
     isReplacedBy
     isVersionOf
     """
-
 
     __tablename__ = 'relations'
     id = Column(Integer, Sequence('relations_id_seq'), primary_key=True)
@@ -96,7 +93,6 @@ class Relation(Base):
     position = Column(Integer, nullable=False)
 
     description = Column(UnicodeText, nullable=True)
-
 
     def to_dict(self):
         start_date = end_date = None
@@ -145,10 +141,12 @@ class DescriptionType(Base):
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class DescriptionFormat(Base):
     __tablename__ = 'description_format_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
+
 
 class Description(Base):
     __tablename__ = 'descriptions'
@@ -167,9 +165,10 @@ class Description(Base):
     type = Column(Unicode(32),
                   ForeignKey('description_type_schemes.key'),
                   nullable=False)
-    format = Column(Unicode(32),
-                  ForeignKey('description_format_schemes.key'),
-                  nullable=False)
+    format = Column(
+        Unicode(32),
+        ForeignKey('description_format_schemes.key'),
+        nullable=False)
     value = Column(UnicodeText, nullable=False)
     position = Column(Integer)
 
@@ -326,7 +325,6 @@ class Work(Base):
 
         return result
 
-
     def update_dict(self, data):
         if self.id is None and data.get('id'):
             self.id = data.pop('id')
@@ -368,20 +366,23 @@ class Work(Base):
                                              work_id=data.get('id')))
 
         if 'contributors' in data:
-            existing_contributors = dict([(c.id, c) for c in self.contributors])
+            existing_contributors = dict(
+                [(c.id, c) for c in self.contributors])
             new_contributors = []
 
             for contributor_data in data.pop('contributors', []):
                 contributor_data['work_id'] = self.id
                 affiliations_data = contributor_data.pop('affiliations', [])
                 if contributor_data.get('id') in existing_contributors:
-                    contributor = existing_contributors.pop(contributor_data['id'])
+                    contributor = existing_contributors.pop(
+                        contributor_data['id'])
                     contributor.update_dict(contributor_data)
 
                 else:
                     contributor = Contributor.from_dict(contributor_data)
 
-                existing_affiliations = dict([(c.id, c) for c in contributor.affiliations])
+                existing_affiliations = dict(
+                    [(c.id, c) for c in contributor.affiliations])
                 new_affiliations = []
                 for affiliation_data in affiliations_data:
                     affiliation_data['work_id'] = self.id
@@ -398,12 +399,14 @@ class Work(Base):
             self.contributors[:] = new_contributors
 
         if 'descriptions' in data:
-            existing_descriptions = dict([(c.id, c) for c in self.descriptions])
+            existing_descriptions = dict(
+                [(c.id, c) for c in self.descriptions])
             new_descriptions = []
             for description_data in data.pop('descriptions', []):
                 description_data['work_id'] = self.id
                 if description_data.get('id') in existing_descriptions:
-                    description = existing_descriptions.pop(description_data['id'])
+                    description = existing_descriptions.pop(
+                        description_data['id'])
                     description.update_dict(description_data)
                 else:
                     description = Description.from_dict(description_data)
@@ -423,12 +426,10 @@ class Work(Base):
                 new_relations.append(relation)
             self.relations[:] = new_relations
 
-
         for key, value in data.items():
             if key.startswith('_'):
                 continue
             set_attribute(self, key, value)
-
 
     @classmethod
     def from_dict(cls, data):
@@ -452,7 +453,6 @@ class Person(Base):
     alternative_name = Column(UnicodeText)
 
     search_terms = Column(TSVECTOR)
-
 
     owners = relationship('Owner', back_populates='person')
     memberships = relationship('Membership',
@@ -574,27 +574,29 @@ class IdentifierType(Base):
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class Identifier(Base):
     __tablename__ = 'identifiers'
-    #__table_args__ = (
+    # __table_args__ = (
     #    UniqueConstraint('type', 'value'),)
-
 
     id = Column(Integer, Sequence('identifiers_id_seq'), primary_key=True)
     work_id = Column(BigInteger,
-                      ForeignKey('works.id'),
-                      index=True,
-                      nullable=False)
+                     ForeignKey('works.id'),
+                     index=True,
+                     nullable=False)
     work = relationship('Work', back_populates='identifiers')
     type = Column(Unicode(32),
                   ForeignKey('identifier_type_schemes.key'),
                   nullable=False)
     value = Column(Unicode(1024), nullable=False)
 
+
 class ConceptType(Base):
     __tablename__ = 'concept_type_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
+
 
 class Concept(Base):
     __tablename__ = 'concepts'
@@ -602,18 +604,17 @@ class Concept(Base):
     id = Column(BigInteger, Sequence('concepts_id_seq'), primary_key=True)
 
     parent_id = Column(BigInteger,
-                      ForeignKey('concepts.id'),
-                      index=True,
-                      nullable=True)
+                       ForeignKey('concepts.id'),
+                       index=True,
+                       nullable=True)
 
     parent = relationship('Concept', remote_side=[id], lazy='joined')
 
     type = Column(Unicode(32),
-                    ForeignKey('concept_type_schemes.key'),
-                    nullable=False)
+                  ForeignKey('concept_type_schemes.key'),
+                  nullable=False)
     label = Column(Unicode(1024), nullable=False)
     notation = Column(Unicode(128), nullable=False)
-
 
 
 class MeasureType(Base):
@@ -621,19 +622,21 @@ class MeasureType(Base):
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class MeasureUnit(Base):
     __tablename__ = 'measure_unit_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
+
 
 class Measure(Base):
     __tablename__ = 'measures'
 
     id = Column(Integer, Sequence('measures_id_seq'), primary_key=True)
     work_id = Column(BigInteger,
-                      ForeignKey('works.id'),
-                      index=True,
-                      nullable=False)
+                     ForeignKey('works.id'),
+                     index=True,
+                     nullable=False)
     work = relationship('Work', back_populates='measures')
     type = Column(Unicode(32),
                   ForeignKey('measure_type_schemes.key'),
@@ -650,15 +653,18 @@ class ExpressionType(Base):
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class ExpressionFormat(Base):
     __tablename__ = 'expression_format_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class ExpressionAccessRight(Base):
     __tablename__ = 'expression_access_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
+
 
 class Blob(Base):
     __tablename__ = 'blobs'
@@ -674,7 +680,7 @@ class Blob(Base):
     checksum = Column(Unicode(32))
     finalized = Column(Boolean)
     transform_name = Column(Unicode(32))
-    info =  Column(JSON)
+    info = Column(JSON)
     text = Column(UnicodeText)
     cover_image = Column(Text)
     thumbnail = Column(Text)
@@ -694,9 +700,7 @@ class Blob(Base):
                   'finalized': self.finalized}
         return result
 
-
     def update_dict(self, data):
-
         for key, value in data.items():
             set_attribute(self, key, value)
 
@@ -706,42 +710,45 @@ class Blob(Base):
         blob.update_dict(data)
         return blob
 
+
 class Expression(Base):
     __tablename__ = 'expressions'
 
     id = Column(Integer, Sequence('expressions_id_seq'), primary_key=True)
     work_id = Column(BigInteger,
-                      ForeignKey('works.id'),
-                      index=True,
-                      nullable=False)
+                     ForeignKey('works.id'),
+                     index=True,
+                     nullable=False)
     work = relationship('Work', back_populates='expressions')
     type = Column(Unicode(32),
                   ForeignKey('expression_type_schemes.key'),
                   nullable=False)
     format = Column(Unicode(32),
-                  ForeignKey('expression_format_schemes.key'),
-                  nullable=False)
+                    ForeignKey('expression_format_schemes.key'),
+                    nullable=False)
     access = Column(Unicode(32),
-                  ForeignKey('expression_access_schemes.key'),
-                  nullable=False)
+                    ForeignKey('expression_access_schemes.key'),
+                    nullable=False)
     during = Column(DateRangeType)
     uri = Column(Unicode(1024), nullable=True)
     info = Column(JSON)
     description = Column(UnicodeText, nullable=True)
+
 
 class PersonAccountType(Base):
     __tablename__ = 'person_account_type_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class PersonAccount(Base):
     __tablename__ = 'person_accounts'
 
     id = Column(Integer, Sequence('person_accounts_id_seq'), primary_key=True)
     person_id = Column(BigInteger,
-                      ForeignKey('persons.id'),
-                      index=True,
-                      nullable=False)
+                       ForeignKey('persons.id'),
+                       index=True,
+                       nullable=False)
     person = relationship('Person', back_populates='accounts')
     type = Column(Unicode(32),
                   ForeignKey('person_account_type_schemes.key'),
@@ -749,17 +756,17 @@ class PersonAccount(Base):
     value = Column(Unicode(128), nullable=False)
 
 
-
-
 class GroupType(Base):
     __tablename__ = 'group_type_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
 
+
 class GroupAccountType(Base):
     __tablename__ = 'group_account_type_schemes'
     key = Column(Unicode(32), primary_key=True)
     label = Column(Unicode(128))
+
 
 class GroupAccount(Base):
     __tablename__ = 'group_accounts'
@@ -775,14 +782,16 @@ class GroupAccount(Base):
                   nullable=False)
     value = Column(Unicode(128), nullable=False)
 
+
 class Group(Base):
     __tablename__ = 'groups'
     __table_args__ = (Index('ix_groups_search_terms',
                             'search_terms',
                             postgresql_using='gin'),)
 
-
-    id = Column(BigInteger, Sequence('group_id_seq'), primary_key=True)
+    id = Column(BigInteger,
+                Sequence('group_id_seq'),
+                primary_key=True)
     type = Column(Unicode(32),
                   ForeignKey('group_type_schemes.key'),
                   nullable=False)
@@ -794,13 +803,12 @@ class Group(Base):
     during = Column(DateRangeType, nullable=True)
 
     parent_id = Column(BigInteger,
-                      ForeignKey('groups.id'),
-                      index=True,
-                      nullable=True)
+                       ForeignKey('groups.id'),
+                       index=True,
+                       nullable=True)
     search_terms = Column(TSVECTOR)
 
     parent = relationship('Group', remote_side=[id], lazy='joined')
-
 
     members = relationship('Membership', back_populates='group')
     positions = relationship('Position', back_populates='group')
@@ -811,7 +819,6 @@ class Group(Base):
                             back_populates='group',
                             info={'inline_schema': True},
                             cascade='all, delete-orphan')
-
 
     def to_dict(self):
         result = {}
@@ -908,7 +915,6 @@ class User(Base):
                      '_group_name': owner_data['_group_name']})
         return result
 
-
     def update_dict(self, data):
         if data.get('owns') is not None:
             owns = data.pop('owns', [])
@@ -972,6 +978,7 @@ class Owner(Base):
             result['_group_name'] = self.group.name
         return result
 
+
 class Membership(Base):
     __tablename__ = 'memberships'
     id = Column(Integer, Sequence('memberships_id_seq'), primary_key=True)
@@ -979,7 +986,9 @@ class Membership(Base):
                        ForeignKey('persons.id'),
                        index=True,
                        nullable=False)
-    person = relationship('Person', back_populates='memberships', lazy='joined')
+    person = relationship('Person',
+                          back_populates='memberships',
+                          lazy='joined')
 
     group_id = Column(BigInteger,
                       ForeignKey('groups.id'),
@@ -989,7 +998,6 @@ class Membership(Base):
 
     during = Column(DateRangeType)
     provenance = Column(Unicode(1024))
-
 
     def to_dict(self):
         start_date = end_date = None
@@ -1007,7 +1015,6 @@ class Membership(Base):
         return result
 
     def update_dict(self, data):
-
         start_date = data.pop('start_date', None)
         end_date = data.pop('end_date', None)
         set_attribute(self, 'during', DateInterval([start_date, end_date]))
@@ -1019,6 +1026,7 @@ class Membership(Base):
         membership = Membership()
         membership.update_dict(data)
         return membership
+
 
 class Position(Base):
     __tablename__ = 'positions'
@@ -1044,7 +1052,6 @@ class Position(Base):
     during = Column(DateRangeType)
     provenance = Column(Unicode(1024))
 
-
     def to_dict(self):
         start_date = end_date = None
         if self.during:
@@ -1063,7 +1070,6 @@ class Position(Base):
         return result
 
     def update_dict(self, data):
-
         start_date = data.pop('start_date', None)
         end_date = data.pop('end_date', None)
         set_attribute(self, 'during', DateInterval([start_date, end_date]))
@@ -1090,26 +1096,28 @@ class Contributor(Base):
                   ForeignKey('contributor_role_schemes.key'),
                   index=True,
                   nullable=False)
-    work_id = Column(BigInteger, ForeignKey('works.id'), index=True, nullable=False)
+    work_id = Column(BigInteger,
+                     ForeignKey('works.id'),
+                     index=True,
+                     nullable=False)
     work = relationship('Work', back_populates='contributors', lazy='joined')
-
-    person_id = Column(BigInteger, ForeignKey('persons.id'), index=True, nullable=True)
+    person_id = Column(BigInteger,
+                       ForeignKey('persons.id'),
+                       index=True,
+                       nullable=True)
     person = relationship('Person', lazy='joined')
-
-    group_id = Column(BigInteger, ForeignKey('groups.id'), index=True, nullable=True)
+    group_id = Column(BigInteger,
+                      ForeignKey('groups.id'),
+                      index=True,
+                      nullable=True)
     group = relationship('Group', lazy='joined')
-
     description = Column(UnicodeText, nullable=True)
-
     during = Column(DateRangeType, nullable=True)
     location = Column(UnicodeText, nullable=True)
-
     position = Column(Integer)
-
     affiliations = relationship('Affiliation',
                                 back_populates='contributor',
                                 lazy='joined')
-
 
     def to_dict(self):
         start_date = end_date = None
@@ -1162,23 +1170,27 @@ class Contributor(Base):
         contributor.update_dict(data)
         return contributor
 
+
 class Affiliation(Base):
     __tablename__ = 'affiliations'
 
     id = Column(Integer, Sequence('affiliations_id_seq'), primary_key=True)
 
-    work_id = Column(BigInteger, ForeignKey('works.id'), index=True, nullable=False)
+    work_id = Column(BigInteger,
+                     ForeignKey('works.id'),
+                     index=True,
+                     nullable=False)
     work = relationship('Work', back_populates='affiliations', lazy='joined')
-
     contributor_id = Column(Integer,
                             ForeignKey('contributors.id'),
                             index=True, nullable=True)
     contributor = relationship('Contributor',
                                back_populates='affiliations')
-
-    group_id = Column(BigInteger, ForeignKey('groups.id'), index=True, nullable=True)
+    group_id = Column(BigInteger,
+                      ForeignKey('groups.id'),
+                      index=True,
+                      nullable=True)
     group = relationship('Group', back_populates='affiliations', lazy='joined')
-
     position = Column(Integer)
 
     def to_dict(self):
@@ -1202,7 +1214,6 @@ class Affiliation(Base):
         affiliation = Affiliation()
         affiliation.update_dict(data)
         return affiliation
-
 
 
 class Repository(Base):
