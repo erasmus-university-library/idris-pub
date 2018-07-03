@@ -68,12 +68,6 @@ export const fetchRecordDetail = (kind, id) => {
             .then(data => {
                 if (data.id){
                     dispatch(updateDetailState(kind, {record: data}));
-                    if (kind === 'group' && data.parent_id) {
-                        dispatch(changeAppHeader(data.name, 'group', `/record/group/${data.parent_id}`, data._parent_name));
-
-                    } else {
-                        dispatch(changeAppHeader(data.title || data.name || data.userid, kind));
-                    }
                     dispatch(showProgress(false));
                 } else {
                     dispatch(errorMessage(data.errors[0].description));
@@ -104,7 +98,6 @@ export const postRecordDetail = (kind, id, values) => {
                         dispatch(flashMessage(`Updated ${kind} ${id}`))
                     }
                     dispatch(updateDetailState(kind, {record: data}));
-                    dispatch(changeAppHeader(data.title || data.name || data.userid, kind));
 
                 } else {
                     const formErrors = {_error: `Error Submitting ${kind} ${id}`};

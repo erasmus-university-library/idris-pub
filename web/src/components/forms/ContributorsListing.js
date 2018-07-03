@@ -198,15 +198,6 @@ class ContributorsListing extends Component {
           </TableRow>
         </TableFooter>
       </Table>
-	  <div className={classes.fabButtonRight}>
-          <Button
-	variant="fab"
-	color="primary"
-	aria-label="add"
-	onClick={() => {this.props.history.push('/record/work/add')}} >
-          <AddIcon />
-        </Button>
-      </div>
       </Paper>
       </div>
       </CardContent>

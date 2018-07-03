@@ -57,6 +57,23 @@ const styles = theme => ({
       minHeight: 68,
       display: 'flex'
   },
+  formContainer: {
+    padding: theme.spacing.unit * 2,
+    paddingBottom: 0,
+  },
+  recordBar: {
+    paddingLeft: theme.spacing.unit * 2,
+    paddingRight: theme.spacing.unit * 2,
+  },
+  tabContent: {
+    margin: theme.spacing.unit * 2
+  },
+  cardContainer: {
+    padding:0
+  },
+  recordAccordions: {
+    padding:theme.spacing.unit * 2
+  },
   editorPanel: {
       padding: 0,
       marginTop: -theme.spacing.unit * 2

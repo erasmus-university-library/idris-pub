@@ -66,7 +66,6 @@ class PersonListing extends Component {
     };
 
     componentWillMount(){
-      this.props.changeAppHeader('Persons');
       if (this.props.offset === undefined){
           // first run
           this.props.onChange({offset: 0});
@@ -103,65 +102,73 @@ class PersonListing extends Component {
         const { classes, query, total, limit, offset, records } = this.props;
       return (
         <div>
-        <Paper>
-          <AppBar position="static" color="default">
-            <Toolbar>
-              <FormControl fullWidth className={classes.formControl}>
-              <InputLabel htmlFor="search">{`Search Persons`}</InputLabel>
-              <Input
-                id="search"
-                type="text"
-                value={query || ''}
-                onChange={this.handleQueryChange}
-                endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
-              />
-              </FormControl>
-            </Toolbar>
-          </AppBar>
-      <Table className={classes.table}>
-        <TableHead>
+          <Paper>
+            <AppBar position="static" color="default">
+              <Toolbar>
+		<FormControl fullWidth className={classes.formControl}>
+		  <InputLabel htmlFor="search">{`Search Persons`}</InputLabel>
+		  <Input
+                     id="search"
+                     type="text"
+                     value={query || ''}
+                     onChange={this.handleQueryChange}
+                     endAdornment={
+			 <InputAdornment position="end">
+			     <IconButton><SearchIcon /></IconButton>
+			 </InputAdornment>}
+			 />
+		</FormControl>
+              </Toolbar>
+            </AppBar>
+	    <Table className={classes.table}>
+              <TableHead>
+		<TableRow>
+		  <TableCell>Name</TableCell>
+		  <TableCell>Group Memberships</TableCell>
+		  <TableCell numeric style={{width:80}}>Memberships</TableCell>
+		  <TableCell numeric style={{width:80}}>Work Contributions</TableCell>
+		</TableRow>
+              </TableHead>
+              <TableBody>{(records || []).map(record => (
+		<TableRow key={record.id}
+                          selected={record.id === this.props.selected}
+                          onClick={this.handleRowClick(record)}
+                          style={{cursor:'pointer'}}
+                          hover>
+                  <TableCell style={{whiteSpace: 'nowrap'}}>{record.name}</TableCell>
+                  <TableCell>
+		    {record.groups.map((group) => (
+		      <Link className={classes.link}
+			    to={`/record/group/${group.id}`}
+			    key={group.id} onClick={(e) => (e.stopPropagation())}>
+			{group.name}
+		      </Link>))}</TableCell>
+                  <TableCell numeric>{record.memberships}</TableCell>
+                  <TableCell numeric>{record.works}</TableCell>
+		</TableRow>
+	      ))}</TableBody>
+          <TableFooter>
           <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Group Memberships</TableCell>
-            <TableCell numeric style={{width:80}}>Memberships</TableCell>
-            <TableCell numeric style={{width:80}}>Work Contributions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {(records || []).map(record => (
-              <TableRow key={record.id}
-                        selected={record.id === this.props.selected}
-                        onClick={this.handleRowClick(record)}
-                        style={{cursor:'pointer'}}
-                        hover>
-                <TableCell style={{whiteSpace: 'nowrap'}}>{record.name}</TableCell>
-                <TableCell>
-              {record.groups.map((group) => (<Link className={classes.link} to={`/record/group/${group.id}`} key={group.id} onClick={(e) => (e.stopPropagation())}>{group.name}</Link>))}
-                </TableCell>
-                <TableCell numeric>{record.memberships}</TableCell>
-                <TableCell numeric>{record.works}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TablePagination
-              count={total || 0}
-              rowsPerPage={limit || 10}
-              page={(offset || 0) / (limit || 10)}
-              onChangePage={this.handlePageChange}
-              onChangeRowsPerPage={this.handleRowsPerPageChange}>
-          </TablePagination>
-          </TableRow>
+          <TablePagination
+	count={total || 0}
+        rowsPerPage={limit || 10}
+        page={(offset || 0) / (limit || 10)}
+        onChangePage={this.handlePageChange}
+        onChangeRowsPerPage={this.handleRowsPerPageChange}>
+        </TablePagination>
+        </TableRow>
         </TableFooter>
-      </Table>
-      <div className={classes.fabButtonRight}>
-        <Button variant="fab" color="primary" aria-label="add" onClick={() => {this.props.history.push('/record/person/add')}} >
+	</Table>
+	  <div className={classes.fabButtonRight}>
+          <Button variant="fab"
+	color="primary"
+	aria-label="add"
+	onClick={() => {this.props.history.push('/record/person/add')}} >
           <PersonAddIcon />
         </Button>
-      </div>
-      </Paper>
-      </div>
+	</div>
+	</Paper>
+	</div>
       );
 
     }

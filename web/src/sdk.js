@@ -64,11 +64,12 @@ export class CiteProc {
     }
 
     renderCitation = function(citation){
-        this.citations[citation.id] = citation
-        const processor = this.getProcessor();
-        processor.updateItems([citation.id])
-        const result = processor.makeBibliography();
-        return result[1].map(biblioStr => htmlToReactParser.parse(biblioStr))
+      this.citations[citation.id] = citation
+      const processor = this.getProcessor();
+      processor.updateItems([citation.id])
+      let result = processor.makeBibliography();
+      result[1][0] = result[1][0].replace('<div class="csl-entry">', '').replace('</div>', '');
+      return result[1].map(biblioStr => htmlToReactParser.parse(biblioStr))
     }
 
 

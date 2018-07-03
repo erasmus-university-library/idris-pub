@@ -2,6 +2,7 @@ import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
 import { CiteProc } from '../../sdk.js';
+import Typography from '@material-ui/core/Typography';
 const citeProc = new CiteProc();
 
 const styles = theme => ({
@@ -19,14 +20,19 @@ const styles = theme => ({
       fontWeight: 300,
       lineHeight: 1.5
   },
-
+  cslContainer: {
+    maxWidth: '50%'
+  }
 });
 
 
 class Citation extends React.Component {
   render(){
     const { classes, citation } = this.props;
-        return <div className={classes.cslEntry}>{citeProc.renderCitation(citation)}</div>
+    let frag = citeProc.renderCitation(citation);
+    console.log(frag);
+
+    return <Typography align="justify">{frag}</Typography>
     }
 }
 export default withStyles(styles)(Citation)
