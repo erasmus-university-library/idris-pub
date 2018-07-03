@@ -14,18 +14,14 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '@material-ui/core/IconButton';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
 import PersonIcon from '@material-ui/icons/Person';
-import Badge from '@material-ui/core/Badge';
+import FingerprintIcon from '@material-ui/icons/Fingerprint';
 
+import RecordBar from './RecordBar.js';
+import RecordAccordion from './RecordAccordion.js';
 import styles from './forms/formStyles.js';
+
+
 
 @withStyles(styles)
 @reduxForm({form: 'person'})
@@ -68,19 +64,28 @@ class PersonDetail extends React.Component {
     }
 
   getErrorCount(errors) {
+    const errorCount = {'person': 0,
+			'accounts': 0};
+
     if (!errors){
-      return 0
+      return errorCount;
     }
-    let errorCount = 0;
     for (const field of ['family_name', 'initials', 'given_name',
                          'family_name_prefix', 'alternative_name']){
       if (errors[field] !== undefined){
-        errorCount += 1;
+        errorCount.person += 1;
       }
     }
+    for (const error of Object.values(errors.accounts)){
+      for (const field of ['type', 'value']){
+        if (error[field] !== undefined){
+          errorCount.accounts += 1;
+        }
+      }
+    }
+
     return errorCount
   }
-
 
   getLabel(formValues){
     if (formValues.family_name){
@@ -116,18 +121,7 @@ class PersonDetail extends React.Component {
       <div>
       <div className={classes.tabContent}>
 	  <Card>
-	    <AppBar position="static" color="default">
-	      <Toolbar className={classes.recordBar}>
-		<ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount}
-							  color="primary"
-							  classes={{colorPrimary: classes.errorBGColor}}>
-		    <PersonIcon /></Badge>: <PersonIcon />}</ListItemIcon>
-		<ListItemText primary={label} />
-		<IconButton>
-		   <MoreVertIcon />
-		</IconButton>
-	      </Toolbar>
-	    </AppBar>
+	    <RecordBar label={label} errorCount={errorCount.person} Icon={PersonIcon}/>
 	    <Tabs value={currentTab || 0}
 		  onChange={this.handleTabClicked}
 		  indicatorColor="primary"
@@ -141,13 +135,19 @@ class PersonDetail extends React.Component {
 		  <CardContent className={classes.cardContainer}>
 		      <PersonForm name="person"
 				    errors={submittedErrors}/>
+
 			<div className={classes.recordAccordions}>
-			    <AccountsForm open={openedAccordion === 'account'}
-					    name="account"
-					    errors={submittedErrors}
-					    formValues={formValues.accounts||[]}
-					    typeOptions={settings.account_types}
-					    onAccordionClicked={this.handleAccordionClicked('account')}/>
+			    <RecordAccordion
+				 open={openedAccordion === 'accounts'}
+				 errorCount={errorCount.accounts}
+				 Icon={FingerprintIcon}
+				 label="Accounts"
+				 count={(formValues.accounts||[]).length}
+				 onClick={this.handleAccordionClicked('accounts')}>
+				<AccountsForm   name="account"
+						  typeOptions={settings.account_types} />
+				</RecordAccordion>
+
 			      <MembershipsForm open={openedAccordion === 'memberships'}
 						 name="memberships"
 						 errors={submittedErrors}
