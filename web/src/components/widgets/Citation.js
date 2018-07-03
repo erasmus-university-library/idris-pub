@@ -30,8 +30,6 @@ class Citation extends React.Component {
   render(){
     const { classes, citation } = this.props;
     let frag = citeProc.renderCitation(citation);
-    console.log(frag);
-
     return <Typography align="justify">{frag}</Typography>
     }
 }

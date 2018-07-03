@@ -74,6 +74,10 @@ const styles = theme => ({
   recordAccordions: {
     padding:theme.spacing.unit * 2
   },
+  contributorCard: {
+    padding:theme.spacing.unit * 2,
+    paddingBottom: 0
+  },
   editorPanel: {
       padding: 0,
       marginTop: -theme.spacing.unit * 2

@@ -171,7 +171,7 @@ class PersonDetail extends React.Component {
 		      </CardActions>
 	      </form>: null}
               {currentTab === 1?
-		<CardContent>
+		<CardContent className={classes.contributorCard}>
 		    <ContributorsListing {...contributorListingState}
 					   history={history}
 					   id={this.props.id}
