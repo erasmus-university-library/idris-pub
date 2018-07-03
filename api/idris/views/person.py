@@ -33,6 +33,7 @@ def deferred_position_type_validator(node, kw):
 
 def person_validator(node, kw):
     if not kw.get('family_name') and not kw.get('alternative_name'):
+        node.name = '%s.family_name' % node.name
         raise colander.Invalid(
             node, "Required: either 'family_name' or 'alternative_name'")
 
