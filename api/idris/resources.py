@@ -199,7 +199,7 @@ class BaseResource(object):
         policy = self.registry.queryUtility(IAuthorizationPolicy)
         context = self.__class__(self.registry, self.session, model=model)
         permitted = policy.permits(context, principals, permission)
-        if permitted is False:
+        if bool(permitted) is False:
             return False
         return True
 
