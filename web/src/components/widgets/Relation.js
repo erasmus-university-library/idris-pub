@@ -82,13 +82,14 @@ class RelationField extends React.Component {
     }
 
     renderInput = (inputProps) => {
-        const { classes, autoFocus, value, label, placeholder, ref, kind, ...other } = inputProps;
-        return (<div>
+      const { classes, autoFocus, error, value, label, placeholder, ref, kind, ...other } = inputProps;
+      return (<div>
             <TextField
             autoFocus={autoFocus}
+	    error={error !== null}
             className={classes.textField}
             value={this.state.label || label}
-            label={placeholder}
+            label={error||placeholder}
             inputRef={ref}
             InputLabelProps={{
                 shrink: true,
@@ -189,9 +190,9 @@ class RelationField extends React.Component {
     }
   };
 
-  render() {
+  render(fields) {
     const { classes } = this.props;
-      return (
+    return (
       <Autosuggest
         theme={{
           container: classes.container,
@@ -210,6 +211,7 @@ class RelationField extends React.Component {
           autoFocus: false,
           classes,
           label: this.props.label,
+	  error: this.props.error,
           kind: this.props.kind,
           value: (this.props.value || -1).toString(),
           placeholder: this.props.placeholder,

@@ -18,22 +18,25 @@ from idris.utils import (ErrorResponseSchema,
                            JsonMappingSchemaSerializerMixin,
                            colander_bound_repository_body_validator)
 
+
 @colander.deferred
 def deferred_group_type_validator(node, kw):
     types = kw['repository'].type_config('group_type')
     return colander.OneOf([t['key'] for t in types])
+
 
 @colander.deferred
 def deferred_account_type_validator(node, kw):
     types = kw['repository'].type_config('group_account_type')
     return colander.OneOf([t['key'] for t in types])
 
+
 class GroupSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     id = colander.SchemaNode(colander.Int())
     type = colander.SchemaNode(colander.String(),
                                validator=deferred_group_type_validator)
     name = colander.SchemaNode(colander.String(),
-                                missing=colander.drop)
+                               missing=colander.drop)
     international_name = colander.SchemaNode(colander.String())
     native_name = colander.SchemaNode(colander.String(),
                                       missing=colander.drop)

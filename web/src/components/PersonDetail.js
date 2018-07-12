@@ -1,5 +1,6 @@
 import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
+import { Field, FieldArray } from 'redux-form'
 
 import { reduxForm } from 'redux-form'
 import Tabs from '@material-ui/core/Tabs';
@@ -14,13 +15,23 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
+import Zoom from '@material-ui/core/Zoom';
+
 import PersonIcon from '@material-ui/icons/Person';
 import FingerprintIcon from '@material-ui/icons/Fingerprint';
+import CardMembershipIcon from '@material-ui/icons/CardMembership';
+import WorkIcon from '@material-ui/icons/Work';
+import SaveIcon from '@material-ui/icons/Save';
 
 import RecordBar from './RecordBar.js';
+import RecordSection from './RecordSection.js';
 import RecordAccordion from './RecordAccordion.js';
 import styles from './forms/formStyles.js';
 
+
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
+import { mappedTextField, mappedSelect } from './widgets/mapping.js';
 
 
 @withStyles(styles)
@@ -28,44 +39,45 @@ import styles from './forms/formStyles.js';
 class PersonDetail extends React.Component {
 
 
-    componentWillMount(){
-       if (this.props.id === 'add'){
-           this.props.onFetch(null)
-       } else {
-           this.props.onFetch(this.props.id);
-       }
-
+  componentWillMount(){
+    if (this.props.id === 'add'){
+      this.props.onFetch(null)
+    } else {
+      this.props.onFetch(this.props.id);
     }
+  }
 
   handleSubmit = (values) => {
-      let id = this.props.id;
-      if (this.props.id === 'add'){
-          id = null;
-      }
-      this.props.onSubmit(id, values);
+    let id = this.props.id;
+    if (this.props.id === 'add'){
+      id = null;
+    }
+    this.props.onSubmit(id, values);
   }
 
   handleAccordionClicked = (name) => (event) => {
-      if (this.props.openedAccordion === name){
-          this.props.onDetailChange({openedAccordion: null});
-      } else {
-          this.props.onDetailChange({openedAccordion: name});
-      }
+    if (this.props.openedAccordion === name){
+      this.props.onDetailChange({openedAccordion: null});
+    } else {
+      this.props.onDetailChange({openedAccordion: name});
+    }
   }
 
   handleTabClicked = (event, value) => {
-      this.props.onDetailChange({currentTab: value});
+    this.props.onDetailChange({currentTab: value});
   }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.id !== this.props.id){
-           this.props.onFetch(nextProps.id);
-        }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.id !== this.props.id){
+      this.props.onFetch(nextProps.id);
     }
+  }
 
   getErrorCount(errors) {
     const errorCount = {'person': 0,
-			'accounts': 0};
+			'accounts': 0,
+			'memberships': 0,
+			'positions': 0};
 
     if (!errors){
       return errorCount;
@@ -76,14 +88,33 @@ class PersonDetail extends React.Component {
         errorCount.person += 1;
       }
     }
-    for (const error of Object.values(errors.accounts)){
-      for (const field of ['type', 'value']){
-        if (error[field] !== undefined){
-          errorCount.accounts += 1;
-        }
+    if (errors.accounts){
+      for (const error of Object.values(errors.accounts)){
+	for (const field of ['type', 'value']){
+          if (error[field] !== undefined){
+            errorCount.accounts += 1;
+          }
+	}
       }
     }
-
+    if (errors.memberships){
+      for (const error of Object.values(errors.memberships)){
+	for (const field of ['group_id', 'start_date', 'end_date']){
+          if (error[field] !== undefined){
+            errorCount.memberships += 1;
+          }
+	}
+      }
+    }
+    if (errors.positions){
+      for (const error of Object.values(errors.positions)){
+	for (const field of ['group_id', 'type', 'start_date', 'end_date', 'description']){
+          if (error[field] !== undefined){
+            errorCount.positions += 1;
+          }
+	}
+      }
+    }
     return errorCount
   }
 
@@ -107,16 +138,20 @@ class PersonDetail extends React.Component {
     }
   }
 
+
+
   render() {
-    const { classes, record, handleSubmit, openedAccordion, submittedErrors,
+    const { classes, handleSubmit, openedAccordion, submittedErrors,
             settings, currentTab, history, formValues,
             contributorListingState, workSettings,
             onContributorFetch, onContributorChange } = this.props;
      if (formValues === undefined){
           return null;
      }
+    const errors = submittedErrors || {};
     const label = this.getLabel(formValues)
     const errorCount = this.getErrorCount(submittedErrors);
+    console.log(settings.position_types.filter((type) => (type.id === 'commercial'? type.label : null))[0].label)
     return (
       <div>
       <div className={classes.tabContent}>
@@ -130,59 +165,62 @@ class PersonDetail extends React.Component {
 	      <Tab label="Personal Information" />
 	      <Tab label="Work Contributions" />
 	    </Tabs>
-	    {!currentTab?
+	    {!currentTab? (
               <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
-		  <CardContent className={classes.cardContainer}>
-		      <PersonForm name="person"
-				    errors={submittedErrors}/>
-
-			<div className={classes.recordAccordions}>
-			    <RecordAccordion
-				 open={openedAccordion === 'accounts'}
-				 errorCount={errorCount.accounts}
+		<CardContent className={classes.cardContainer}>
+		  <PersonForm name="person"
+			      errorCount={errorCount.person}/>
+		  <div className={classes.recordAccordions}>
+		  <RecordSection label="Accounts"
+				 errors={errors}
+				 name="accounts"
+				 settings={settings}
 				 Icon={FingerprintIcon}
-				 label="Accounts"
-				 count={(formValues.accounts||[]).length}
-				 onClick={this.handleAccordionClicked('accounts')}>
-				<AccountsForm   name="account"
-						  typeOptions={settings.account_types} />
-				</RecordAccordion>
-
-			      <MembershipsForm open={openedAccordion === 'memberships'}
-						 name="memberships"
-						 errors={submittedErrors}
-						 formValues={formValues.memberships||[]}
-						 record={record}
-						 typeOptions={[]}
-						 onAccordionClicked={this.handleAccordionClicked('memberships')}/>
-				<PositionsForm open={openedAccordion === 'positions'}
-						 name="positions"
-						 errors={submittedErrors}
-						 formValues={formValues.positions||[]}
-						 positionOptions={settings.position_types}
-						 history={history}
-						 onAccordionClicked={this.handleAccordionClicked('positions')}/>
-			  </div>
-		    </CardContent>
-		    <CardActions>
-			<Button type="submit" color="primary">
-			    Update
-			  </Button>
-		      </CardActions>
-	      </form>: null}
-              {currentTab === 1?
-		<CardContent className={classes.contributorCard}>
-		    <ContributorsListing {...contributorListingState}
-					   history={history}
-					   id={this.props.id}
-					   settings={workSettings}
-					   onChange={onContributorChange}
-					   onFetch={onContributorFetch} />
-		  </CardContent>
-            : null}
-	    </Card>
-      </div>
-      </div>
+				 Form={AccountsForm}
+				 fieldLabels = {(value) => ([(settings.account_types.filter((type) => (type.id === value.type? type.label : null))[0]||{}).label||null, value.value])}
+				 >
+		  </RecordSection>
+		  <RecordSection label="Affiliations"
+				 errors={errors}
+				 name="memberships"
+				 settings={settings}
+				 Icon={CardMembershipIcon}
+				 Form={MembershipsForm}
+				 fieldLabels = {(value) => ([value.start_date ? value.end_date ? `${value.start_date.substr(0, 4)} - ${value.end_date.substr(0, 4)}` : `${value.start_date.substr(0, 4)} - ∞`: value.end_date ? `∞ - ${value.end_date.substr(0, 4)}`: '∞', value._group_name])}
+				 >
+		  </RecordSection>
+		  <RecordSection label="External employment and side positions"
+				 errors={errors}
+				 name="positions"
+				 settings={settings}
+				 Icon={WorkIcon}
+				 Form={PositionsForm}
+				 fieldLabels = {(value) => ([(settings.position_types.filter((type) => (type.id === value.type? type.label : null))[0]||{}).label||null, value._group_name])}
+		    >
+		  </RecordSection>
+		  </div>
+		</CardContent>
+		<CardActions>
+		  <Zoom in={true} className={classes.SaveButton}>
+		  <Button variant="fab" type="submit" color="primary">
+		    <SaveIcon />
+		  </Button>
+		  </Zoom>
+		</CardActions>
+	      </form>) : (null)}
+      {currentTab === 1? (
+	<CardContent className={classes.contributorCard}>
+	  <ContributorsListing {...contributorListingState}
+			       history={history}
+			       id={this.props.id}
+			       settings={workSettings}
+			       onChange={onContributorChange}
+			       onFetch={onContributorFetch} />
+	</CardContent>
+      ) : (null)}
+      </Card>
+	</div>
+	</div>
     );
   }
 }

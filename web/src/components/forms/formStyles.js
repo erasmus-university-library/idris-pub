@@ -54,8 +54,7 @@ const styles = theme => ({
       width: 180,
   },
   formItem: {
-      minHeight: 68,
-      display: 'flex'
+      width: '100%',
   },
   formContainer: {
     padding: theme.spacing.unit * 2,
@@ -93,5 +92,31 @@ const styles = theme => ({
   noPadding: {
       padding: 0,
   },
+  singlePadding: {
+    padding: theme.spacing.unit * 1
+  },
+  doublePadding: {
+    padding: theme.spacing.unit * 2
+  },
+  RecordAccordionContainer: {
+    paddingTop: theme.spacing.unit * 2
+  },
+  RecordAccordionHeading: {
+    fontSize: theme.typography.pxToRem(15),
+  },
+  RecordAccordionSecondaryHeading: {
+    fontSize: theme.typography.pxToRem(15),
+    color: theme.palette.text.secondary,
+  },
+  RecordAccordionColumn: {
+    flexBasis: '20%',
+  },
+  SaveButton: {
+    position: 'fixed',
+    left: '100%',
+    top: '100%',
+    marginLeft: -70,
+    marginTop: -70
+  }
 });
 export default styles

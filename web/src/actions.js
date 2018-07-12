@@ -1,5 +1,6 @@
 import { createAction } from 'redux-actions';
 import { stopSubmit } from 'redux-form';
+import { SubmissionError } from 'redux-form';
 
 import IdrisSDK from './sdk.js';
 const sdk = new IdrisSDK();
@@ -125,8 +126,8 @@ export const postRecordDetail = (kind, id, values) => {
 
                         }
                     }
-                    dispatch(stopSubmit(kind, formErrors));
-                    dispatch(showProgress(false));
+                  dispatch(stopSubmit(kind, formErrors));
+                  dispatch(showProgress(false));
                 };
             });
     }
