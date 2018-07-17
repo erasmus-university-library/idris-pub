@@ -92,16 +92,8 @@ class SubGroupsForm extends React.Component {
     render(){
       const { classes, onAccordionClicked, open, query, total, limit, offset, records } = this.props;
       return (
-          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <ListItemIcon><SupervisorAccountIcon /></ListItemIcon>
-              <ListItemText primary="Sub Groups" />
-            {total?<Chip label={total} align="right" key={total}/>:null}
-            <div />
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.editorPanel}>
-          <Card className={classes.editorCard} style={{boxShadow:'unset'}}>
-          <CardContent style={{padding:'16px 0px 0px 0px'}}>
+        <Card className={classes.editorCard}>
+          <CardContent className={classes.noPadding}>
         <div>
         <Paper>
           <AppBar position="static" color="default">
@@ -154,8 +146,6 @@ class SubGroupsForm extends React.Component {
       </div>
         </CardContent>
           </Card>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
       );
     }
 }

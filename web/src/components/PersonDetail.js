@@ -25,7 +25,6 @@ import SaveIcon from '@material-ui/icons/Save';
 
 import RecordBar from './RecordBar.js';
 import RecordSection from './RecordSection.js';
-import RecordAccordion from './RecordAccordion.js';
 import styles from './forms/formStyles.js';
 
 
@@ -73,51 +72,6 @@ class PersonDetail extends React.Component {
     }
   }
 
-  getErrorCount(errors) {
-    const errorCount = {'person': 0,
-			'accounts': 0,
-			'memberships': 0,
-			'positions': 0};
-
-    if (!errors){
-      return errorCount;
-    }
-    for (const field of ['family_name', 'initials', 'given_name',
-                         'family_name_prefix', 'alternative_name']){
-      if (errors[field] !== undefined){
-        errorCount.person += 1;
-      }
-    }
-    if (errors.accounts){
-      for (const error of Object.values(errors.accounts)){
-	for (const field of ['type', 'value']){
-          if (error[field] !== undefined){
-            errorCount.accounts += 1;
-          }
-	}
-      }
-    }
-    if (errors.memberships){
-      for (const error of Object.values(errors.memberships)){
-	for (const field of ['group_id', 'start_date', 'end_date']){
-          if (error[field] !== undefined){
-            errorCount.memberships += 1;
-          }
-	}
-      }
-    }
-    if (errors.positions){
-      for (const error of Object.values(errors.positions)){
-	for (const field of ['group_id', 'type', 'start_date', 'end_date', 'description']){
-          if (error[field] !== undefined){
-            errorCount.positions += 1;
-          }
-	}
-      }
-    }
-    return errorCount
-  }
-
   getLabel(formValues){
     if (formValues.family_name){
       let name = formValues.family_name;
@@ -150,13 +104,12 @@ class PersonDetail extends React.Component {
      }
     const errors = submittedErrors || {};
     const label = this.getLabel(formValues)
-    const errorCount = this.getErrorCount(submittedErrors);
-    console.log(settings.position_types.filter((type) => (type.id === 'commercial'? type.label : null))[0].label)
+    const errorCount = Object.values(errors).length;
     return (
       <div>
       <div className={classes.tabContent}>
 	  <Card>
-	    <RecordBar label={label} errorCount={errorCount.person} Icon={PersonIcon}/>
+	    <RecordBar label={label} errorCount={errorCount} Icon={PersonIcon}/>
 	    <Tabs value={currentTab || 0}
 		  onChange={this.handleTabClicked}
 		  indicatorColor="primary"
@@ -168,10 +121,9 @@ class PersonDetail extends React.Component {
 	    {!currentTab? (
               <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
 		<CardContent className={classes.cardContainer}>
-		  <PersonForm name="person"
-			      errorCount={errorCount.person}/>
+		  <PersonForm name="person" />
 		  <div className={classes.recordAccordions}>
-		  <RecordSection label="Accounts"
+		    <RecordSection label="Accounts"
 				 errors={errors}
 				 name="accounts"
 				 settings={settings}
@@ -179,7 +131,7 @@ class PersonDetail extends React.Component {
 				 Form={AccountsForm}
 				 fieldLabels = {(value) => ([(settings.account_types.filter((type) => (type.id === value.type? type.label : null))[0]||{}).label||null, value.value])}
 				 >
-		  </RecordSection>
+		    </RecordSection>
 		  <RecordSection label="Affiliations"
 				 errors={errors}
 				 name="memberships"

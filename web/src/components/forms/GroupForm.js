@@ -20,78 +20,51 @@ import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
 class GroupForm extends React.Component {
-    getErrorCount() {
-        if (!this.props.errors){
-            return 0
-        }
-        let errorCount = 0;
-        for (const field of ['international_name', 'native_name', 'abbreviated_name', 'type', 'start_date', 'end_date', 'location']){
-            if (this.props.errors[field] !== undefined){
-                errorCount += 1;
-            }
-        }
-        return errorCount
-    }
 
     render(){
-      const { classes, onAccordionClicked, open, typeOptions } = this.props;
-      const errorCount = this.getErrorCount();
+      const { classes, settings } = this.props;
 
       return (
-          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><GroupIcon /></Badge>: <GroupIcon />}</ListItemIcon>
-              <ListItemText primary="Group" />
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.editorPanel}>
-          <Card className={classes.editorCard}>
-          <CardContent>
-           <div className={classes.formItem}>
-             <Field name="type" component={mappedSelect} options={typeOptions} label="Type" className={classes.flex}/>
-             <span className={classes.gutter}> </span>
-             <Field name="international_name" component={mappedTextField} label="International Name" className={classes.flex}/>
-           </div>
-           <div className={classes.formItem}>
-             <Field name="native_name" component={mappedTextField} label="Native Name" className={classes.flex}/>
-             <span className={classes.gutter}> </span>
-             <Field name="abbreviated_name" component={mappedTextField} label="Abbreviated Name" className={classes.flex}/>
-           </div>
-           <div className={classes.formItem}>
-             <Fields names={['parent_id', '_parent_name']}
-                    component={mappedRelationField}
-                    placeholder="Part of parent Group"
-                    kind="group"
-                    className={classes.flex}/>
-           </div>
-           <div className={classes.formItem}>
-             <Field name="start_date"
-                    component={mappedTextField}
-                    type="date"
-                    label="Start Date"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
-             <span className={classes.gutter}> </span>
-             <Field name="end_date"
-                    component={mappedTextField}
-                    type="date"
-                    label="End Date"
-                    className={classes.flex}
-                    InputLabelProps={{shrink: true}}/>
-             <span className={classes.gutter}> </span>
-             <Field name="location"
-                    component={mappedTextField}
-                    label="Location"
-                    className={classes.flex} />
-          </div>
-        </CardContent>
-          <CardActions>
-          <Button type="submit" color="primary">
-          Update
-          </Button>
-          </CardActions>
-          </Card>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+        <div className={classes.formItem}>
+	  <div className={classes.formContainer}>
+            <div className={classes.formFieldRow}>
+              <Field name="type" component={mappedSelect} options={settings.type} label="Type" className={classes.flex}/>
+              <span className={classes.gutter}> </span>
+              <Field name="international_name" component={mappedTextField} label="International Name" className={classes.flex}/>
+              <span className={classes.gutter}> </span>
+              <Field name="abbreviated_name" component={mappedTextField} label="Abbreviated Name" className={classes.dateField}/>
+            </div>
+            <div className={classes.formFieldRow}>
+              <Fields names={['parent_id', '_parent_name']}
+                      component={mappedRelationField}
+                      placeholder="Part of parent Group"
+                      kind="group"
+                      className={classes.flex}/>
+              <span className={classes.gutter}> </span>
+              <Field name="native_name" component={mappedTextField} label="Native Name" className={classes.flex}/>
+            </div>
+            <div className={classes.formFieldRow}>
+              <Field name="location"
+                     component={mappedTextField}
+                     label="Location"
+                     className={classes.flex} />
+              <span className={classes.gutter}> </span>
+              <Field name="start_date"
+                     component={mappedTextField}
+                     type="date"
+                     label="Start Date"
+                     className={classes.dateField}
+                     InputLabelProps={{shrink: true}}/>
+              <span className={classes.gutter}> </span>
+              <Field name="end_date"
+                     component={mappedTextField}
+                     type="date"
+                     label="End Date"
+                     className={classes.dateField}
+                     InputLabelProps={{shrink: true}}/>
+            </div>
+	  </div>
+	</div>
       );
     }
 }

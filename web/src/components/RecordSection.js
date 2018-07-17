@@ -50,7 +50,7 @@ const styles = theme => ({
     padding: theme.spacing.unit * 2,
     paddingBottom: 0
   },
-  editorPanel: {
+  editorBar: {
     backgroundColor: '#f5f5f5',
     boxShadow: '0px 2px 4px -1px rgba(0, 0, 0, 0.2),0px 4px 5px 0px rgba(0, 0, 0, 0.14),0px 1px 10px 0px rgba(0, 0, 0, 0.12)'
   },
@@ -100,7 +100,7 @@ const RecordAccordion = ({classes, fields, field, fieldIndex, error, open, onRow
   const value = (fields.get(fieldIndex));
   const labels = fieldLabels(value);
   return (<ExpansionPanel expanded={open} onChange={onRowClick} className={error? classes.editorError: null}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} className={classes.editorPanel}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} className={open ? classes.editorBar: null}>
 	  <div className={classes.RecordAccordionColumn}>
 	  <Typography className={classes.RecordAccordionHeading}>{labels[0]}</Typography>
 	  </div>

@@ -21,7 +21,7 @@ import styles from './formStyles.js';
 class PersonForm extends React.Component {
 
     render(){
-      const { classes, onAccordionClicked, open, formValues } = this.props;
+      const { classes } = this.props;
       return (
      <div className={classes.formItem}>
        <div className={classes.formContainer}>
@@ -44,8 +44,7 @@ class PersonForm extends React.Component {
 	   <Field name="initials"
 		  component={mappedTextField}
 		  label="Initials"/>
-         </div>
-         <div className={classes.formFieldRow}>
+	   <span className={classes.gutter}> </span>
 	   <Field name="alternative_name"
                   component={mappedTextField}
                   multiline

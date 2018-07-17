@@ -111,15 +111,7 @@ class MembersListing extends React.Component {
       const { classes, query, total, limit, offset, records, filters,
               onAccordionClicked, open} = this.props;
       return (
-          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <ListItemIcon><CardMembershipIcon /></ListItemIcon>
-              <ListItemText primary="Members" />
-            {total?<Chip label={total} align="right" key={total}/>:null}
-            <div />
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails style={{padding: 0}}>
-          <Card className={classes.editorCard}>
+        <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>
         <div>
           <AppBar position="static" color="default">
@@ -203,8 +195,6 @@ class MembersListing extends React.Component {
       </div>
         </CardContent>
         </Card>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
         );
     }
 }
