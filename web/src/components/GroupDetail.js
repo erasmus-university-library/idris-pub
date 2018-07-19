@@ -19,17 +19,12 @@ import AffiliationsListing from './forms/AffiliationsListing';
 
 import GroupIcon from '@material-ui/icons/Group';
 import FingerprintIcon from '@material-ui/icons/Fingerprint';
-
+import SaveIcon from '@material-ui/icons/Save';
 
 import RecordBar from './RecordBar.js';
 import RecordSection from './RecordSection.js';
 
-
-const styles = theme => ({
-  tabContent: {
-      margin: theme.spacing.unit * 2
-  }
-});
+import styles from './forms/formStyles.js';
 
 @reduxForm({form: 'group'})
 class GroupDetail extends React.Component {
@@ -69,6 +64,14 @@ class GroupDetail extends React.Component {
         }
     }
 
+  getLabel(formValues) {
+    let name = formValues.international_name || '';
+    if (formValues.abbreviated_name){
+      name = `${name} (${formValues.abbreviated_name})`;
+    }
+    return name;
+  }
+
   render() {
     const { classes, handleSubmit, openedAccordion, submittedErrors,
             settings, onMemberChange, onMemberFetch, onMemberSubmit, onMemberAdd,
@@ -82,7 +85,7 @@ class GroupDetail extends React.Component {
      }
 
     const errors = submittedErrors || {};
-    const label = formValues.international_name || '';
+    const label = this.getLabel(formValues);
     const errorCount = Object.values(errors).length;
 
 
@@ -122,6 +125,13 @@ class GroupDetail extends React.Component {
 			 </RecordSection>
 		     </div>
 	       </CardContent>
+		<CardActions>
+		  <Zoom in={true} className={classes.SaveButton}>
+		  <Button variant="fab" type="submit" color="primary">
+		    <SaveIcon />
+		  </Button>
+		  </Zoom>
+		</CardActions>
          </form>: null}
          {currentTab === 1?
            (
@@ -162,65 +172,6 @@ class GroupDetail extends React.Component {
       </div>
       </div>
     );
-    /*
-    foo = (
-      <div>
-	<Card>
-      <Tabs value={currentTab || 0}
-            onChange={this.handleTabClicked}
-            indicatorColor="primary"
-            textColor="primary"
-            centered>
-        <Tab label="Group Information" />
-        <Tab label="Affiliated Works" />
-      </Tabs>
-      <div className={classes.tabContent}>
-        {!currentTab?
-         <form onSubmit={ handleSubmit(this.handleSubmit) } noValidate autoComplete="off">
-            <GroupForm open={openedAccordion === 'group' || openedAccordion === undefined}
-                       name="group"
-                       errors={submittedErrors}
-                       typeOptions={settings.type}
-                       history={history}
-                       onAccordionClicked={this.handleAccordionClicked('group')}/>
-            <AccountsForm open={openedAccordion === 'account'}
-                          name="account"
-                          errors={submittedErrors}
-                          formValues={formValues.accounts || []}
-                          typeOptions={settings.account_types}
-                          onAccordionClicked={this.handleAccordionClicked('account')}/>
-            <MembersListing open={openedAccordion === 'members'}
-                            name="members"
-                            id={this.props.id}
-                            history={history}
-                            {...memberListingState}
-                            onAccordionClicked={this.handleAccordionClicked('members')}
-                            onChange={onMemberChange}
-                            onFetch={onMemberFetch}
-                            onSubmit={onMemberSubmit}
-                            onMemberAdd={onMemberAdd} />
-            <SubGroupsForm open={openedAccordion === 'subgroups'}
-                           name="subgroups"
-                           id={this.props.id}
-                           history={history}
-                           {...subgroupListingState}
-                           onAccordionClicked={this.handleAccordionClicked('subgroups')}
-                           onChange={onSubgroupChange}
-                           onFetch={onSubgroupFetch} />
-        </form>: null}
-        {currentTab === 1?
-	<CardContent className={classes.contributorCard}>
-           <AffiliationsListing {...affiliationListingState}
-                                 history={history}
-                                 id={this.props.id}
-                                 settings={workSettings}
-                                 onChange={onAffiliationChange}
-                                  onFetch={onAffiliationFetch} />
-	  </CardContent>
-         : null}
-        </div>
-        </div>
-    );*/
   }
 }
 

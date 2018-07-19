@@ -17,12 +17,20 @@ import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
+import TablePagination from '@material-ui/core/TablePagination';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import FormControl from '@material-ui/core/FormControl';
+
 
 import { Field, FieldArray } from 'redux-form'
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
+import SearchIcon from '@material-ui/icons/Search';
+
 
 //import styles from './forms/formStyles.js';
 
@@ -62,15 +70,22 @@ const styles = theme => ({
     padding: theme.spacing.unit * 1,
     paddingTop: 0
   },
+  editorPagination: {
+    flexGrow: 1
+  },
+  editorSearch: {
+    marginTop: -theme.spacing.unit * 2,
+    marginRight: theme.spacing.unit * 2
+  },
   RecordAccordionContainer: {
     paddingTop: theme.spacing.unit * 2
   },
   RecordAccordionHeading: {
     fontSize: theme.typography.pxToRem(15),
+    color: theme.palette.text.secondary,
   },
   RecordAccordionSecondaryHeading: {
     fontSize: theme.typography.pxToRem(15),
-    color: theme.palette.text.secondary,
   },
   RecordAccordionColumn: {
     flexBasis: '20%',
@@ -99,12 +114,16 @@ const RecordSectionIcon = ({classes, Icon, errorCount}) => {
 const RecordAccordion = ({classes, fields, field, fieldIndex, error, open, onRowClick, fieldLabels, Form, settings}) => {
   const value = (fields.get(fieldIndex));
   const labels = fieldLabels(value);
-  return (<ExpansionPanel expanded={open} onChange={onRowClick} className={error? classes.editorError: null}>
+  if (labels[1] !== undefined && labels[1].length > 80){
+    labels[1] = labels[1].substr(0, 80) + '…';
+  }
+
+  return (<ExpansionPanel key={fieldIndex} expanded={open} onChange={onRowClick} className={error? classes.editorError: null}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} className={open ? classes.editorBar: null}>
 	  <div className={classes.RecordAccordionColumn}>
 	  <Typography className={classes.RecordAccordionHeading}>{labels[0]}</Typography>
 	  </div>
-	  <div className={classes.RecordAccordionSecondaryColumn} style={{flexGrow:1}}>
+	  <div className={classes.RecordAccordionSecondaryColumn}>
 	  <Typography className={classes.RecordAccordionSecondaryHeading}>{labels[1]}</Typography>
 	  </div>
 	  </ExpansionPanelSummary>
@@ -118,61 +137,12 @@ const RecordAccordion = ({classes, fields, field, fieldIndex, error, open, onRow
 	  </ExpansionPanel>);
 }
 
-const RecordCard = ({classes, errors, label, onRowClick, onAddField, selectedField, Icon, fields, fieldLabels, settings, Form}) => {
-  let errorCount = 0;
-  if (errors){
-    errorCount = Object.values(errors).length;
-  }
-    return (
-      <Card className={classes.RecordCard}>
-	<CardContent className={classes.doublePadding}>
-	  <List className={classes.noPadding}>
-	    <ListItem className={classes.noPadding}>
-	      <RecordSectionIcon
-		Icon={Icon}
-		errorCount={errorCount}
-		classes={classes}/>
-	      <ListItemText primary={label} />
-	      {fields.length ? (
-		<Chip label={fields.length} align="right" />
-	      ) : (
-		<IconButton aria-label="Add" onClick={onAddField(fields)}><AddIcon/></IconButton>
-	      ) }
-      </ListItem>
-	</List>
-	{fields.length > 0 ? (
-	<div className={classes.RecordAccordionContainer}>
-	{fields.map((field, fieldIndex) => (
-	  <RecordAccordion
-	    key={field}
-	    open={fieldIndex === selectedField}
-	    onRowClick={onRowClick(fieldIndex)}
-	    classes={classes}
-	    fields={fields}
-	    field={field}
-	    error={(errors||{})[fieldIndex] || null}
-	    fieldIndex={fieldIndex}
-	    fieldLabels={fieldLabels}
-	    Form={Form}
-	    settings={settings}/>))}
-	  </div>
-	) : (null)}
-	</CardContent>
-	{fields.length > 0 ? (
-	  <CardActions>
-	    <IconButton aria-label="Add" onClick={onAddField(fields)}><AddIcon/></IconButton>
-	  </CardActions> ) : (null)
-	}
-      </Card>
-    );
-
-}
 
 @withStyles(styles)
 class RecordSection extends React.Component {
 
   state = {
-    limit: 5,
+    limit: 10,
     offset: 0,
     total: 0,
     selected: null,
@@ -192,9 +162,130 @@ class RecordSection extends React.Component {
     this.handleRowClick(fields.length)()
   }
 
+  handlePageChange = (event, page) => {
+    this.setState({offset: page * this.state.limit})
+  }
 
-  renderFields = ({fields, meta: error, errors, selected}) => {
+  handleRowsPerPageChange = event => {
+    this.setState({offset: 0, limit: event.target.value});
+  };
+
+  handleQueryChange = event => {
+    // calc new total value
+    let query = event.target.value;
+    if (query) {
+      query = query.toLowerCase();
+    } else {
+      query = null;
+    }
+    this.setState({offset: 0,
+                   selected: null,
+                   query});
+  }
+
+
+  filteredFields = (fields, query) => {
+    const result = [];
+
+    fields.forEach(
+      (field, index) => {
+	if (query) {
+	  let match = false;
+	  Object.values(fields.get(index)).forEach((value) => {if (value.toLowerCase !== undefined && value.toLowerCase().indexOf(query) !== -1){match = true;}});
+	  if (match === false){
+	    return;
+	  }
+	}
+	result.push([field, index]);
+
+      })
+    return result;
+  }
+
+  paginatedFields = (filteredFields, offset, limit) => {
+    return filteredFields.slice(offset, offset+limit);
+  }
+
+  renderFields = ({fields, meta: error, errors, selected, limit, offset, total, query}) => {
     const {classes, name, label, Icon, fieldLabels, Form, settings} = this.props;
+    let errorCount = 0;
+    if (errors){
+      errorCount = Object.values(errors).length;
+    }
+    const filteredFields = this.filteredFields(fields, query);
+    const paginatedFields = this.paginatedFields(filteredFields, offset, limit);
+
+    return (
+      <Card className={classes.RecordCard}>
+	<CardContent className={classes.doublePadding}>
+	  <List className={classes.noPadding}>
+	    <ListItem className={classes.noPadding}>
+	      <RecordSectionIcon
+		Icon={Icon}
+		errorCount={errorCount}
+		classes={classes}/>
+	      {fields.length > limit ? (
+		<FormControl fullWidth className={classes.editorSearch}>
+		  <InputLabel htmlFor={`search-${name}`}>{label}</InputLabel>
+		  <Input
+                    id={`search-${name}`}
+                    type="text"
+                    value={query || ''}
+                    onChange={this.handleQueryChange}
+                    endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
+		    />
+		</FormControl>
+
+	      ) : (
+		<ListItemText primary={label} />
+	      )}
+
+	      {fields.length ? (
+		<Chip label={filteredFields.length === fields.length ? fields.length : `${filteredFields.length} / ${fields.length}`} align="right" />
+	      ) : (
+		<IconButton aria-label="Add" onClick={this.handleAddField(fields)}><AddIcon/></IconButton>
+	      ) }
+      </ListItem>
+	</List>
+	{fields.length > 0 ? (
+	  <div className={classes.RecordAccordionContainer}>
+	    {paginatedFields.map((field) => (
+	      <RecordAccordion
+		key={field[1]}
+		open={field[1] === selected}
+		onRowClick={this.handleRowClick(field[1])}
+		classes={classes}
+		fields={fields}
+		field={field[0]}
+		error={(errors||{})[field[1]] || null}
+		fieldIndex={field[1]}
+		fieldLabels={fieldLabels}
+		Form={Form}
+		settings={settings}/>))}
+	  </div>
+	) : (null)}
+      </CardContent>
+	{fields.length > 0 ? (
+	  <CardActions>
+	    <IconButton aria-label="Add" onClick={this.handleAddField(fields)}><AddIcon/></IconButton>
+	    {fields.length > limit ? (
+	      <div className={classes.editorPagination}>
+	      <TablePagination
+		component="div"
+		labelRowsPerPage="items per page:"
+		count={fields.length}
+		rowsPerPage={limit}
+		page={(offset) / (limit)}
+		onChangePage={this.handlePageChange}
+		onChangeRowsPerPage={this.handleRowsPerPageChange}>
+            </TablePagination></div>) : (null)}
+
+	  </CardActions> ) : (null)
+	}
+      </Card>
+    );
+
+
     return (
       <RecordCard
 	classes={classes}
@@ -213,8 +304,9 @@ class RecordSection extends React.Component {
 
   render() {
     const {name, errors} = this.props;
+    const {selected, limit, total, offset, query } = this.state
     return (
-      <FieldArray name={name} component={this.renderFields} errors={errors} selected={this.state.selected} />
+      <FieldArray name={name} component={this.renderFields} errors={errors} selected={selected} limit={limit} offset={offset} total={total} query={query} />
     );
 
   }

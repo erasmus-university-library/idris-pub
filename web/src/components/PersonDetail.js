@@ -27,7 +27,6 @@ import RecordBar from './RecordBar.js';
 import RecordSection from './RecordSection.js';
 import styles from './forms/formStyles.js';
 
-
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { mappedTextField, mappedSelect } from './widgets/mapping.js';

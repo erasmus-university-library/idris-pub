@@ -20,18 +20,6 @@ import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
 class WorkForm extends React.Component {
-    getErrorCount() {
-        if (!this.props.errors){
-            return 0
-        }
-        let errorCount = 0;
-        for (const field of ['title', 'issued', 'type']){
-            if (this.props.errors[field] !== undefined){
-                errorCount += 1;
-            }
-        }
-        return errorCount
-    }
     shouldComponentUpdate(nextProps, nextState){
         if (this.props.open === false && nextProps.open === false){
             return false;
@@ -40,43 +28,26 @@ class WorkForm extends React.Component {
     }
 
     render(){
-      const { classes, onAccordionClicked, open, typeOptions, formValues } = this.props;
-      const errorCount = this.getErrorCount();
-
-      let typeLabel = formValues.type || 'work';
-      typeOptions.forEach(type => {if(type.id === formValues.type){ typeLabel = type.label}});
+      const { classes, onAccordionClicked, open, settings } = this.props;
 
       return (
-          <ExpansionPanel expanded={open} onChange={onAccordionClicked}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <ListItemIcon>{ errorCount > 0 ? <Badge badgeContent={errorCount} color="primary" classes={{colorPrimary: classes.errorBGColor}}><StyleIcon /></Badge>: <StyleIcon />}</ListItemIcon>
-              <ListItemText primary={`Work / ${typeLabel}`} />
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.editorPanel}>
-          <Card className={classes.editorCard}>
-          <CardContent>
-           <div className={classes.formItem}>
-             <Field name="type" component={mappedSelect} options={typeOptions} label="Type" className={classes.flex}/>
-             <span className={classes.gutter}> </span>
-             <Field name="issued" component={mappedTextField} label="Issued Date" type="date" className={classes.dateField} />
-           </div>
-           <div className={classes.formItem}>
-             <Field name="title"
-                    component={mappedTextField}
-                    label="Title / Name"
-                    multiline
-                    rowsMax="4"
-                    className={classes.flex}/>
-           </div>
-        </CardContent>
-          <CardActions>
-          <Button type="submit" color="primary">
-          Update
-          </Button>
-          </CardActions>
-          </Card>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+        <div className={classes.formItem}>
+          <div className={classes.formContainer}>
+            <div className={classes.formFieldRow}>
+              <Field name="type" component={mappedSelect} options={settings.type} label="Type" className={classes.flex}/>
+              <span className={classes.gutter}> </span>
+              <Field name="issued" component={mappedTextField} label="Issued Date" type="date" className={classes.dateField} />
+            </div>
+            <div className={classes.formFieldRow}>
+              <Field name="title"
+                     component={mappedTextField}
+                     label="Title / Name"
+                     multiline
+                     rowsMax="4"
+                     className={classes.flex}/>
+            </div>
+          </div>
+        </div>
       );
     }
 }
