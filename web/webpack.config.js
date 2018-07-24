@@ -6,6 +6,9 @@ const htmlWebpackPlugin = new HtmlWebpackPlugin({
     template: path.join(__dirname, "public/index.html"),
     filename: "./index.html"
 });
+
+
+
 module.exports = {
   entry: path.join(__dirname, "src/index.js"),
   output: {
@@ -24,6 +27,17 @@ module.exports = {
             plugins: ["transform-decorators-legacy"]
           }
         }
+      },
+      {
+	test: /\.(js|jsx)$/,
+	exclude: /node_modules/,
+	use: [{loader: "babel-loader",
+               options: {
+		 presets: ['env', 'es2015', 'react', 'stage-0'],
+		 plugins: ["transform-decorators-legacy"]
+               }
+	      },
+	      'eslint-loader']
       },
       {
 	test: /\.(png|svg|csl|xml)$/,
