@@ -34,6 +34,7 @@ import SearchIcon from '@material-ui/icons/Search';
 
 //import styles from './forms/formStyles.js';
 
+
 const styles = theme => ({
 
   noPadding: {
@@ -62,11 +63,14 @@ const styles = theme => ({
     backgroundColor: '#f5f5f5',
     boxShadow: '0px 2px 4px -1px rgba(0, 0, 0, 0.2),0px 4px 5px 0px rgba(0, 0, 0, 0.14),0px 1px 10px 0px rgba(0, 0, 0, 0.12)'
   },
+  editorSummary: {
+    backgroundColor: '#f5f5f5',
+  },
   editorError: {
     boxShadow: '0px 2px 4px -1px #f44336,0px 4px 5px 0px #f44336,0px 1px 10px 0px #f44336'
   },
   editorActions: {
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-end',
     padding: theme.spacing.unit * 1,
     paddingTop: 0
   },
@@ -111,31 +115,6 @@ const RecordSectionIcon = ({classes, Icon, errorCount}) => {
 
 }
 
-const RecordAccordion = ({classes, fields, field, fieldIndex, error, open, onRowClick, fieldLabels, Form, settings}) => {
-  const value = (fields.get(fieldIndex));
-  const labels = fieldLabels(value);
-  if (labels[1] !== undefined && labels[1].length > 80){
-    labels[1] = labels[1].substr(0, 80) + '…';
-  }
-
-  return (<ExpansionPanel key={fieldIndex} expanded={open} onChange={onRowClick} className={error? classes.editorError: null}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} className={open ? classes.editorBar: null}>
-	  <div className={classes.RecordAccordionColumn}>
-	  <Typography className={classes.RecordAccordionHeading}>{labels[0]}</Typography>
-	  </div>
-	  <div className={classes.RecordAccordionSecondaryColumn}>
-	  <Typography className={classes.RecordAccordionSecondaryHeading}>{labels[1]}</Typography>
-	  </div>
-	  </ExpansionPanelSummary>
-	  {open === true ? ([
-            <ExpansionPanelDetails className={classes.editorContent}>
-	      <Form settings={settings} fields={fields} field={field} fieldIndex={fieldIndex} error={error}/>
-	      </ExpansionPanelDetails>,
-	    <ExpansionPanelActions className={classes.editorActions}>
-	      <IconButton aria-label="Remove" onClick={() => fields.remove(fieldIndex)}><DeleteIcon/></IconButton>
-	    </ExpansionPanelActions>]) : (null)}
-	  </ExpansionPanel>);
-}
 
 
 @withStyles(styles)
@@ -153,13 +132,20 @@ class RecordSection extends React.Component {
     if (index === this.state.selected){
       this.setState({selected: null});
     } else {
-      this.setState({selected: index});
+      const offset = index - (index % this.state.limit);
+      this.setState({selected: index, offset});
     }
   }
 
-  handleAddField = (fields) => (event) => {
-    fields.push({});
-    this.handleRowClick(fields.length)()
+  handleAddField = (fields, index=null) => (event) => {
+    console.log('add', fields, index)
+    if (index === null){
+      fields.push({});
+      this.handleRowClick(fields.length)()
+    } else {
+      fields.insert(index, {})
+      this.handleRowClick(index)()
+    }
   }
 
   handlePageChange = (event, page) => {
@@ -206,6 +192,45 @@ class RecordSection extends React.Component {
     return filteredFields.slice(offset, offset+limit);
   }
 
+  renderAccordion = ({fields, field, fieldIndex, error, open}) => {
+    const {classes, name, label, Icon, fieldLabels, Form, settings} = this.props;
+
+    const value = (fields.get(fieldIndex));
+    const labels = fieldLabels(value);
+    if (labels[1] !== undefined && labels[1].length > 80){
+      labels[1] = labels[1].substr(0, 80) + '…';
+    }
+
+    return (
+      <ExpansionPanel
+	key={fieldIndex}
+	expanded={open}
+	onChange={this.handleRowClick(fieldIndex)}
+	className={error? classes.editorError: null}>
+        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} className={open ? classes.editorBar: classes.editorSummary}>
+	  <div className={classes.RecordAccordionColumn}>
+	    <Typography className={classes.RecordAccordionHeading}>{labels[0]}</Typography>
+	  </div>
+	  <div className={classes.RecordAccordionSecondaryColumn}>
+	    <Typography className={classes.RecordAccordionSecondaryHeading}>{labels[1]}</Typography>
+	  </div>
+	</ExpansionPanelSummary>
+	{open === true ? ([
+	    <ExpansionPanelDetails className={classes.editorContent}>
+		<Form settings={settings} fields={fields} field={field} fieldIndex={fieldIndex} error={error}/>
+	      </ExpansionPanelDetails>,
+	  <ExpansionPanelActions className={classes.editorActions}>
+	    <Button aria-label="Remove"
+			title={`Remove from ${label}`}
+			onClick={() => fields.remove(fieldIndex)}><DeleteIcon/> Remove</Button>
+	    <Button aria-label="Insert"
+			title={`Insert into ${label}`}
+			onClick={() => fields.insert(fieldIndex, {})}><AddIcon/> Insert</Button>
+	  </ExpansionPanelActions>]) : ( null)}
+      </ExpansionPanel>);
+    }
+
+
   renderFields = ({fields, meta: error, errors, selected, limit, offset, total, query}) => {
     const {classes, name, label, Icon, fieldLabels, Form, settings} = this.props;
     let errorCount = 0;
@@ -249,19 +274,13 @@ class RecordSection extends React.Component {
 	</List>
 	{fields.length > 0 ? (
 	  <div className={classes.RecordAccordionContainer}>
-	    {paginatedFields.map((field) => (
-	      <RecordAccordion
-		key={field[1]}
-		open={field[1] === selected}
-		onRowClick={this.handleRowClick(field[1])}
-		classes={classes}
-		fields={fields}
-		field={field[0]}
-		error={(errors||{})[field[1]] || null}
-		fieldIndex={field[1]}
-		fieldLabels={fieldLabels}
-		Form={Form}
-		settings={settings}/>))}
+	    {paginatedFields.map((field) => (this.renderAccordion(
+	      {fields,
+	       field: field[0],
+	       fieldIndex: field[1],
+	       open: field[1] === this.state.selected,
+	       error: (errors||{})[field[1]] || null,
+	    })))}
 	  </div>
 	) : (null)}
       </CardContent>
@@ -284,22 +303,6 @@ class RecordSection extends React.Component {
 	}
       </Card>
     );
-
-
-    return (
-      <RecordCard
-	classes={classes}
-	label={label}
-	errors={errors[name]}
-	fields={fields}
-	Icon={Icon}
-	Form={Form}
-	settings={settings}
-	selectedField={selected}
-	fieldLabels={fieldLabels}
-	onRowClick={this.handleRowClick}
-	onAddField={this.handleAddField}>
-      </RecordCard>)
   }
 
   render() {

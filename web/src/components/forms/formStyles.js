@@ -117,6 +117,11 @@ const styles = theme => ({
     top: '100%',
     marginLeft: -70,
     marginTop: -70
-  }
+  },
+  RelationButton: {
+    marginTop: '8px',
+    width: '40px',
+    height: '40px'
+  },
 });
 export default styles
