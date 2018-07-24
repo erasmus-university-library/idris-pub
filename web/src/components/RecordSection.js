@@ -24,7 +24,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import FormControl from '@material-ui/core/FormControl';
 
 
-import { Field, FieldArray } from 'redux-form'
+import { FieldArray } from 'redux-form'
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
@@ -193,7 +193,7 @@ class RecordSection extends React.Component {
   }
 
   renderAccordion = ({fields, field, fieldIndex, error, open}) => {
-    const {classes, name, label, Icon, fieldLabels, Form, settings} = this.props;
+    const {classes, label, fieldLabels, Form, settings} = this.props;
 
     const value = (fields.get(fieldIndex));
     const labels = fieldLabels(value);
@@ -216,10 +216,10 @@ class RecordSection extends React.Component {
 	  </div>
 	</ExpansionPanelSummary>
 	{open === true ? ([
-	    <ExpansionPanelDetails className={classes.editorContent}>
+	    <ExpansionPanelDetails key={0} className={classes.editorContent}>
 		<Form settings={settings} fields={fields} field={field} fieldIndex={fieldIndex} error={error}/>
 	      </ExpansionPanelDetails>,
-	  <ExpansionPanelActions className={classes.editorActions}>
+	  <ExpansionPanelActions key={1} className={classes.editorActions}>
 	    <Button aria-label="Remove"
 			title={`Remove from ${label}`}
 			onClick={() => fields.remove(fieldIndex)}><DeleteIcon/> Remove</Button>
@@ -232,7 +232,7 @@ class RecordSection extends React.Component {
 
 
   renderFields = ({fields, meta: error, errors, selected, limit, offset, total, query}) => {
-    const {classes, name, label, Icon, fieldLabels, Form, settings} = this.props;
+    const {classes, name, label, Icon } = this.props;
     let errorCount = 0;
     if (errors){
       errorCount = Object.values(errors).length;

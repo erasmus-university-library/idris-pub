@@ -65,14 +65,14 @@ class PersonListing extends Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
       if (this.props.offset === undefined){
           // first run
           this.props.onChange({offset: 0});
       }
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.query !== this.props.query ||
             nextProps.offset !== this.props.offset ||
             nextProps.limit !== this.props.limit){

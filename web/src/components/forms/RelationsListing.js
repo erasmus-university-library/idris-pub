@@ -54,7 +54,7 @@ class RelationsListing extends Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
         if (this.props.id === 'add'){
             this.props.onChange({offset: 0, filters: {related_work_id: null}});
         } else if ((this.props.filters||{}).related_work_id !== this.props.id) {
@@ -62,7 +62,7 @@ class RelationsListing extends Component {
         }
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
             this.props.onChange({offset: 0, filters: {related_work_id: nextProps.id}});
         }

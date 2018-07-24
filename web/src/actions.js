@@ -1,6 +1,5 @@
 import { createAction } from 'redux-actions';
 import { stopSubmit } from 'redux-form';
-import { SubmissionError } from 'redux-form';
 
 import IdrisSDK from './sdk.js';
 const sdk = new IdrisSDK();

@@ -1,3 +1,4 @@
+//import React from "react";
 import React from 'react';
 import { render } from 'react-dom';
 import { createStore, applyMiddleware, compose, combineReducers } from 'redux';
@@ -25,10 +26,12 @@ const store = createStore(combineReducers({app: appReducer,
                           preloadedState,
                           composeEnhancers(reduxBatch, applyMiddleware(thunkMiddleware), reduxBatch));
 
-render(<Provider store={store}>
-         <Router>
-          <App />
-         </Router>
-        </Provider>,
-        document.getElementById('root'));
+
+render(
+  <Provider store={store}>
+    <Router>
+      <App />
+    </Router>
+  </Provider>,
+  document.getElementById('root'));
 registerServiceWorker();

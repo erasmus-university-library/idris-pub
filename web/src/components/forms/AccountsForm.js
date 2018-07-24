@@ -8,7 +8,7 @@ import styles from './formStyles.js';
 @withStyles(styles, { withTheme: true })
 class AccountsForm extends React.Component {
   render(){
-    const { classes, settings, fields, field, fieldIndex } = this.props;
+    const { classes, settings, field, fieldIndex } = this.props;
     return (
       <div key={fieldIndex} className={classes.formItem}>
 	<div className={classes.formFieldRow}>

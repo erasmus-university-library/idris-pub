@@ -3,5 +3,8 @@
 	"plugins": ["react"],
 	"rules": {
 	"no-unused-vars": ["warn", {"args": "none"}],
-	},
+        "react/jsx-uses-vars": [2],
+	"react/prop-types": 0
+    	},
+	"extends": ["plugin:react/recommended"]
 }

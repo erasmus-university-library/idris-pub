@@ -28,7 +28,7 @@ import styles from './forms/formStyles.js';
 
 @reduxForm({form: 'group'})
 class GroupDetail extends React.Component {
-    componentWillMount(){
+    componentDidMount(){
        if (this.props.id === 'add'){
            this.props.changeAppHeader('Add Group');
            this.props.onFetch(null);
@@ -58,7 +58,7 @@ class GroupDetail extends React.Component {
   }
 
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
             this.props.onFetch(nextProps.id);
         }

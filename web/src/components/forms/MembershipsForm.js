@@ -10,7 +10,7 @@ import styles from './formStyles.js';
 @withStyles(styles, { withTheme: true })
 class MembershipsForm extends React.Component {
     render() {
-      const { classes, settings, fields, field, error, fieldIndex } = this.props;
+      const { classes, field, error, fieldIndex } = this.props;
       return (
 	<div key={fieldIndex} className={classes.formItem}>
 	  <div className={classes.formFieldRow}>

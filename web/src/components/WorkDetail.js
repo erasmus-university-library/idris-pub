@@ -11,11 +11,6 @@ import DescriptionsForm from './forms/DescriptionsForm';
 import IdentifiersForm from './forms/IdentifiersForm';
 import MeasuresForm from './forms/MeasuresForm';
 import RelationsListing from './forms/RelationsListing';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 
 import Card from '@material-ui/core/Card';
@@ -43,7 +38,7 @@ import styles from './forms/formStyles.js';
 @withStyles(styles)
 @reduxForm({form: 'work'})
 class WorkDetail extends React.Component {
-    componentWillMount(){
+    componentDidMount(){
        if (this.props.id === 'add'){
            this.props.changeAppHeader('Add Work');
            this.props.onFetch(null);
@@ -73,7 +68,7 @@ class WorkDetail extends React.Component {
   }
 
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
             if (this.props.currentTab !== 0){
                 this.props.onDetailChange({currentTab: 0});
@@ -92,8 +87,8 @@ class WorkDetail extends React.Component {
   }
 
   render() {
-    const { classes, handleSubmit, openedAccordion, submittedErrors,
-            settings, history, currentTab, formActions, formValues,
+    const { classes, handleSubmit, submittedErrors,
+            settings, history, currentTab, formValues,
             relationListingState, workSettings, onRelationChange, onRelationFetch } = this.props;
       if (formValues === undefined){
           return null;

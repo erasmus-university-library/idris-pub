@@ -12,8 +12,6 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import FormControl from '@material-ui/core/FormControl';
 import SearchIcon from '@material-ui/icons/Search';
 import IconButton from '@material-ui/core/IconButton';
-import AddIcon from '@material-ui/icons/Add';
-import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -56,7 +54,7 @@ class ContributorsListing extends Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
         if (this.props.id === 'add'){
             this.props.onChange({offset: 0, filters: {contributor_person_id: null}});
         } else if ((this.props.filters||{}).contributor_person_id !== this.props.id) {
@@ -64,7 +62,7 @@ class ContributorsListing extends Component {
         }
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
             this.props.onChange({offset: 0, filters: {contributor_person_id: nextProps.id}});
         }

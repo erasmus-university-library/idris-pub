@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
 import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Paper from '@material-ui/core/Paper';
 import AppBar from '@material-ui/core/AppBar';
@@ -58,7 +57,7 @@ class AffiliationsListing extends Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
         if (this.props.id === 'add'){
             this.props.onChange({offset: 0, filters: {affiliation_group_id: null}});
         } else if ((this.props.filters||{}).contributor_person_id !== this.props.id) {
@@ -66,7 +65,7 @@ class AffiliationsListing extends Component {
         }
     }
 
-    componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
             this.props.onChange({offset: 0, filters: {affiliation_group_id: nextProps.id}});
         }

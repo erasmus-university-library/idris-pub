@@ -1,13 +1,9 @@
 import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 
 import Paper from '@material-ui/core/Paper';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import Chip from '@material-ui/core/Chip';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import InputAdornment from '@material-ui/core/InputAdornment';
@@ -21,19 +17,16 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 
 import styles from './formStyles.js';
 
 @withStyles(styles, { withTheme: true })
 class SubGroupsForm extends React.Component {
-    handleRowClick = (record) => (event) => {
+
+
+  handleRowClick = (record) => (event) => {
         this.props.history.push(`/record/group/${record.id}`);
         this.props.onChange({selected: record.id, records: []});
 
@@ -53,13 +46,13 @@ class SubGroupsForm extends React.Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
         this.props.onChange({offset: 0, filters: {filter_parent: this.props.id}});
     }
 
 
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
             this.props.onChange({offset: 0, filters: {filter_parent: nextProps.id}});
         }
@@ -90,7 +83,7 @@ class SubGroupsForm extends React.Component {
     }
 
     render(){
-      const { classes, onAccordionClicked, open, query, total, limit, offset, records } = this.props;
+      const { classes, query, total, limit, offset, records } = this.props;
       return (
         <Card className={classes.editorCard}>
           <CardContent className={classes.noPadding}>

@@ -56,7 +56,7 @@ class UserListing extends Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
       this.props.changeAppHeader('Users');
         this.groupTypeLabels = {};
 
@@ -70,7 +70,7 @@ class UserListing extends Component {
       }
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.query !== this.props.query ||
             nextProps.offset !== this.props.offset ||
             nextProps.limit !== this.props.limit){

@@ -96,7 +96,7 @@ class WorkListing extends Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
       this.props.changeAppHeader('Works');
       if (this.props.offset === undefined){
           // first run
@@ -104,7 +104,7 @@ class WorkListing extends Component {
       }
     }
 
-    componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.query !== this.props.query ||
             (nextProps.filters || {}).filter_type !== (this.props.filters || {}).filter_type ||
             (nextProps.filters || {}).start_date !== (this.props.filters || {}).start_date ||
@@ -138,7 +138,6 @@ class WorkListing extends Component {
 
     render(){
         const { settings, classes, query, filters, total, limit, offset, records } = this.props;
-        console.log('render work listing')
       return (
         <div>
         <Paper>

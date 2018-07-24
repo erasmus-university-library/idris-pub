@@ -31,8 +31,6 @@ class WorkRecord extends Component {
                                 submittedErrors={detailErrors}
                                 id={match.params.id}
                                 formValues={this.props.formValues}
-                                formActions={{arrayRemoveAll: this.props.FormArrayRemoveAll,
-                                              arrayPush: this.props.FormArrayPush}}
                                 settings={this.props.detailSettings}
                                 history={this.props.history}
                                 onDetailChange={this.props.updateWorkState}

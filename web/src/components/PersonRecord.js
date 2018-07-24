@@ -7,8 +7,7 @@ import PersonDetail from './PersonDetail';
 
 import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErrors } from '../selectors';
 import { updateListingState, fetchRecordListing,
-         updateDetailState, fetchRecordDetail, postRecordDetail,
-         changeAppHeader } from '../actions';
+         updateDetailState, fetchRecordDetail, postRecordDetail } from '../actions';
 import { getFormValues } from 'redux-form';
 
 

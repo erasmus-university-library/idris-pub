@@ -17,7 +17,7 @@ const styles = theme => ({
 class UserDetail extends React.Component {
 
 
-    componentWillMount(){
+    componentDidMount(){
        if (this.props.id === 'add'){
            this.props.changeAppHeader('Add User');
            this.props.onFetch(null);
@@ -41,7 +41,7 @@ class UserDetail extends React.Component {
           this.props.onDetailChange({openedAccordion: name});
       }
   }
-    componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.id !== this.props.id){
            this.props.onFetch(nextProps.id);
         }

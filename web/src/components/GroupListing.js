@@ -70,7 +70,7 @@ class GroupListing extends Component {
       this.props.onChange({offset: 0, limit: event.target.value});
     };
 
-    componentWillMount(){
+    componentDidMount(){
       this.props.changeAppHeader('Groups');
       if (this.props.offset === undefined){
           // first run
@@ -78,7 +78,7 @@ class GroupListing extends Component {
       }
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.query !== this.props.query ||
             nextProps.filter_type !== this.props.filter_type ||
             nextProps.offset !== this.props.offset ||

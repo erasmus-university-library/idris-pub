@@ -1,6 +1,5 @@
 import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import { Field, FieldArray } from 'redux-form'
 
 import { reduxForm } from 'redux-form'
 import Tabs from '@material-ui/core/Tabs';
@@ -27,17 +26,12 @@ import RecordBar from './RecordBar.js';
 import RecordSection from './RecordSection.js';
 import styles from './forms/formStyles.js';
 
-import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
-import { mappedTextField, mappedSelect } from './widgets/mapping.js';
-
-
 @withStyles(styles)
 @reduxForm({form: 'person'})
 class PersonDetail extends React.Component {
 
 
-  componentWillMount(){
+  componentDidMount(){
     if (this.props.id === 'add'){
       this.props.onFetch(null)
     } else {
@@ -65,7 +59,7 @@ class PersonDetail extends React.Component {
     this.props.onDetailChange({currentTab: value});
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.id !== this.props.id){
       this.props.onFetch(nextProps.id);
     }
@@ -94,7 +88,7 @@ class PersonDetail extends React.Component {
 
 
   render() {
-    const { classes, handleSubmit, openedAccordion, submittedErrors,
+    const { classes, handleSubmit, submittedErrors,
             settings, currentTab, history, formValues,
             contributorListingState, workSettings,
             onContributorFetch, onContributorChange } = this.props;
