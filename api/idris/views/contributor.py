@@ -1,28 +1,26 @@
-import datetime
-
-from intervals import DateInterval
 import colander
 import sqlalchemy as sql
-from sqlalchemy import func
 from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from idris.models import Contributor, Person, Group
+from idris.models import Contributor
 from idris.resources import ResourceFactory, ContributorResource, GroupResource
 
 from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
-                           StatusResponseSchema,
-                           OKStatusResponseSchema,
-                           OKStatus,
-                           JsonMappingSchemaSerializerMixin,
-                           colander_bound_repository_body_validator,
-                           )
+                         StatusResponseSchema,
+                         OKStatusResponseSchema,
+                         OKStatus,
+                         JsonMappingSchemaSerializerMixin,
+                         colander_bound_repository_body_validator)
+
+
 @colander.deferred
 def deferred_contributor_role_validator(node, kw):
     types = kw['repository'].type_config('contributor_role')
     return colander.OneOf([t['key'] for t in types])
+
 
 def contributor_validator(node, kw):
     if not kw.get('group_id') and not kw.get('person_id'):
@@ -57,7 +55,6 @@ class ContributorSchema(colander.MappingSchema,
     location = colander.SchemaNode(colander.String(), missing=None)
     position = colander.SchemaNode(colander.Int())
 
-
     @colander.instantiate(missing=colander.drop)
     class affiliations(colander.SequenceSchema):
         @colander.instantiate()
@@ -73,8 +70,10 @@ class ContributorPostSchema(ContributorSchema):
     # similar to contributor schema, but id is optional
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
 
+
 class ContributorResponseSchema(colander.MappingSchema):
     body = ContributorSchema()
+
 
 class ContributorListingResponseSchema(colander.MappingSchema):
     @colander.instantiate()
@@ -100,13 +99,14 @@ class ContributorListingResponseSchema(colander.MappingSchema):
                 work_id = colander.SchemaNode(colander.Int())
                 work_name = colander.SchemaNode(colander.String())
 
+
 class ContributorListingRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
         offset = colander.SchemaNode(colander.Int(),
-                                   default=0,
-                                   validator=colander.Range(min=0),
-                                   missing=0)
+                                     default=0,
+                                     validator=colander.Range(min=0),
+                                     missing=0)
         limit = colander.SchemaNode(colander.Int(),
                                     default=20,
                                     validator=colander.Range(0, 100),
@@ -124,17 +124,19 @@ class ContributorListingRequestSchema(colander.MappingSchema):
             validator=colander.OneOf(['record', 'snippet']),
             missing=colander.drop)
 
+
 class ContributorBulkRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class records(colander.SequenceSchema):
         contributor = ContributorSchema()
+
 
 @resource(name='Contributor',
           collection_path='/api/v1/contributor/records',
           path='/api/v1/contributor/records/{id}',
           tags=['contributor'],
           cors_origins=('*', ),
-          api_security=[{'jwt':[]}],
+          api_security=[{'jwt': []}],
           factory=ResourceFactory(ContributorResource))
 class ContributorRecordAPI(object):
     def __init__(self, request, context):
@@ -143,11 +145,11 @@ class ContributorRecordAPI(object):
 
     @view(permission='view',
           response_schemas={
-        '200': ContributorResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+              '200': ContributorResponseSchema(description='Ok'),
+              '401': ErrorResponseSchema(description='Unauthorized'),
+              '403': ErrorResponseSchema(description='Forbidden'),
+              '404': ErrorResponseSchema(description='Not Found'),
+          })
     def get(self):
         "Retrieve a Contributor"
         return ContributorSchema().to_json(self.context.model.to_dict())
@@ -156,11 +158,11 @@ class ContributorRecordAPI(object):
           schema=ContributorSchema(),
           validators=(colander_bound_repository_body_validator,),
           response_schemas={
-        '200': ContributorResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+              '200': ContributorResponseSchema(description='Ok'),
+              '401': ErrorResponseSchema(description='Unauthorized'),
+              '403': ErrorResponseSchema(description='Forbidden'),
+              '404': ErrorResponseSchema(description='Not Found'),
+          })
     def put(self):
         "Modify a Contributor"
         body = self.request.validated
@@ -174,14 +176,13 @@ class ContributorRecordAPI(object):
             return
         return ContributorSchema().to_json(self.context.model.to_dict())
 
-
     @view(permission='delete',
           response_schemas={
-        '200': StatusResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+              '200': StatusResponseSchema(description='Ok'),
+              '401': ErrorResponseSchema(description='Unauthorized'),
+              '403': ErrorResponseSchema(description='Forbidden'),
+              '404': ErrorResponseSchema(description='Not Found'),
+          })
     def delete(self):
         "Delete a Contributor"
         self.context.delete()
@@ -209,15 +210,14 @@ class ContributorRecordAPI(object):
         self.request.response.status = 201
         return ContributorSchema().to_json(contributor.to_dict())
 
-
     @view(permission='view',
           schema=ContributorListingRequestSchema(),
           validators=(colander_validator),
           cors_origins=('*', ),
           response_schemas={
-        '200': ContributorListingResponseSchema(description='Ok'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized')})
+              '200': ContributorListingResponseSchema(description='Ok'),
+              '400': ErrorResponseSchema(description='Bad Request'),
+              '401': ErrorResponseSchema(description='Unauthorized')})
     def collection_get(self):
         qs = self.request.validated['querystring']
         offset = qs['offset']
@@ -227,7 +227,6 @@ class ContributorRecordAPI(object):
         work_id = qs.get('group_id')
         format = qs.get('format')
         order_by = []
-        query = qs.get('query')
         filters = []
         if person_id:
             filters.append(Contributor.person_id == person_id)
@@ -244,9 +243,8 @@ class ContributorRecordAPI(object):
             else:
                 filters.append(Contributor.group_id == group_id)
 
-
         cte_total = None
-        from_query=None
+        from_query = None
         query_callback = None
         if format == 'record':
             format = None
@@ -288,25 +286,26 @@ class ContributorRecordAPI(object):
         return result
 
 
+contributor_bulk = Service(
+    name='ContributorBulk',
+    path='/api/v1/contributor/bulk',
+    factory=ResourceFactory(ContributorResource),
+    api_security=[{'jwt': []}],
+    tags=['contributor'],
+    cors_origins=('*', ),
+    schema=ContributorBulkRequestSchema(),
+    validators=(colander_bound_repository_body_validator,),
+    response_schemas={
+        '200': OKStatusResponseSchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
 
-contributor_bulk = Service(name='ContributorBulk',
-                     path='/api/v1/contributor/bulk',
-                     factory=ResourceFactory(ContributorResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['contributor'],
-                     cors_origins=('*', ),
-                     schema=ContributorBulkRequestSchema(),
-                     validators=(colander_bound_repository_body_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
 
 @contributor_bulk.post(permission='import')
 def contributor_bulk_import_view(request):
     # get existing resources from submitted bulk
     keys = [r['id'] for r in request.validated['records'] if r.get('id')]
-    existing_records = {r.id:r for r in request.context.get_many(keys) if r}
+    existing_records = {r.id: r for r in request.context.get_many(keys) if r}
     models = []
     for record in request.validated['records']:
         if record['id'] in existing_records:
