@@ -8,11 +8,23 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Badge from '@material-ui/core/Badge';
-
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
 import styles from './forms/formStyles.js';
 
 @withStyles(styles)
 class RecordBar extends React.Component {
+  state = {menuAnchorEl: null}
+
+  toggleMenu = (event) => {
+    this.setState({menuAnchorEl: event.currentTarget})
+  }
+
+  handleDelete = () => {
+    this.setState({menuAnchorEl: null})
+    this.props.onDelete()
+  }
+
   render() {
     const {classes, label, errorCount, Icon} = this.props;
     return (
@@ -28,10 +40,16 @@ class RecordBar extends React.Component {
 	  }
       </ListItemIcon>
 	<ListItemText primary={label} />
-	<IconButton>
+	<IconButton onClick={this.toggleMenu}
+                    aria-owns="recordMenu">
 	<MoreVertIcon />
-      </IconButton>
+	</IconButton>
       </Toolbar>
+	<Menu id="recordMenu"
+              anchorEl={this.state.menuAnchorEl}
+              open={Boolean(this.state.menuAnchorEl)}>
+	<MenuItem onClick={this.handleDelete}>Delete</MenuItem>
+	</Menu>
       </AppBar>
     );
   }

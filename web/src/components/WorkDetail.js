@@ -87,7 +87,7 @@ class WorkDetail extends React.Component {
   }
 
   render() {
-    const { classes, handleSubmit, submittedErrors,
+    const { classes, handleSubmit, submittedErrors, onDelete,
             settings, history, currentTab, formValues,
             relationListingState, workSettings, onRelationChange, onRelationFetch } = this.props;
       if (formValues === undefined){
@@ -102,7 +102,7 @@ class WorkDetail extends React.Component {
       <div>
       <div className={classes.tabContent}>
 	  <Card>
-	    <RecordBar label={label} errorCount={errorCount} Icon={StyleIcon}/>
+	    <RecordBar label={label} errorCount={errorCount} Icon={StyleIcon} onDelete={() => {onDelete(formValues.id)}}/>
 	    <Tabs value={currentTab || 0}
 		  onChange={this.handleTabClicked}
 		  indicatorColor="primary"

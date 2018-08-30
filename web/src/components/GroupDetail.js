@@ -75,7 +75,7 @@ class GroupDetail extends React.Component {
   render() {
     const { classes, handleSubmit, openedAccordion, submittedErrors,
             settings, onMemberChange, onMemberFetch, onMemberSubmit, onMemberAdd,
-            onSubgroupChange, onSubgroupFetch, subgroupListingState,
+            onSubgroupChange, onSubgroupFetch, subgroupListingState, onDelete,
             memberListingState, history, currentTab, formValues,
             affiliationListingState, workSettings, onAffiliationChange, onAffiliationFetch
            } = this.props;
@@ -93,7 +93,10 @@ class GroupDetail extends React.Component {
       <div>
       <div className={classes.tabContent}>
 	  <Card>
-	    <RecordBar label={label} errorCount={errorCount} Icon={GroupIcon}/>
+	    <RecordBar label={label}
+		       errorCount={errorCount}
+		       Icon={GroupIcon}
+		       onDelete={() => onDelete(formValues.id)}/>
 	    <Tabs value={currentTab || 0}
 		  onChange={this.handleTabClicked}
 		  indicatorColor="primary"

@@ -6,7 +6,7 @@ import PersonListing from './PersonListing';
 import PersonDetail from './PersonDetail';
 
 import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErrors } from '../selectors';
-import { updateListingState, fetchRecordListing,
+import { updateListingState, fetchRecordListing, deleteRecordDetail,
          updateDetailState, fetchRecordDetail, postRecordDetail } from '../actions';
 import { getFormValues } from 'redux-form';
 
@@ -33,6 +33,7 @@ class PersonRecord extends Component {
                                   onDetailChange={this.props.updateDetailState}
                                   onFetch={this.props.fetchRecordDetail}
                                   onSubmit={this.props.postRecordDetail}
+                                  onDelete={this.props.deletePersonRecord}
 
                                   workSettings={this.props.workSettings}
                                   contributorListingState={this.props.contributorListing}
@@ -66,6 +67,7 @@ const mapDispatchToProps = dispatch => {
             fetchRecordListing('workContributor', query, filters, offset, limit))},
         updateContributorListingState: (state) => {dispatch(updateListingState('workContributor', state))},
         updateDetailState: (state) => {dispatch(updateDetailState('person', state))},
+        deletePersonRecord: (id) => {dispatch(deleteRecordDetail('person', id))},
         fetchRecordDetail: (id) => {dispatch(fetchRecordDetail('person', id))},
         postRecordDetail: (id, data) => {dispatch(postRecordDetail('person', id, data))},
     };

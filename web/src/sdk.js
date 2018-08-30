@@ -146,6 +146,13 @@ export class IdrisSDK {
                       headers: {'Authorization': `Bearer ${this.token}`}});
     }
 
+  recordDelete = function(type, id){
+    return fetch(`${this.backendURL}/${type}/records/${id}`,
+                 {method: 'DELETE',
+                  mode: 'cors',
+                  headers: {'Authorization': `Bearer ${this.token}`}});
+  }
+
     recordSubmit = function(type, id, value){
         if (id === null) {
             return fetch(`${this.backendURL}/${type}/records`,

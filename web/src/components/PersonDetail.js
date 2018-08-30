@@ -90,7 +90,7 @@ class PersonDetail extends React.Component {
   render() {
     const { classes, handleSubmit, submittedErrors,
             settings, currentTab, history, formValues,
-            contributorListingState, workSettings,
+            contributorListingState, workSettings, onDelete,
             onContributorFetch, onContributorChange } = this.props;
      if (formValues === undefined){
           return null;
@@ -102,7 +102,7 @@ class PersonDetail extends React.Component {
       <div>
       <div className={classes.tabContent}>
 	  <Card>
-	    <RecordBar label={label} errorCount={errorCount} Icon={PersonIcon}/>
+	    <RecordBar label={label} errorCount={errorCount} Icon={PersonIcon} onDelete={() => {onDelete(formValues.id)}}/>
 	    <Tabs value={currentTab || 0}
 		  onChange={this.handleTabClicked}
 		  indicatorColor="primary"

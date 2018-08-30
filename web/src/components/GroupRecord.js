@@ -7,7 +7,7 @@ import GroupDetail from './GroupDetail';
 
 import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErrors } from '../selectors';
 import { updateListingState, fetchRecordListing,
-         updateDetailState, fetchRecordDetail, postRecordDetail,
+         updateDetailState, fetchRecordDetail, postRecordDetail, deleteRecordDetail,
          changeAppHeader } from '../actions';
 import { getFormValues } from 'redux-form';
 
@@ -37,6 +37,7 @@ class GroupRecord extends Component {
                                   onDetailChange={this.props.updateGroupState}
                                   onFetch={this.props.fetchGroupRecord}
                                   onSubmit={this.props.postGroupRecord}
+                        	  onDelete={this.props.deleteGroupRecord}
 
                                   memberListingState={this.props.memberListing}
                                   onMemberChange={this.props.updateMemberListingState}
@@ -90,6 +91,7 @@ const mapDispatchToProps = dispatch => {
         updateAffiliationListingState: (state) => {dispatch(updateListingState('workAffiliation', state))},
         fetchGroupRecord: (id) => {dispatch(fetchRecordDetail('group', id))},
         postGroupRecord: (id, data) => {dispatch(postRecordDetail('group', id, data))},
+        deleteGroupRecord: (id) => {dispatch(deleteRecordDetail('group', id))},
         postMembershipRecord: (group_id, person_id) => {dispatch(postRecordDetail('membership', null, {group_id, person_id}))},
         updateMemberState: (state) => {dispatch(updateDetailState('membership', state))},
         fetchMemberRecord: (id) => {dispatch(fetchRecordDetail('membership', id))},

@@ -175,14 +175,13 @@ class GroupRecordAPI(object):
             return
         return GroupSchema().to_json(self.context.model.to_dict())
 
-
     @view(permission='delete',
           response_schemas={
-        '200': StatusResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+              '200': StatusResponseSchema(description='Ok'),
+              '401': ErrorResponseSchema(description='Unauthorized'),
+              '403': ErrorResponseSchema(description='Forbidden'),
+              '404': ErrorResponseSchema(description='Not Found'),
+          })
     def delete(self):
         "Delete an Group"
         self.context.delete()

@@ -8,7 +8,7 @@ import WorkDetail from './WorkDetail';
 import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErrors } from '../selectors';
 import { updateListingState, fetchRecordListing,
          updateDetailState, fetchRecordDetail, postRecordDetail,
-         changeAppHeader } from '../actions';
+         changeAppHeader, deleteRecordDetail } from '../actions';
 import { arrayRemoveAll, arrayPush, getFormValues } from 'redux-form';
 
 class WorkRecord extends Component {
@@ -36,6 +36,7 @@ class WorkRecord extends Component {
                                 onDetailChange={this.props.updateWorkState}
                                 onFetch={this.props.fetchWorkRecord}
                                 onSubmit={this.props.postWorkRecord}
+                                onDelete={this.props.deleteWorkRecord}
 
                                 workSettings={this.props.detailSettings}
                                 relationListingState={this.props.relationListing}
@@ -70,6 +71,7 @@ const mapDispatchToProps = dispatch => {
         updateWorkState: (state) => {dispatch(updateDetailState('work', state))},
         fetchWorkRecord: (id) => {dispatch(fetchRecordDetail('work', id))},
         postWorkRecord: (id, data) => {dispatch(postRecordDetail('work', id, data))},
+        deleteWorkRecord: (id) => {dispatch(deleteRecordDetail('work', id))},
         fetchRelationListing: (query, filters, offset, limit) => {dispatch(
             fetchRecordListing('workContributor', query, filters, offset, limit))},
         updateRelationListingState: (state) => {dispatch(updateListingState('workContributor', state))},

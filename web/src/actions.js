@@ -132,6 +132,24 @@ export const postRecordDetail = (kind, id, values) => {
     }
 
 }
+export const deleteRecordDetail = (kind, id) => {
+    return dispatch => {
+        dispatch(showProgress(true));
+        sdk.recordDelete(kind, id)
+            .then(response => response.json(),
+                  error => dispatch(errorMessage(error)))
+            .then(data => {
+              if (data.status === 'ok'){
+                  dispatch(setRedirectURL(`/record/${kind}`));
+                  dispatch(flashMessage(`Deleted ${kind} ${id}`))
+                  dispatch(showProgress(false));
+                };
+            });
+    }
+
+}
+
+
 export const doLogin = (user, password) => {
     return dispatch => {
         dispatch(showProgress(true));
