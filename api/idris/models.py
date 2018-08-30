@@ -1183,7 +1183,7 @@ class Affiliation(Base):
     work_id = Column(BigInteger,
                      ForeignKey('works.id'),
                      index=True,
-                     nullable=False)
+                     nullable=True)
     work = relationship('Work', back_populates='affiliations', lazy='joined')
     contributor_id = Column(Integer,
                             ForeignKey('contributors.id'),

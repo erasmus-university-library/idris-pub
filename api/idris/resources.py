@@ -127,6 +127,20 @@ class BaseResource(object):
         except sqlalchemy.exc.IntegrityError as err:
             print(err)
             raise StorageError.from_err(err)
+
+        for model in models:
+            if model.__table__.name == 'works':
+                # make sure that affiliation table holds work id
+                # this does not automatically propagate in certain
+                # conditions
+                for contributor in model.contributors:
+                    for affiliation in contributor.affiliations:
+                        if not affiliation.work_id:
+                            affiliation.work_id = model.id
+                            self.session.add(affiliation)
+        if self.session.dirty:
+            self.session.flush()
+
         return models
 
     def delete(self, model=None, principals=None):
@@ -433,6 +447,23 @@ class WorkResource(BaseResource):
             ContributorResource.pre_put_hook(contributor)
 
         return model
+
+    def put_many(self, models, principals=None):
+        models = super(WorkResource, self).put_many(models,
+                                                    principals=principals)
+        # make sure that affiliation table holds work id
+        # this does not automatically propagate in certain
+        # conditions, so after storing a work, we make sure
+        # all affiliations have a work id
+        for model in models:
+            for contributor in model.contributors:
+                for affiliation in contributor.affiliations:
+                    if not affiliation.work_id:
+                        affiliation.work_id = model.id
+                        self.session.add(affiliation)
+        if self.session.dirty:
+            self.session.flush()
+        return models
 
     def listing(self,
                 text_query=None,
