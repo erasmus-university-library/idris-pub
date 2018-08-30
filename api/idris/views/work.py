@@ -12,6 +12,10 @@ from cornice import Service
 
 from idris.models import Work, Contributor, Affiliation, Person, Group
 from idris.resources import ResourceFactory, WorkResource, GroupResource
+from idris.views.contributor import (
+    deferred_contributor_role_validator,
+    ContributorSchema,
+    ContributorAffiliationSchema)
 
 from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
@@ -34,10 +38,10 @@ def deferred_identifier_type_validator(node, kw):
     return colander.OneOf([t['key'] for t in types])
 
 
-@colander.deferred
-def deferred_contributor_role_validator(node, kw):
-    types = kw['repository'].type_config('contributor_role')
-    return colander.OneOf([t['key'] for t in types])
+#@colander.deferred
+#def deferred_contributor_role_validator(node, kw):
+#    types = kw['repository'].type_config('contributor_role')
+#    return colander.OneOf([t['key'] for t in types])
 
 
 @colander.deferred
@@ -139,32 +143,20 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     @colander.instantiate(missing=colander.drop)
     class contributors(colander.SequenceSchema):
         @colander.instantiate()
-        class contributor(colander.MappingSchema):
-            role = colander.SchemaNode(
-                colander.String(),
-                validator=deferred_contributor_role_validator)
-            position = colander.SchemaNode(colander.Integer(),
-                                           missing=colander.drop)
-            id = colander.SchemaNode(colander.Integer(), missing=colander.drop)
-            person_id = colander.SchemaNode(colander.Integer())
-            _person_name = colander.SchemaNode(colander.String(),
-                                               missing=colander.drop)
-            start_date = colander.SchemaNode(colander.Date(), missing=None)
-            end_date = colander.SchemaNode(colander.Date(), missing=None)
-            description = colander.SchemaNode(colander.String(), missing=None)
-            location = colander.SchemaNode(colander.String(), missing=None)
+        class contributor(ContributorSchema):
+            # re-uses schemas from contributor views
+            # but id / work_id are not needed because of inlining
+            id = colander.SchemaNode(colander.Int(),
+                                     missing=colander.drop)
+            work_id = colander.SchemaNode(colander.Int(),
+                                          missing=colander.drop)
 
             @colander.instantiate(missing=colander.drop)
             class affiliations(colander.SequenceSchema):
                 @colander.instantiate()
-                class affiliation(colander.MappingSchema):
+                class affiliation(ContributorAffiliationSchema):
                     id = colander.SchemaNode(colander.Int(),
                                              missing=colander.drop)
-                    group_id = colander.SchemaNode(colander.Int())
-                    _group_name = colander.SchemaNode(colander.String(),
-                                              missing=colander.drop)
-                    position = colander.SchemaNode(colander.Int(),
-                                                   missing=colander.drop)
 
 
 class WorkPostSchema(WorkSchema):

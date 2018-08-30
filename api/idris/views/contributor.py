@@ -29,6 +29,14 @@ def contributor_validator(node, kw):
             node, "Required: supply either 'person_id' or 'group_id'")
 
 
+class ContributorAffiliationSchema(colander.MappingSchema):
+    id = colander.SchemaNode(colander.Int())
+    group_id = colander.SchemaNode(colander.Int())
+    _group_name = colander.SchemaNode(colander.String(),
+                                      missing=colander.drop)
+    position = colander.SchemaNode(colander.Int())
+
+
 class ContributorSchema(colander.MappingSchema,
                         JsonMappingSchemaSerializerMixin):
     def __init__(self, *args, **kwargs):
@@ -58,12 +66,8 @@ class ContributorSchema(colander.MappingSchema,
     @colander.instantiate(missing=colander.drop)
     class affiliations(colander.SequenceSchema):
         @colander.instantiate()
-        class affiliation(colander.MappingSchema):
-            id = colander.SchemaNode(colander.Int())
-            group_id = colander.SchemaNode(colander.Int())
-            _group_name = colander.SchemaNode(colander.String(),
-                                      missing=colander.drop)
-            position = colander.SchemaNode(colander.Int())
+        class affiliation(ContributorAffiliationSchema):
+            pass
 
 
 class ContributorPostSchema(ContributorSchema):
