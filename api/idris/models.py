@@ -1159,7 +1159,6 @@ class Contributor(Base):
         return result
 
     def update_dict(self, data):
-
         start_date = data.pop('start_date', None)
         end_date = data.pop('end_date', None)
         set_attribute(self, 'during', DateInterval([start_date, end_date]))

@@ -43,6 +43,11 @@ const styles = theme => ({
   gutter: {
     margin: theme.spacing.unit
   },
+  gutter_text: {
+    margin: theme.spacing.unit * 3
+  },
+
+
   collapse: {
       paddingLeft: theme.spacing.unit * 3,
       paddingRight: theme.spacing.unit * 3,

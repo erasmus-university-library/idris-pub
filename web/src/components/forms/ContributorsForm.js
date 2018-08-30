@@ -83,6 +83,12 @@ class ContributorsForm extends React.Component {
                     onRelationChange={this.handleContributorFormPersonChange}
                     placeholder="Person"
                     kind="person"
+                     className={classes.flex}/>
+	     <span className={classes.gutter_text}> or </span>
+             <Fields names={[`${field}.group_id`, `${field}._group_name`]}
+                    component={mappedRelationField}
+                    placeholder="Organisation"
+                    kind="group"
                     className={classes.flex}/>
         </div>
         <div className={classes.formFieldRow}>

@@ -126,7 +126,7 @@ class WorkDetail extends React.Component {
 				   settings={settings}
 				   Icon={FavoriteIcon}
 				   Form={ContributorsForm}
-				   fieldLabels = {(value) => ([(settings.contributor_role.filter((type) => (type.id === value.role? type.label : null))[0]||{}).label||null, value._person_name])} />
+				   fieldLabels = {(value) => ([(settings.contributor_role.filter((type) => (type.id === value.role? type.label : null))[0]||{}).label||null, (value._person_name || value._group_name || value.description)])} />
 		    <RecordSection label="Relations"
 				   errors={errors}
 				   name="relations"

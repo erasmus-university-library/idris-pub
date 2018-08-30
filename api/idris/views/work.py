@@ -142,6 +142,8 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                                      missing=colander.drop)
             work_id = colander.SchemaNode(colander.Int(),
                                           missing=colander.drop)
+            position = colander.SchemaNode(colander.Int(),
+                                           missing=colander.drop)
 
             @colander.instantiate(missing=colander.drop)
             class affiliations(colander.SequenceSchema):
@@ -151,6 +153,8 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                                              missing=colander.drop)
                     work_id = colander.SchemaNode(colander.Int(),
                                                   missing=colander.drop)
+                    position = colander.SchemaNode(colander.Int(),
+                                                   missing=colander.drop)
                     contributor_id = colander.SchemaNode(colander.Int(),
                                                          missing=colander.drop)
 
