@@ -10,12 +10,10 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from idris.models import Work, Contributor, Affiliation, Person, Group
+from idris.models import Work
 from idris.resources import ResourceFactory, WorkResource, GroupResource
 from idris.views.contributor import (
-    deferred_contributor_role_validator,
-    ContributorSchema,
-    ContributorAffiliationSchema)
+    ContributorSchema, ContributorAffiliationSchema)
 
 from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
@@ -36,12 +34,6 @@ def deferred_work_type_validator(node, kw):
 def deferred_identifier_type_validator(node, kw):
     types = kw['repository'].type_config('identifier_type')
     return colander.OneOf([t['key'] for t in types])
-
-
-#@colander.deferred
-#def deferred_contributor_role_validator(node, kw):
-#    types = kw['repository'].type_config('contributor_role')
-#    return colander.OneOf([t['key'] for t in types])
 
 
 @colander.deferred
@@ -157,6 +149,10 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                 class affiliation(ContributorAffiliationSchema):
                     id = colander.SchemaNode(colander.Int(),
                                              missing=colander.drop)
+                    work_id = colander.SchemaNode(colander.Int(),
+                                                  missing=colander.drop)
+                    contributor_id = colander.SchemaNode(colander.Int(),
+                                                         missing=colander.drop)
 
 
 class WorkPostSchema(WorkSchema):
@@ -421,6 +417,69 @@ def work_bulk_import_view(request):
     return {'status': 'ok'}
 
 
+def csl_convert(item):
+    issued = datetime.datetime.strptime(item['issued'], '%Y-%m-%d')
+    date_parts = [issued.year]
+    if not (issued.month == 1 and issued.day == 1):
+        date_parts.append(issued.month)
+        if issued.day != 1:
+            date_parts.append(issued.day)
+
+    authors = []
+    editors = []
+    for c in item['contributors']:
+        if c.get('family_name'):
+            contributor = {
+                'given': c.get('given_name') or c.get('initials'),
+                'family': c.get('family_name'),
+                'initials': c.get('initials'),
+                'non-dropping-particle': c.get('prefix')}
+        elif c.get('group_name'):
+            contributor = {
+                'literal': c.get('group_name', ''),
+                'name': c.get('group_name', '')}
+        else:
+            contributor = {
+                'literal': c.get('description', ''),
+                'name': c.get('description', '')}
+        if c['role'] == 'editor':
+            editors.append(contributor)
+        else:
+            authors.append(contributor)
+    type = 'entry'
+    if 'chapter' in item['type'].lower():
+        type = 'chapter'
+    elif 'book' in item['type'].lower():
+        type = 'book'
+    elif 'article' in item['type'].lower():
+        type = 'article-journal'
+    elif ('paper' in item['type'].lower() or
+          'report' in item['type'].lower()):
+        type = 'report'
+
+    journal = {}
+    for rel in item.get('relations', []):
+        if rel['relation_type'] == 'isPartOf' and rel['type'] == 'journal':
+            journal['container-title'] = rel['title']
+            if rel['issue']:
+                journal['issue'] = rel['issue']
+            if rel['volume']:
+                journal['volume'] = rel['volume']
+            if rel['starting'] and rel['ending']:
+                journal['page'] = '%s-%s' % (rel['starting'],
+                                             rel['ending'])
+            break
+
+    result = {'title': item['title'],
+              'id': str(item['id']),
+              'type': type,
+              'issued': {"date-parts": [date_parts]},
+              'author': authors,
+              'editor': editors}
+    result.update(journal)
+    return result
+
+
 work_listing = Service(
     name='WorkListing',
     path='/api/v1/work/listing',
@@ -459,59 +518,6 @@ def work_listing_view(request):
         params['related_work_ids'] = [qs['related_work_id']]
 
     result = request.context.listing(**params)
-
-    def csl_convert(item):
-        issued = datetime.datetime.strptime(item['issued'], '%Y-%m-%d')
-        date_parts = [issued.year]
-        if not (issued.month == 1 and issued.day == 1):
-            date_parts.append(issued.month)
-            if issued.day != 1:
-                date_parts.append(issued.day)
-
-        authors = []
-        editors = []
-        for c in item['contributors']:
-            contributor = {
-                'given': c.get('given_name') or c.get('initials'),
-                'family': c.get('family_name'),
-                'initials': c.get('initials'),
-                'non-dropping-particle': c.get('prefix')}
-            if c['role'] == 'editor':
-                editors.append(contributor)
-            else:
-                authors.append(contributor)
-        type = 'entry'
-        if 'chapter' in item['type'].lower():
-            type = 'chapter'
-        elif 'book' in item['type'].lower():
-            type = 'book'
-        elif 'article' in item['type'].lower():
-            type = 'article-journal'
-        elif ('paper' in item['type'].lower() or
-              'report' in item['type'].lower()):
-            type = 'report'
-
-        journal = {}
-        for rel in item.get('relations', []):
-            if rel['relation_type'] == 'isPartOf' and rel['type'] == 'journal':
-                journal['container-title'] = rel['title']
-                if rel['issue']:
-                    journal['issue'] = rel['issue']
-                if rel['volume']:
-                    journal['volume'] = rel['volume']
-                if rel['starting'] and rel['ending']:
-                    journal['page'] = '%s-%s' % (rel['starting'],
-                                                 rel['ending'])
-                break
-
-        result = {'title': item['title'],
-                  'id': str(item['id']),
-                  'type': type,
-                  'issued': {"date-parts": [date_parts]},
-                  'author': authors,
-                  'editor': editors}
-        result.update(journal)
-        return result
 
     if qs.get('format') == 'csl':
         result['hits'] = [csl_convert(h) for h in result['hits']]

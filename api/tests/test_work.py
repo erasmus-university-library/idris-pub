@@ -192,8 +192,86 @@ class WorkPermissionWebTest(BaseTest):
         pub = out.json
         assert len(pub['contributors']) == 1
 
+    def test_add_contributor_inline_group(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
+                           headers=headers)
+        pub = out.json
+        assert len(pub['contributors']) == 1
+        pub['contributors'].append({'position': 1,
+                                    'role': 'author',
+                                    'group_id': self.corp_id})
+        out = self.api.put_json('/api/v1/work/records/%s' % self.pub_id,
+                                pub,
+                                headers=headers)
+        pub = out.json
+        assert len(pub['contributors']) == 2
 
-    def test_add_contributor_affiliations_inline(self):
+        # test output GET
+        out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
+                           headers=headers)
+        corp = out.json['contributors'][1]
+        assert corp['_group_name'] == 'Corp.'
+        # test listing output
+        out = self.api.get('/api/v1/work/records',
+                           headers=headers)
+        corp = out.json['records'][1]['contributors'][1]
+        assert corp['_group_name'] == 'Corp.'
+        # test listing output
+        out = self.api.get('/api/v1/work/listing',
+                           headers=headers)
+        corp = out.json['snippets'][0]['contributors'][1]
+        assert corp['group_name'] == 'Corp.'
+        # test csl listing output
+        out = self.api.get('/api/v1/work/listing?format=csl',
+                           headers=headers)
+        corp = out.json['snippets'][0]['author'][1]
+        assert corp['literal'] == 'Corp.'
+
+        del pub['contributors'][1]
+        out = self.api.put_json('/api/v1/work/records/%s' % self.pub_id,
+                                pub,
+                                headers=headers)
+        pub = out.json
+        assert len(pub['contributors']) == 1
+
+    def test_add_contributor_inline_description(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
+                           headers=headers)
+        pub = out.json
+        assert len(pub['contributors']) == 1
+        pub['contributors'].append({'position': 1,
+                                    'role': 'author',
+                                    'description': 'Somebody I used to know.'})
+        out = self.api.put_json('/api/v1/work/records/%s' % self.pub_id,
+                                pub,
+                                headers=headers)
+        pub = out.json
+        assert len(pub['contributors']) == 2
+        # test output GET
+        out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
+                           headers=headers)
+        somebody = out.json['contributors'][1]
+        assert somebody['description'] == 'Somebody I used to know.'
+        # test listing output
+        out = self.api.get('/api/v1/work/records',
+                           headers=headers)
+        somebody = out.json['records'][1]['contributors'][1]
+        assert somebody['description'] == 'Somebody I used to know.'
+        # test listing output
+        out = self.api.get('/api/v1/work/listing',
+                           headers=headers)
+        somebody = out.json['snippets'][0]['contributors'][1]
+        assert somebody['description'] == 'Somebody I used to know.'
+        # test csl listing output
+        out = self.api.get('/api/v1/work/listing?format=csl',
+                           headers=headers)
+        somebody = out.json['snippets'][0]['author'][1]
+        assert somebody['literal'] == 'Somebody I used to know.'
+
+
+    def test_add_contributor_inline_affiliations(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
                            headers=headers)
@@ -306,5 +384,3 @@ class WorkPermissionWebTest(BaseTest):
         pub = out.json
         assert len(pub['relations']) == 1
         assert pub['relations'][0]['_target_name'] == 'Another Test Publication'
-
-

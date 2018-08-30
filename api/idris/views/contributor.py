@@ -23,10 +23,12 @@ def deferred_contributor_role_validator(node, kw):
 
 
 def contributor_validator(node, kw):
-    if not kw.get('group_id') and not kw.get('person_id'):
+    if (not kw.get('group_id') and not kw.get('person_id') and not kw.get(
+            'description')):
         node.name = '%s.person_id' % node.name
         raise colander.Invalid(
-            node, "Required: supply either 'person_id' or 'group_id'")
+            node,
+            "Required: supply either 'person_id', 'group_id' or 'description'")
 
 
 class ContributorAffiliationSchema(colander.MappingSchema):
@@ -34,6 +36,8 @@ class ContributorAffiliationSchema(colander.MappingSchema):
     group_id = colander.SchemaNode(colander.Int())
     _group_name = colander.SchemaNode(colander.String(),
                                       missing=colander.drop)
+    work_id = colander.SchemaNode(colander.Int())
+    contributor_id = colander.SchemaNode(colander.Int())
     position = colander.SchemaNode(colander.Int())
 
 
@@ -61,6 +65,7 @@ class ContributorSchema(colander.MappingSchema,
     end_date = colander.SchemaNode(colander.Date(),
                                    missing=colander.drop)
     location = colander.SchemaNode(colander.String(), missing=None)
+    description = colander.SchemaNode(colander.String(), missing=None)
     position = colander.SchemaNode(colander.Int())
 
     @colander.instantiate(missing=colander.drop)

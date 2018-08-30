@@ -95,7 +95,8 @@ class BaseResource(object):
         return self.session.execute(
             sql.func.next_value(pkey_col.default)).scalar()
 
-    def pre_put_hook(self, model):
+    @classmethod
+    def pre_put_hook(cls, model):
         return model
 
     def put(self, model=None, principals=None):
@@ -114,7 +115,7 @@ class BaseResource(object):
                 permission = 'add'
             else:
                 permission = 'edit'
-            model = self.pre_put_hook(model)
+            model = self.__class__.pre_put_hook(model)
             self.session.add(model)
             if principals and not self.is_permitted(
                     model, principals, permission):
@@ -231,7 +232,8 @@ class UserResource(BaseResource):
             filters.append(User.userid == user_id)
         return filters
 
-    def pre_put_hook(self, model):
+    @classmethod
+    def pre_put_hook(cls, model):
         search_terms = [model.userid]
         model.search_terms = sql.func.to_tsvector(' '.join(search_terms))
         return model
@@ -259,7 +261,8 @@ class PersonResource(BaseResource):
             # no model loaded yet, allow container view
             yield (Allow, 'system.Authenticated', 'view')
 
-    def pre_put_hook(self, model):
+    @classmethod
+    def pre_put_hook(cls, model):
         if model.family_name:
             name = model.family_name
             search_terms = [name]
@@ -317,7 +320,8 @@ class GroupResource(BaseResource):
             # no model loaded yet, allow container view
             yield (Allow, 'system.Authenticated', 'view')
 
-    def pre_put_hook(self, model):
+    @classmethod
+    def pre_put_hook(cls, model):
         model.name = model.international_name
         search_terms = [model.international_name]
 
@@ -420,9 +424,14 @@ class WorkResource(BaseResource):
             filters.append(Contributor.id == -1)
         return filters
 
-    def pre_put_hook(self, model):
+    @classmethod
+    def pre_put_hook(cls, model):
         search_terms = [model.title]
         model.search_terms = sql.func.to_tsvector(' '.join(search_terms))
+
+        for contributor in model.contributors:
+            ContributorResource.pre_put_hook(contributor)
+
         return model
 
     def listing(self,
@@ -532,6 +541,8 @@ class WorkResource(BaseResource):
                                        'prefix', Person.family_name_prefix,
                                        'given_name', Person.given_name,
                                        'family_name', Person.family_name,
+                                       'description', Contributor.description,
+                                       'group_id', Contributor.group_id,
                                        'role', Contributor.role)
                           ).label('contributors'),
             func.json_agg(
@@ -570,6 +581,7 @@ class WorkResource(BaseResource):
         hits = []
         contributor_role_ids = set(contributor_person_ids or [])
         for hit in full_listing.all():
+            aff_labels = dict([tuple(a.split(':', 1)) for a in hit.affiliations])
             contributors = []
             roles = set()
             hit.contributors.sort(key=itemgetter('position'))
@@ -582,6 +594,10 @@ class WorkResource(BaseResource):
                     # it's hard to remove this with a distinct clause
                     # in the json agg, so we remove it here
                     continue
+                cg_id = contributor['group_id']
+                if cg_id and str(cg_id) in aff_labels:
+                    # a group contributor is always added as an affiliation
+                    contributor['group_name'] = aff_labels[str(cg_id)]
                 contributors.append(contributor)
             affiliations = []
             for affiliation in hit.affiliations:
@@ -758,6 +774,21 @@ class ContributorResource(BaseResource):
                 filters.append(
                     Contributor.person_id == principal.split(':')[-1])
         return filters
+
+    @classmethod
+    def pre_put_hook(cls, model):
+        if model.group_id:
+            # if a contributor with group_id is added
+            # then add the group also as affiliation
+            has_group_aff = [a for a in model.affiliations
+                             if a.group_id == model.group_id]
+            if not has_group_aff:
+                model.affiliations.append(
+                    Affiliation(group_id=model.group_id,
+                                contributor_id=model.id,
+                                work_id=model.work_id))
+
+        return model
 
 
 class AffiliationResource(BaseResource):

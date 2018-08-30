@@ -277,14 +277,17 @@ class Work(Base):
         for contributor in self.contributors:
             contributor = contributor.to_dict()
             result['contributors'].append(
-                {'person_id': contributor['person_id'],
-                 'id': contributor['id'],
+                {'id': contributor['id'],
+                 'person_id': contributor['person_id'],
                  '_person_name': contributor['_person_name'],
+                 'group_id': contributor['group_id'],
+                 '_group_name': contributor['_group_name'],
                  'role': contributor['role'],
                  'location': contributor['location'],
                  'start_date': contributor['start_date'],
                  'end_date': contributor['end_date'],
                  'position': contributor['position'],
+                 'description': contributor['description'],
                  'affiliations': [{'group_id': a['group_id'],
                                    '_group_name': a['_group_name'],
                                    'id': a['id'],
@@ -1089,7 +1092,9 @@ class Contributor(Base):
     "An Actor that made a specific contribution to a work"
     __tablename__ = 'contributors'
     __table_args__ = (
-        CheckConstraint('NOT(person_id IS NULL AND group_id IS NULL)'),
+        CheckConstraint('NOT(person_id IS NULL '
+                        'AND group_id IS NULL '
+                        'AND description IS NULL)'),
         )
     id = Column(Integer, Sequence('contributors_id_seq'), primary_key=True)
     role = Column(Unicode(32),
@@ -1203,10 +1208,9 @@ class Affiliation(Base):
         return result
 
     def update_dict(self, data):
-
         for key, value in data.items():
             if key.startswith('_'):
-               continue
+                continue
             set_attribute(self, key, value)
 
     @classmethod
