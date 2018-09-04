@@ -1,3 +1,5 @@
+import uuid
+
 from pyramid.decorator import reify
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import sessionmaker
@@ -8,19 +10,42 @@ import transaction
 from idris.interfaces import IBlobStoreBackend
 from idris.blob import BlobStore
 from idris.models import (Base,
-                            Repository,
-                            User, UserGroup,
-                            GroupType,
-                            WorkType,
-                            ContributorRole,
-                            PersonAccountType,
-                            IdentifierType,
-                            MeasureType,
-                            RelationType,
-                            DescriptionType,
-                            PositionType,
-                            DescriptionFormat,
-                            GroupAccountType)
+                          Repository,
+                          User, UserGroup,
+                          GroupType,
+                          WorkType,
+                          ContributorRole,
+                          PersonAccountType,
+                          IdentifierType,
+                          MeasureType,
+                          RelationType,
+                          DescriptionType,
+                          PositionType,
+                          DescriptionFormat,
+                          GroupAccountType)
+
+SQL_FUNCTIONS = """
+CREATE OR REPLACE FUNCTION pseudo_encrypt(VALUE int) returns int AS $$
+DECLARE
+l1 int;
+l2 int;
+r1 int;
+r2 int;
+i int:=0;
+BEGIN
+ l1:= (VALUE >> 16) & 65535;
+ r1:= VALUE & 65535;
+ WHILE i < 3 LOOP
+   l2 := r1;
+   r2 := l1 # ((((1366 * r1 + 150889) % 47538) / 47538.0) * 32767)::int;
+   l1 := l2;
+   r1 := r2;
+   i := i + 1;
+ END LOOP;
+ RETURN ((r1 << 16) + l1);
+END;
+$$ LANGUAGE plpgsql strict immutable;
+"""
 
 DEFAULTS = {
     'user_groups': {100: 'Admin',
@@ -33,7 +58,9 @@ DEFAULTS = {
                           'editor': 'Editor',
                           'publisher': 'Publisher',
                           'funder': 'Funder'},
-    'work_types': {'article': 'Article'},
+    'work_types': {'article': 'Article',
+                   'journal': 'Journal',
+                   'course': 'Course'},
     'person_account_types': {'email': 'email',
                              'local': 'Local',
                              'wikipedia': 'Wikipedia'},
@@ -69,8 +96,10 @@ DEFAULTS = {
                             'wikipedia': 'Wikipedia'},
     'repository_settings': {'title': 'Idris'}}
 
+
 class Storage(object):
     schema_version = '0.1'
+
     def __init__(self, registry):
         self.registry = registry
 
@@ -82,12 +111,19 @@ class Storage(object):
 
     def create_repository(self, session, namespace, vhost_name, settings=None):
         self.registry['engine'].execute(CreateSchema(namespace))
-        session.add(Repository(namespace=namespace,
-                               schema_version=self.schema_version,
-                               vhost_name=vhost_name,
-                               settings=settings or DEFAULTS['repository_settings']))
+        repository_secret = uuid.uuid4().hex
+        session.add(
+            Repository(namespace=namespace,
+                       schema_version=self.schema_version,
+                       vhost_name=vhost_name,
+                       secret=repository_secret,
+                       settings=settings or DEFAULTS['repository_settings']))
         session.flush()
-        session.execute('SET search_path TO %s, public' % namespace);
+        session.execute(SQL_FUNCTIONS)
+        session.execute('SET search_path TO %s, public' % namespace)
+        # we create the blobs_id_seq manually, since we use the default argument
+        # to generate new ids with the pseudo_encrypt function
+        session.execute('CREATE SEQUENCE blobs_id_seq')
         Base.metadata.create_all(bind=session.connection())
         session.flush()
 

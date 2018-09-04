@@ -15,17 +15,14 @@ class BlobStore(object):
         self.backend = backend
         self.registry = self.backend.repository.registry
 
-    def new_blobkey(self):
-        return uuid.uuid4().hex
+    def blob_exists(self, blob_id):
+        return self.backend.blob_exists(blob_id)
 
-    def blob_exists(self, blob_key):
-        return self.backend.blob_exists(blob_key)
+    def upload_url(self, blob_id):
+        return self.backend.upload_url(blob_id)
 
-    def upload_url(self, blob_key):
-        return self.backend.upload_url(blob_key)
-
-    def download_url(self, blob_key):
-        return self.backend.download_url(blob_key)
+    def download_url(self, blob_id):
+        return self.backend.download_url(blob_id)
 
     def receive_blob(self, request, blob):
         return self.backend.receive_blob(request, blob)
@@ -34,11 +31,11 @@ class BlobStore(object):
         return self.backend.serve_blob(request, response, blob)
 
     def finalize_blob(self, blob):
-        if not self.backend.blob_exists(blob.model.blob_key):
+        if not self.backend.blob_exists(blob.model.id):
             return False
         if not blob.model.checksum:
             blob.model.checksum = self.backend.blob_checksum(
-                blob.model.blob_key)
+                blob.model.id)
             blob.model.finalize = True
             blob.put()
         return True
@@ -55,7 +52,7 @@ class BlobStore(object):
             output['transformer'] = None
             return output
         output['transformer'] = transformer.name
-        transformer(blob).execute(self.backend.local_path(blob.model.blob_key))
+        transformer(blob).execute(self.backend.local_path(blob.model.id))
         blob.model.transform_name = transformer.name
         blob.put()
 
@@ -81,34 +78,34 @@ class LocalBlobStore(object):
                                 self.repository.namespace)
         return root
 
-    def _blob_key_path(self, blob_key, makedirs=False):
-        directory = os.path.join(self._path, blob_key[-3:])
+    def _blob_path(self, blob_id, makedirs=False):
+        directory = os.path.join(self._path, str(blob_id)[-3:])
         if makedirs and not os.path.isdir(directory):
             os.makedirs(directory)
-        return os.path.join(directory, blob_key)
+        return os.path.join(directory, str(blob_id))
 
-    def blob_exists(self, blob_key):
+    def blob_exists(self, blob_id):
         "Determine if a blob exists in the filesystem"
-        return os.path.isfile(self._blob_key_path(blob_key))
+        return os.path.isfile(self._blob_path(blob_id))
 
-    def upload_url(self, blob_key):
+    def upload_url(self, blob_id):
         "Create an upload url that can be used to POST bytes"
         return '%s/api/v1/blob/upload/%s' % (self.repository.api_host_url,
-                                             blob_key)
+                                             blob_id)
 
-    def local_path(self, blob_key):
-        return self._blob_key_path(blob_key)
+    def local_path(self, blob_id):
+        return self._blob_path(blob_id)
 
     def serve_blob(self, request, response, blob):
         "Modify the response to servce bytes from blob_key"
         response.content_type = blob.model.format
-        path = self._blob_key_path(blob.model.blob_key)
+        path = self._blob_path(blob.model.id)
         with open(path, 'rb') as fp:
             response.body = fp.read()
         return response
 
     def receive_blob(self, request, blob):
-        path = self._blob_key_path(blob.model.blob_key, makedirs=True)
+        path = self._blob_path(str(blob.model.id), makedirs=True)
         with open(path, 'wb') as fp:
             fp.write(request.body)
         blob.model.checksum = hashlib.md5(request.body).hexdigest()

@@ -25,18 +25,19 @@ class BlobSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     name = colander.SchemaNode(colander.String())
     bytes = colander.SchemaNode(colander.Int())
 
-    blob_key = colander.SchemaNode(colander.String(), missing=colander.drop)
     format = colander.SchemaNode(colander.String(), missing=colander.drop)
     checksum = colander.SchemaNode(colander.String(), missing=colander.drop)
     upload_url = colander.SchemaNode(colander.String(), missing=colander.drop)
 
 
 class BlobPostSchema(BlobSchema):
-    # similar to blob schema, but id is optional
+    # similar to blob schema, but key is optional
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
+
 
 class BlobResponseSchema(colander.MappingSchema):
     body = BlobSchema()
+
 
 class BlobListingResponseSchema(colander.MappingSchema):
     @colander.instantiate()
@@ -49,6 +50,7 @@ class BlobListingResponseSchema(colander.MappingSchema):
         @colander.instantiate()
         class records(colander.SequenceSchema):
             blob = BlobSchema()
+
 
 class BlobListingRequestSchema(colander.MappingSchema):
     @colander.instantiate()
@@ -68,7 +70,7 @@ class BlobListingRequestSchema(colander.MappingSchema):
           path='/api/v1/blob/records/{id}',
           tags=['blob'],
           cors_origins=('*', ),
-          api_security=[{'jwt':[]}],
+          api_security=[{'jwt': []}],
           factory=ResourceFactory(BlobResource))
 class BlobRecordAPI(object):
     def __init__(self, request, context):
@@ -77,11 +79,11 @@ class BlobRecordAPI(object):
 
     @view(permission='view',
           response_schemas={
-        '200': BlobResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+              '200': BlobResponseSchema(description='Ok'),
+              '401': ErrorResponseSchema(description='Unauthorized'),
+              '403': ErrorResponseSchema(description='Forbidden'),
+              '404': ErrorResponseSchema(description='Not Found'),
+          })
     def get(self):
         "Retrieve a Blob"
 
@@ -90,11 +92,11 @@ class BlobRecordAPI(object):
 
     @view(permission='delete',
           response_schemas={
-        '200': StatusResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+              '200': StatusResponseSchema(description='Ok'),
+              '401': ErrorResponseSchema(description='Unauthorized'),
+              '403': ErrorResponseSchema(description='Forbidden'),
+              '404': ErrorResponseSchema(description='Not Found'),
+          })
     def delete(self):
         "Delete an Blob"
         self.context.delete()
@@ -105,15 +107,14 @@ class BlobRecordAPI(object):
           validators=(colander_bound_repository_body_validator,),
           cors_origins=('*', ),
           response_schemas={
-        '201': BlobResponseSchema(description='Created'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        })
+              '201': BlobResponseSchema(description='Created'),
+              '400': ErrorResponseSchema(description='Bad Request'),
+              '401': ErrorResponseSchema(description='Unauthorized'),
+              '403': ErrorResponseSchema(description='Forbidden'),
+          })
     def collection_post(self):
         "Create a new Blob"
         blob = Blob.from_dict(self.request.validated)
-        blob.blob_key = self.request.repository.blob.new_blobkey()
         try:
             self.context.put(blob)
         except StorageError as err:
@@ -122,20 +123,19 @@ class BlobRecordAPI(object):
             return
 
         self.request.response.status = 201
-        result =  BlobSchema().to_json(blob.to_dict())
+        result = BlobSchema().to_json(blob.to_dict())
         result['upload_url'] = self.request.repository.blob.upload_url(
-            result['blob_key'])
+            result['id'])
         return result
-
 
     @view(permission='view',
           schema=BlobListingRequestSchema(),
           validators=(colander_validator),
           cors_origins=('*', ),
           response_schemas={
-        '200': BlobListingResponseSchema(description='Ok'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized')})
+              '200': BlobListingResponseSchema(description='Ok'),
+              '400': ErrorResponseSchema(description='Bad Request'),
+              '401': ErrorResponseSchema(description='Unauthorized')})
     def collection_get(self):
         offset = self.request.validated['querystring']['offset']
         limit = self.request.validated['querystring']['limit']
@@ -157,41 +157,37 @@ class BlobRecordAPI(object):
                              for blob in listing['hits']]
         return result
 
+
 blob_upload = Service(name='BlobUpload',
-                     path='/api/v1/blob/upload/{blob_key}',
-                     factory=ResourceFactory(BlobResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['blob'],
-                     cors_origins=('*', ))
+                      path='/api/v1/blob/upload/{id}',
+                      factory=ResourceFactory(BlobResource),
+                      api_security=[{'jwt': []}],
+                      tags=['blob'],
+                      cors_origins=('*', ))
+
+
 @blob_upload.post(permission='upload')
 def blob_upload_local_view(request):
-    blob_key = request.matchdict['blob_key']
-
-    request.context.from_blob_key(request.matchdict['blob_key'])
-    if request.context.model is None:
-        raise HTTPNotFound()
-
     blobstore = request.repository.blob
-    if blobstore.blob_exists(blob_key):
+    if blobstore.blob_exists(request.context.model.id):
         raise HTTPPreconditionFailed()
 
     blobstore.receive_blob(request, request.context)
     return BlobSchema().to_json(request.context.model.to_dict())
 
+
 blob_transform = Service(name='BlobTransform',
-                         path='/api/v1/blob/transform/{blob_key}',
+                         path='/api/v1/blob/transform/{id}',
                          factory=ResourceFactory(BlobResource),
-                         api_security=[{'jwt':[]}],
+                         api_security=[{'jwt': []}],
                          tags=['blob'],
                          cors_origins=('*', ))
+
+
 @blob_transform.post(permission='transform')
 def blob_transform_view(request):
-    blob_key = request.matchdict['blob_key']
-    request.context.from_blob_key(blob_key)
-    if request.context.model is None:
-        raise HTTPNotFound()
     blobstore = request.repository.blob
-    if not blobstore.blob_exists(blob_key):
+    if not blobstore.blob_exists(request.context.model.id):
         raise HTTPPreconditionFailed('File is missing')
 
     blobstore.transform_blob(request.context)

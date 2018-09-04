@@ -1,4 +1,6 @@
 import unittest
+import os
+import shutil
 
 import transaction
 from pyramid import testing
@@ -8,6 +10,7 @@ from idris import main
 from idris.storage import Storage
 from idris.models import User, Owner
 from idris.resources import UserResource
+
 
 class BaseTest(unittest.TestCase):
 
@@ -22,17 +25,28 @@ class BaseTest(unittest.TestCase):
         }
 
     def setUp(self):
-        self.app = main({}, **self.app_settings())
+        settings = self.app_settings()
+        self.app = main({}, **settings)
+
         self.storage = self.app.registry['storage']
-        self.api = WebTestApp(self.app,
-                              extra_environ={'HTTP_HOST': 'unittest.localhost'})
+        blob_path = settings['idris.blob_path']
+        if os.path.isdir(blob_path):
+            shutil.rmtree(blob_path)
+        self.api = WebTestApp(
+            self.app,
+            extra_environ={'HTTP_HOST': 'unittest.localhost'})
         storage = Storage(self.app.registry)
         self.session = storage.make_session()
         if 'unittest' in storage.repository_info(self.session):
             storage.drop_repository(self.session, 'unittest')
             transaction.commit()
-        storage.create_repository(self.session, 'unittest', 'unittest.localhost')
-        storage.initialize_repository(self.session, 'unittest', 'admin', 'admin')
+        storage.create_repository(self.session,
+                                  'unittest',
+                                  'unittest.localhost')
+        storage.initialize_repository(self.session,
+                                      'unittest',
+                                      'admin',
+                                      'admin')
         transaction.commit()
 
     def admin_token(self):
@@ -45,10 +59,9 @@ class BaseTest(unittest.TestCase):
         If the user does not exist, a new user is created
         """
         response = self.api.post_json(
-                '/api/v1/auth/login',
-                {'user': user_group_password,
-                 'password': user_group_password}
-                ,status=[200, 401])
+            '/api/v1/auth/login',
+            {'user': user_group_password, 'password': user_group_password},
+            status=[200, 401])
         if response.status_code == 401:
             context = UserResource(self.storage.registry, self.session)
             context.put(

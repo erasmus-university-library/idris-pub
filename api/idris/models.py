@@ -10,15 +10,15 @@ from sqlalchemy import (
     Date,
     Sequence,
     ForeignKey,
-    CheckConstraint
-    )
+    CheckConstraint,
+    text)
 from sqlalchemy.orm import relationship, configure_mappers
 from sqlalchemy.schema import Index
 from sqlalchemy.orm.attributes import instance_dict
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import DateRangeType, PasswordType
-from sqlalchemy.dialects.postgresql import JSON, TSVECTOR
+from sqlalchemy.dialects.postgresql import JSON, TSVECTOR, UUID
 from sqlalchemy.orm.attributes import set_attribute
 from idris.utils import parse_duration
 
@@ -670,13 +670,32 @@ class ExpressionAccessRight(Base):
 
 
 class Blob(Base):
+    """
+    1. get upload url and blob_id by posting info to blob api
+    2. upload content
+    3. run transforms with blob_id
+    4. add blob to expression
+    5. use work/expression to auth blob download
+
+    - Make blob_id a random large integer (uuid4 int)
+    - Store expression id in the blob so it can not be used / changed for other expressions
+
+
+    """
     __tablename__ = 'blobs'
     __table_args__ = (Index('ix_blobs_search_terms',
                             'search_terms',
                             postgresql_using='gin'),)
-
-    id = Column(Integer, Sequence('blobs_id_seq'), primary_key=True)
-    blob_key = Column(Unicode(32), nullable=False)
+    id = Column(
+        Integer,
+        #Sequence('blobs_id_seq'),
+        default=text("pseudo_encrypt(nextval('blobs_id_seq')::integer)"),
+        primary_key=True)
+    expression_id = Column(Integer,
+                           ForeignKey('expressions.id'),
+                           index=True,
+                           nullable=True)
+    expression = relationship('Expression', back_populates='blob')
     bytes = Column(Integer, nullable=False)
     name = Column(Unicode(1024), nullable=False)
     format = Column(Unicode(1024), nullable=False)
@@ -691,7 +710,6 @@ class Blob(Base):
 
     def to_dict(self):
         result = {'id': self.id,
-                  'blob_key': self.blob_key,
                   'bytes': self.bytes,
                   'format': self.format,
                   'checksum': self.checksum,
@@ -736,6 +754,11 @@ class Expression(Base):
     uri = Column(Unicode(1024), nullable=True)
     info = Column(JSON)
     description = Column(UnicodeText, nullable=True)
+
+    blob = relationship('Blob',
+                        back_populates='expression',
+                        cascade='all, delete-orphan')
+
 
 
 class PersonAccountType(Base):
@@ -1225,6 +1248,7 @@ class Repository(Base):
     vhost_name = Column(Unicode(128), nullable=False, unique=True)
     config_revision = Column(Integer, nullable=False)
     schema_version = Column(Unicode(32), nullable=False)
+    secret = Column(Unicode(32), nullable=False)
     settings = Column(JSON)
 
     __mapper_args__ = {
