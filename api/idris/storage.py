@@ -22,6 +22,9 @@ from idris.models import (Base,
                           DescriptionType,
                           PositionType,
                           DescriptionFormat,
+                          ExpressionType,
+                          ExpressionFormat,
+                          ExpressionAccessRight,
                           GroupAccountType)
 
 SQL_FUNCTIONS = """
@@ -83,6 +86,9 @@ DEFAULTS = {
     'description_formats': {'text': 'Plain Text',
                             'markdown': 'Markdown Text',
                             'html': 'HTML'},
+    'expression_types': {'publication': 'Publication'},
+    'expression_formats': {'manuscript': 'Manuscript'},
+    'expression_rights': {'openAccess': 'Open Access'},
     'measure_types': {'cites': 'Citations',
                       'openAccess': 'Open Access',
                       'impactFactor': 'Impact Factor'},
@@ -190,6 +196,15 @@ class Storage(object):
         description_formats = DEFAULTS['description_formats']
         for key, label in description_formats.items():
             session.add(DescriptionFormat(key=key, label=label))
+        expression_types = DEFAULTS['expression_types']
+        for key, label in expression_types.items():
+            session.add(ExpressionType(key=key, label=label))
+        expression_formats = DEFAULTS['expression_formats']
+        for key, label in expression_formats.items():
+            session.add(ExpressionFormat(key=key, label=label))
+        expression_rights = DEFAULTS['expression_rights']
+        for key, label in expression_rights.items():
+            session.add(ExpressionAccessRight(key=key, label=label))
         measure_types = DEFAULTS['measure_types']
         for key, label in measure_types.items():
             session.add(MeasureType(key=key, label=label))
@@ -198,7 +213,7 @@ class Storage(object):
             session.add(PositionType(key=key, label=label))
 
         session.flush()
-        session.execute('SET search_path TO public');
+        session.execute('SET search_path TO public')
         session.flush()
 
 
@@ -229,7 +244,9 @@ def get_tm_session(session_factory, transaction_manager):
         dbsession, transaction_manager=transaction_manager)
     return dbsession
 
+
 REPOSITORY_CONFIG = {}
+
 
 class RepositoryConfig(object):
     orm_table = {'group_type': GroupType,
@@ -241,10 +258,14 @@ class RepositoryConfig(object):
                  'relation_type': RelationType,
                  'description_type': DescriptionType,
                  'description_format': DescriptionFormat,
+                 'expression_type': ExpressionType,
+                 'expression_format': ExpressionFormat,
+                 'expression_rights': ExpressionAccessRight,
                  'position_type': PositionType,
                  'measure_type': MeasureType}
 
-    def __init__(self, registry, session, namespace, api_host_url, config_revision=0, settings=None):
+    def __init__(self, registry, session, namespace, api_host_url,
+                 config_revision=0, settings=None):
         self.registry = registry
         self.session = session
         self.namespace = namespace

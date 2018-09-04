@@ -17,11 +17,11 @@ from idris.views.contributor import (
 
 from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
-                           StatusResponseSchema,
-                           OKStatusResponseSchema,
-                           OKStatus,
-                           JsonMappingSchemaSerializerMixin,
-                           colander_bound_repository_body_validator)
+                         StatusResponseSchema,
+                         OKStatusResponseSchema,
+                         OKStatus,
+                         JsonMappingSchemaSerializerMixin,
+                         colander_bound_repository_body_validator)
 
 
 @colander.deferred
@@ -51,6 +51,24 @@ def deferred_description_type_validator(node, kw):
 @colander.deferred
 def deferred_description_format_validator(node, kw):
     types = kw['repository'].type_config('description_format')
+    return colander.OneOf([t['key'] for t in types])
+
+
+@colander.deferred
+def deferred_expression_type_validator(node, kw):
+    types = kw['repository'].type_config('expression_type')
+    return colander.OneOf([t['key'] for t in types])
+
+
+@colander.deferred
+def deferred_expression_format_validator(node, kw):
+    types = kw['repository'].type_config('expression_format')
+    return colander.OneOf([t['key'] for t in types])
+
+
+@colander.deferred
+def deferred_expression_rights_validator(node, kw):
+    types = kw['repository'].type_config('expression_rights')
     return colander.OneOf([t['key'] for t in types])
 
 
@@ -157,6 +175,29 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                                                    missing=colander.drop)
                     contributor_id = colander.SchemaNode(colander.Int(),
                                                          missing=colander.drop)
+
+    @colander.instantiate(missing=colander.drop)
+    class expressions(colander.SequenceSchema):
+        @colander.instantiate()
+        class expression(colander.MappingSchema):
+            type = colander.SchemaNode(
+                colander.String(),
+                validator=deferred_expression_type_validator)
+            format = colander.SchemaNode(
+                colander.String(),
+                validator=deferred_expression_format_validator)
+            rights = colander.SchemaNode(
+                colander.String(),
+                missing=None,
+                validator=deferred_expression_rights_validator)
+            start_date = colander.SchemaNode(colander.Date(), missing=None)
+            end_date = colander.SchemaNode(colander.Date(), missing=None)
+            description = colander.SchemaNode(colander.String(), missing=None)
+            uri = colander.SchemaNode(colander.String(), missing=None)
+            position = colander.SchemaNode(colander.Integer(),
+                                           missing=colander.drop)
+            id = colander.SchemaNode(colander.Integer(), missing=colander.drop)
+            blob_id = colander.SchemaNode(colander.Integer(), missing=None)
 
 
 class WorkPostSchema(WorkSchema):

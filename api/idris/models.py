@@ -49,6 +49,148 @@ class PositionType(Base):
     label = Column(Unicode(128))
 
 
+class ExpressionType(Base):
+    __tablename__ = 'expression_type_schemes'
+    key = Column(Unicode(32), primary_key=True)
+    label = Column(Unicode(128))
+
+
+class ExpressionFormat(Base):
+    __tablename__ = 'expression_format_schemes'
+    key = Column(Unicode(32), primary_key=True)
+    label = Column(Unicode(128))
+
+
+class ExpressionAccessRight(Base):
+    __tablename__ = 'expression_access_schemes'
+    key = Column(Unicode(32), primary_key=True)
+    label = Column(Unicode(128))
+
+
+class Blob(Base):
+    """
+    1. get upload url and blob_id by posting info to blob api
+    2. upload content
+    3. run transforms with blob_id
+    4. add blob to expression
+    5. use work/expression to auth blob download
+
+    - Make blob_id a random large integer (uuid4 int)
+    - Store expression id in the blob so it can not be used / changed for other expressions
+
+
+    """
+    __tablename__ = 'blobs'
+    __table_args__ = (Index('ix_blobs_search_terms',
+                            'search_terms',
+                            postgresql_using='gin'),)
+    id = Column(
+        Integer,
+        default=text("pseudo_encrypt(nextval('blobs_id_seq')::integer)"),
+        primary_key=True)
+    expression = relationship('Expression', back_populates='blob')
+    bytes = Column(Integer, nullable=False)
+    name = Column(Unicode(1024), nullable=False)
+    format = Column(Unicode(1024), nullable=False)
+    checksum = Column(Unicode(32))
+    finalized = Column(Boolean)
+    transform_name = Column(Unicode(32))
+    info = Column(JSON)
+    text = Column(UnicodeText)
+    cover_image = Column(Text)
+    thumbnail = Column(Text)
+    search_terms = Column(TSVECTOR)
+
+    def to_dict(self):
+        result = {'id': self.id,
+                  'bytes': self.bytes,
+                  'format': self.format,
+                  'checksum': self.checksum,
+                  'name': self.name,
+                  'info': self.info,
+                  'thumbnail': self.thumbnail,
+                  'text': self.text,
+                  'transform_name': self.transform_name,
+                  'finalized': self.finalized}
+        return result
+
+    def update_dict(self, data):
+        for key, value in data.items():
+            set_attribute(self, key, value)
+
+    @classmethod
+    def from_dict(cls, data):
+        blob = Blob()
+        blob.update_dict(data)
+        return blob
+
+
+class Expression(Base):
+    __tablename__ = 'expressions'
+
+    id = Column(Integer, Sequence('expressions_id_seq'), primary_key=True)
+    work_id = Column(BigInteger,
+                     ForeignKey('works.id'),
+                     index=True,
+                     nullable=False)
+    work = relationship('Work', back_populates='expressions')
+    type = Column(Unicode(32),
+                  ForeignKey('expression_type_schemes.key'),
+                  nullable=False)
+    format = Column(Unicode(32),
+                    ForeignKey('expression_format_schemes.key'),
+                    nullable=False)
+    rights = Column(Unicode(32),
+                    ForeignKey('expression_access_schemes.key'),
+                    nullable=False)
+    during = Column(DateRangeType)
+    uri = Column(Unicode(1024), nullable=True)
+    info = Column(JSON)
+    description = Column(UnicodeText, nullable=True)
+    blob_id = Column(Integer,
+                     ForeignKey('blobs.id'),
+                     index=True,
+                     nullable=False)
+    blob = relationship('Blob',
+                        back_populates='expression',
+                        single_parent=True,
+                        cascade='all, delete-orphan')
+    position = Column(Integer)
+
+    def to_dict(self):
+        start_date = end_date = None
+        if self.during:
+            start_date, end_date = parse_duration(self.during)
+
+        result = {'id': self.id,
+                  'type': self.type,
+                  'format': self.format,
+                  'rights': self.rights,
+                  'uri': self.uri,
+                  'start_date': start_date,
+                  'end_date': end_date,
+                  'description': self.description,
+                  'blob_id': self.blob_id,
+                  'position': self.position}
+
+        return result
+
+    def update_dict(self, data):
+        start_date = data.pop('start_date', None)
+        end_date = data.pop('end_date', None)
+        set_attribute(self, 'during', DateInterval([start_date, end_date]))
+        for key, value in data.items():
+            if key.startswith('_'):
+                continue
+            set_attribute(self, key, value)
+
+    @classmethod
+    def from_dict(cls, data):
+        expression = Expression()
+        expression.update_dict(data)
+        return expression
+
+
 class RelationType(Base):
     __tablename__ = 'relation_type_schemes'
     key = Column(Unicode(32), primary_key=True)
@@ -234,8 +376,11 @@ class Work(Base):
                             back_populates='work',
                             cascade='all, delete-orphan')
     expressions = relationship('Expression',
-                               info={'inline_schema': True},
                                back_populates='work',
+                               info={'inline_schema': True},
+                               foreign_keys=[Expression.work_id],
+                               order_by='Expression.position',
+                               collection_class=ordering_list('position'),
                                cascade='all, delete-orphan')
 
     contributors = relationship('Contributor',
@@ -305,6 +450,10 @@ class Work(Base):
                  'value': description['value'],
                  'format': description['format'],
                  'position': description['position']})
+
+        result['expressions'] = []
+        for expression in self.expressions:
+            result['expressions'].append(expression.to_dict())
 
         result['relations'] = []
         for relation in self.relations:
@@ -428,6 +577,21 @@ class Work(Base):
                     relation = Relation.from_dict(relation_data)
                 new_relations.append(relation)
             self.relations[:] = new_relations
+
+        if 'expressions' in data:
+            existing_expressions = dict(
+                [(c.id, c) for c in self.expressions])
+            new_expressions = []
+            for expression_data in data.pop('expressions', []):
+                expression_data['work_id'] = self.id
+                if expression_data.get('id') in existing_expressions:
+                    expression = existing_expressions.pop(
+                        expression_data['id'])
+                    expression.update_dict(expression_data)
+                else:
+                    expression = Expression.from_dict(expression_data)
+                new_expressions.append(expression)
+            self.expressions[:] = new_expressions
 
         for key, value in data.items():
             if key.startswith('_'):
@@ -649,115 +813,6 @@ class Measure(Base):
                   nullable=True)
     during = Column(DateRangeType)
     value = Column(Unicode(128), nullable=False)
-
-
-class ExpressionType(Base):
-    __tablename__ = 'expression_type_schemes'
-    key = Column(Unicode(32), primary_key=True)
-    label = Column(Unicode(128))
-
-
-class ExpressionFormat(Base):
-    __tablename__ = 'expression_format_schemes'
-    key = Column(Unicode(32), primary_key=True)
-    label = Column(Unicode(128))
-
-
-class ExpressionAccessRight(Base):
-    __tablename__ = 'expression_access_schemes'
-    key = Column(Unicode(32), primary_key=True)
-    label = Column(Unicode(128))
-
-
-class Blob(Base):
-    """
-    1. get upload url and blob_id by posting info to blob api
-    2. upload content
-    3. run transforms with blob_id
-    4. add blob to expression
-    5. use work/expression to auth blob download
-
-    - Make blob_id a random large integer (uuid4 int)
-    - Store expression id in the blob so it can not be used / changed for other expressions
-
-
-    """
-    __tablename__ = 'blobs'
-    __table_args__ = (Index('ix_blobs_search_terms',
-                            'search_terms',
-                            postgresql_using='gin'),)
-    id = Column(
-        Integer,
-        #Sequence('blobs_id_seq'),
-        default=text("pseudo_encrypt(nextval('blobs_id_seq')::integer)"),
-        primary_key=True)
-    expression_id = Column(Integer,
-                           ForeignKey('expressions.id'),
-                           index=True,
-                           nullable=True)
-    expression = relationship('Expression', back_populates='blob')
-    bytes = Column(Integer, nullable=False)
-    name = Column(Unicode(1024), nullable=False)
-    format = Column(Unicode(1024), nullable=False)
-    checksum = Column(Unicode(32))
-    finalized = Column(Boolean)
-    transform_name = Column(Unicode(32))
-    info = Column(JSON)
-    text = Column(UnicodeText)
-    cover_image = Column(Text)
-    thumbnail = Column(Text)
-    search_terms = Column(TSVECTOR)
-
-    def to_dict(self):
-        result = {'id': self.id,
-                  'bytes': self.bytes,
-                  'format': self.format,
-                  'checksum': self.checksum,
-                  'name': self.name,
-                  'info': self.info,
-                  'thumbnail': self.thumbnail,
-                  'text': self.text,
-                  'transform_name': self.transform_name,
-                  'finalized': self.finalized}
-        return result
-
-    def update_dict(self, data):
-        for key, value in data.items():
-            set_attribute(self, key, value)
-
-    @classmethod
-    def from_dict(cls, data):
-        blob = Blob()
-        blob.update_dict(data)
-        return blob
-
-
-class Expression(Base):
-    __tablename__ = 'expressions'
-
-    id = Column(Integer, Sequence('expressions_id_seq'), primary_key=True)
-    work_id = Column(BigInteger,
-                     ForeignKey('works.id'),
-                     index=True,
-                     nullable=False)
-    work = relationship('Work', back_populates='expressions')
-    type = Column(Unicode(32),
-                  ForeignKey('expression_type_schemes.key'),
-                  nullable=False)
-    format = Column(Unicode(32),
-                    ForeignKey('expression_format_schemes.key'),
-                    nullable=False)
-    access = Column(Unicode(32),
-                    ForeignKey('expression_access_schemes.key'),
-                    nullable=False)
-    during = Column(DateRangeType)
-    uri = Column(Unicode(1024), nullable=True)
-    info = Column(JSON)
-    description = Column(UnicodeText, nullable=True)
-
-    blob = relationship('Blob',
-                        back_populates='expression',
-                        cascade='all, delete-orphan')
 
 
 

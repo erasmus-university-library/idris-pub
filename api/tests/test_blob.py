@@ -64,3 +64,33 @@ class BlobStorageTest(BaseTest):
         assert out.json.get('info').get('pages') == 1
         assert out.json.get('info').get('words') == 4
         assert out.json.get('text') == 'This is a test!'
+
+    def test_work_expression(self):
+        content = 'This is a test!'.encode('utf8')
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.post_json('/api/v1/blob/records',
+                                 {'name': 'test.txt',
+                                  'bytes': str(len(content)),
+                                  'format': 'text/plain'},
+                                 headers=headers,
+                                 status=201)
+        blob_id = out.json['id']
+        upload_headers = headers.copy()
+        upload_headers['Content-Length'] = str(len(content))
+        upload_headers['Content-Type'] = 'text/plain'
+        self.api.post(out.json['upload_url'],
+                      content,
+                      headers=upload_headers,
+                      status=200)
+        out = self.api.post_json(
+            '/api/v1/work/records',
+            {'title': 'A test article.',
+             'issued': '2018-02-26',
+             'type': 'article',
+             'expressions': [{'type': 'publication',
+                              'format': 'manuscript',
+                              'rights': 'openAccess',
+                              'description': 'Just a test file..',
+                              'blob_id': blob_id}]},
+            headers=headers)
+        assert out.status_code == 201
