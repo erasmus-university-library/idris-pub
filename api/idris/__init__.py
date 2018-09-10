@@ -13,7 +13,6 @@ def main(global_config, **settings):
     config.include('pyramid_jwt')
     config.include('idris.storage')
     config.include('idris.blob')
-    import pdb; pdb.set_trace()
 
     config.set_authorization_policy(ACLAuthorizationPolicy())
     config.set_jwt_authentication_policy(settings['idris.secret'],
