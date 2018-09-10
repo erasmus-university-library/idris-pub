@@ -99,5 +99,3 @@ class BlobStorageTest(BaseTest):
         out = self.api.get('/api/v1/blob/download/%s' % blob_id,
                            headers=headers,
                            status=200)
-
-        import pdb; pdb.set_trace()
