@@ -81,7 +81,7 @@ module.exports = {
     extensions: [".js", ".jsx"]
   },
   devServer: {contentBase: __dirname + '/src',
-	      publicPath: '/edit/',
+	      publicPath: '/' + (process.env.OUTPUT_PATH || 'edit') + '/',
               allowedHosts: ['.localhost']},
   devtool: 'source-map'
 };

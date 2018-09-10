@@ -33,4 +33,10 @@ def main(global_config, **settings):
                 route_name='edit_without_slash')
     config.add_static_view('edit', path='idris:static/dist/web')
 
+    config.add_route('course_without_slash', '/course')
+    config.add_view(lambda _, __: HTTPFound('/course/'),
+                route_name='course_without_slash')
+    config.add_static_view('course', path='idris:static/dist/web')
+
+    config.add_static_view('', path='idris:static/dist/web')
     return config.make_wsgi_app()

@@ -1,5 +1,5 @@
 //import React from "react";
-import React from 'react';
+import React, { Component } from 'react';
 import { render } from 'react-dom';
 import { createStore, applyMiddleware, compose, combineReducers } from 'redux';
 import thunkMiddleware from 'redux-thunk';
@@ -9,7 +9,9 @@ import {Provider} from 'react-redux';
 import './index.css';
 import 'typeface-roboto';
 
-import App from './components/App';
+import EditorApp from './components/EditorApp';
+import CourseApp from './components/CourseApp';
+import HelloApp from './components/HelloApp';
 
 import {reducer as formReducer } from 'redux-form';
 import appReducer from './reducers';
@@ -26,11 +28,22 @@ const store = createStore(combineReducers({app: appReducer,
                           preloadedState,
                           composeEnhancers(reduxBatch, applyMiddleware(thunkMiddleware), reduxBatch));
 
+class AppChooser extends Component {
+  render() {
+    const url = new URL(document.location);
+    let path = url.pathname.split('/')[1];
+    if (!path){
+      path = 'root';
+    }
+    const App = this.props[path];
+    return <App />
+  }
+}
 
 render(
   <Provider store={store}>
     <Router>
-      <App />
+      <AppChooser edit={EditorApp} course={CourseApp} root={HelloApp} />
     </Router>
   </Provider>,
   document.getElementById('root'));

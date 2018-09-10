@@ -26,7 +26,7 @@
     "typeface-roboto": "0.0.43"
   },
   "scripts": {
-    "start": "webpack-dev-server --mode=development --hot --inline --output-public-path=/edit/ --allowed-hosts .localhost",
+    "start": "webpack-dev-server --mode=development --hot --inline --allowed-hosts .localhost",
     "build": "webpack --mode=production",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
