@@ -77,19 +77,26 @@ export class CiteProc {
 
 
 export class IdrisSDK {
-    constructor() {
-        if (!sdk_client){
-            this.token = null;
-            const url = new URL(document.location);
-            this.backendURL = url.protocol + '//' + url.hostname + ':6543/api/v1';
+  constructor() {
+    if (!sdk_client){
+      this.token = null;
+      const url = new URL(document.location);
+      let port = ''
+      if (url.port){
+	port = ':' + url.port;
+	if (url.port === '8080'){
+	  port = ':6543';
+	}
+      }
+      this.backendURL = url.protocol + '//' + url.hostname + port + '/api/v1';
 
-            this.login = this.login.bind(this);
-            this.recordList = this.recordList.bind(this);
+      this.login = this.login.bind(this);
+      this.recordList = this.recordList.bind(this);
 
-            sdk_client = this;
-        }
-        return sdk_client
+      sdk_client = this;
     }
+    return sdk_client
+  }
 
 
 

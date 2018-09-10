@@ -197,7 +197,8 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             position = colander.SchemaNode(colander.Integer(),
                                            missing=colander.drop)
             id = colander.SchemaNode(colander.Integer(), missing=colander.drop)
-            blob_id = colander.SchemaNode(colander.Integer(), missing=None)
+            blob_id = colander.SchemaNode(colander.Integer(),
+                                          missing=colander.drop)
 
 
 class WorkPostSchema(WorkSchema):

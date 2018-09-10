@@ -915,4 +915,4 @@ class BlobResource(BaseResource):
 
     def __acl__(self):
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
-        yield (Allow, 'system.Authenticated', ['add', 'upload'])
+        yield (Allow, 'system.Authenticated', ['add', 'transform', 'upload'])

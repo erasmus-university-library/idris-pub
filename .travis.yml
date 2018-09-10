@@ -38,4 +38,4 @@ before_script:
   - psql -c "CREATE USER idris WITH PASSWORD 'c4l31d0'" -U postgres
   - psql -c 'GRANT ALL PRIVILEGES ON DATABASE idris to idris' -U postgres;
   - psql idris -c 'CREATE EXTENSION ltree' -U postgres
-  - initialize_db idris.ini
+  - initialize_db idris-dev.ini

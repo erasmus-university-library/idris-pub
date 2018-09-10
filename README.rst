@@ -21,10 +21,10 @@ Setting up Idris API
     source bin/activate
     pip install -e .
 
-* Create a PostgreSQL database with the same user/password as the idris.ini file (Have a look at the psql commands in the travis.yaml file)
+* Create a PostgreSQL database with the same user/password as the idris-dev.ini file (Have a look at the psql commands in the travis.yaml file)
 * Initialize the database with the initialize_db script::
 
-    initialize_db idris.ini
+    initialize_db idris-dev.ini
 
 Tests
 -----
@@ -42,7 +42,7 @@ Starting the API server
 
 * Start the development webserver::
 
-    gunicorn --paste idris.ini
+    gunicorn --paste idris-dev.ini
 
 * Visit the API browser at http://localhost:6543/api/
 

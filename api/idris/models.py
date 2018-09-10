@@ -93,7 +93,6 @@ class Blob(Base):
     name = Column(Unicode(1024), nullable=False)
     format = Column(Unicode(1024), nullable=False)
     checksum = Column(Unicode(32))
-    finalized = Column(Boolean)
     transform_name = Column(Unicode(32))
     info = Column(JSON)
     text = Column(UnicodeText)
@@ -110,8 +109,7 @@ class Blob(Base):
                   'info': self.info,
                   'thumbnail': self.thumbnail,
                   'text': self.text,
-                  'transform_name': self.transform_name,
-                  'finalized': self.finalized}
+                  'transform_name': self.transform_name}
         return result
 
     def update_dict(self, data):
@@ -147,10 +145,10 @@ class Expression(Base):
     uri = Column(Unicode(1024), nullable=True)
     info = Column(JSON)
     description = Column(UnicodeText, nullable=True)
-    blob_id = Column(Integer,
+    blob_id = Column(BigInteger,
                      ForeignKey('blobs.id'),
                      index=True,
-                     nullable=False)
+                     nullable=True)
     blob = relationship('Blob',
                         back_populates='expression',
                         single_parent=True,
@@ -179,6 +177,7 @@ class Expression(Base):
         start_date = data.pop('start_date', None)
         end_date = data.pop('end_date', None)
         set_attribute(self, 'during', DateInterval([start_date, end_date]))
+
         for key, value in data.items():
             if key.startswith('_'):
                 continue

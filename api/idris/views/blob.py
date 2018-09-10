@@ -194,19 +194,19 @@ def blob_transform_view(request):
     return request.context.model.to_dict()
 
 
-"""
 blob_download = Service(name='BlobDownload',
-                     path='/api/v1/blob/download/{blob_key}',
-                     factory=ResourceFactory(BlobResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['blob'],
-                     cors_origins=('*', ))
+                        path='/api/v1/blob/download/{id}',
+                        factory=ResourceFactory(BlobResource),
+                        api_security=[{'jwt': []}],
+                        tags=['blob'],
+                        cors_origins=('*', ))
+
+
 @blob_download.get(permission='download')
 def blob_download_local_view(request):
-    blob_key = request.matchdict['blob_key']
-    request.context.from_blob_key(blob_key)
-    if request.context.model is None:
-        raise HTTPNotFound()
+    blobstore = request.repository.blob
+    if not blobstore.blob_exists(request.context.model.id):
+        raise HTTPPreconditionFailed('File is missing')
     response = request.response
     response.content_type = request.context.model.format
     response.content_length = request.context.model.bytes
@@ -214,5 +214,3 @@ def blob_download_local_view(request):
                                        response,
                                        request.context)
     return response
-
-"""

@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from pyramid.decorator import reify
 from sqlalchemy import engine_from_config
@@ -142,7 +143,7 @@ class Storage(object):
         session.flush()
 
     def create_all(self, session):
-        session.execute('SET search_path TO public');
+        session.execute('SET search_path TO public')
         Repository.__table__.create(bind=session.connection())
         session.flush()
 
@@ -156,11 +157,12 @@ class Storage(object):
             self.registry['dbsession_factory'],
             transaction_manager or transaction.manager)
         if namespace:
-            session.execute('SET search_path TO %s, public' % namespace);
+            session.execute('SET search_path TO %s, public' % namespace)
         return session
 
-    def initialize_repository(self, session, namespace, admin_userid, admin_credentials):
-        session.execute('SET search_path TO %s, public' % namespace);
+    def initialize_repository(
+            self, session, namespace, admin_userid, admin_credentials):
+        session.execute('SET search_path TO %s, public' % namespace)
         user_groups = DEFAULTS['user_groups']
         for id, label in user_groups.items():
             session.add(UserGroup(id=id, label=label))
@@ -344,7 +346,7 @@ def includeme(config):
     # use pyramid_retry to retry a request when transient exceptions occur
     config.include('pyramid_retry')
 
-    engine = engine_from_config(settings, prefix='sqlalchemy.')#, echo=True)
+    engine = engine_from_config(settings, prefix='sqlalchemy.')  # , echo=True)
 
     session_factory = sessionmaker()
     session_factory.configure(bind=engine, autoflush=False)
@@ -357,7 +359,8 @@ def includeme(config):
     def new_dbsession(request):
         session = get_tm_session(session_factory, request.tm)
         host = request.headers['Host'].split(':')[0]
-        repository = session.query(Repository).filter(Repository.vhost_name == host).first()
+        repository = session.query(Repository).filter(
+            Repository.vhost_name == host).first()
         if repository:
             request.environ[
                 'idris.repository.namespace'] = repository.namespace
@@ -366,7 +369,9 @@ def includeme(config):
             request.environ[
                 'idris.repository.settings'] = repository.settings
             session.execute(
-                'SET search_path TO %s, public' % repository.namespace);
+                'SET search_path TO %s, public' % repository.namespace)
+        else:
+            logging.error('No repository found for host: %s' % host)
         return session
 
     def new_repository(request):

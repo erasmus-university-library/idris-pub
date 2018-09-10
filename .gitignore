@@ -17,3 +17,5 @@ api/idris/views/__pycache__/
 api/pip-selfcheck.json
 *.tern-port
 api/idris/static/dist/web
+idris-gae.ini
+idris-cloudsql.ini

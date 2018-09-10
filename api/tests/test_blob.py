@@ -94,3 +94,10 @@ class BlobStorageTest(BaseTest):
                               'blob_id': blob_id}]},
             headers=headers)
         assert out.status_code == 201
+        # now we can download the blob through the work
+        pub_id = out.json['id']
+        out = self.api.get('/api/v1/blob/download/%s' % blob_id,
+                           headers=headers,
+                           status=200)
+
+        import pdb; pdb.set_trace()
