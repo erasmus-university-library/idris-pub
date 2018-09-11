@@ -384,3 +384,23 @@ class WorkPermissionWebTest(BaseTest):
         pub = out.json
         assert len(pub['relations']) == 1
         assert pub['relations'][0]['_target_name'] == 'Another Test Publication'
+
+    def test_add_relations_description(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
+                           headers=headers)
+        pub = out.json
+
+        assert len(pub['relations']) == 0
+        pub['relations'].append({'type': 'isPartOf',
+                                 'description': 'Some Journal',
+                                 'starting': '1',
+                                 'ending': '2',
+                                 'volume': '3',
+                                 'issue': '4',
+                                 'location': 'here'})
+        out = self.api.put_json('/api/v1/work/records/%s' % self.pub_id,
+                                pub,
+                                headers=headers)
+        pub = out.json
+        assert len(pub['relations']) == 1

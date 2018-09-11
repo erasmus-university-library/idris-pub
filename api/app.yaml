@@ -1,9 +1,5 @@
 runtime: custom
 env: flex
-entrypoint: gunicorn --paste idris-gae.ini -b :$PORT
-
-runtime_config:
-  python_version: 3
 
 beta_settings:
     cloud_sql_instances: caleido-eur:europe-west1:caleidev

@@ -2,8 +2,7 @@ FROM gcr.io/google-appengine/python
 
 # Add idris dependencies
 
-RUN apt-get update
-RUN apt-get install -y poppler-utils ghostscript imagemagick
+RUN apt-get update && apt-get install -y poppler-utils ghostscript imagemagick
 
 # Create a virtualenv for dependencies. This isolates these packages from
 # system-level packages.
@@ -24,5 +23,5 @@ ADD . /app
 
 # Run a WSGI server to serve the application. gunicorn must be declared as
 # a dependency in requirements.txt.
-CMD gunicorn -b :$PORT main:app
+CMD gunicorn --paste idris-gae.ini -b :$PORT
 

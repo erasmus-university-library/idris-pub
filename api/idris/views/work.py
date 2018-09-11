@@ -42,6 +42,14 @@ def deferred_relation_type_validator(node, kw):
     return colander.OneOf([t['key'] for t in types])
 
 
+def relation_validator(node, kw):
+    if (not kw.get('target_id') and not kw.get('description')):
+        node.name = '%s.target_id' % node.name
+        raise colander.Invalid(
+            node,
+            "Required: supply either 'target_id' or 'description'")
+
+
 @colander.deferred
 def deferred_description_type_validator(node, kw):
     types = kw['repository'].type_config('description_type')
@@ -76,6 +84,35 @@ def deferred_expression_rights_validator(node, kw):
 def deferred_measure_type_validator(node, kw):
     types = kw['repository'].type_config('measure_type')
     return colander.OneOf([t['key'] for t in types])
+
+
+class RelationSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
+    def __init__(self, *args, **kwargs):
+        kwargs['validator'] = relation_validator
+        super(RelationSchema, self).__init__(*args, **kwargs)
+
+    type = colander.SchemaNode(
+        colander.String(),
+        validator=deferred_relation_type_validator)
+    position = colander.SchemaNode(colander.Integer(),
+                                   missing=colander.drop)
+    id = colander.SchemaNode(colander.Integer(), missing=colander.drop)
+    target_id = colander.SchemaNode(colander.Integer(),
+                                    missing=None)
+    _target_name = colander.SchemaNode(colander.String(),
+                                       missing=colander.drop)
+    _target_type = colander.SchemaNode(colander.String(),
+                                       missing=colander.drop)
+    start_date = colander.SchemaNode(colander.Date(), missing=None)
+    end_date = colander.SchemaNode(colander.Date(), missing=None)
+    starting = colander.SchemaNode(colander.String(), missing=None)
+    ending = colander.SchemaNode(colander.String(), missing=None)
+    total = colander.SchemaNode(colander.String(), missing=None)
+    volume = colander.SchemaNode(colander.String(), missing=None)
+    issue = colander.SchemaNode(colander.String(), missing=None)
+    description = colander.SchemaNode(colander.String(), missing=None)
+    location = colander.SchemaNode(colander.String(), missing=None)
+    number = colander.SchemaNode(colander.String(), missing=None)
 
 
 class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
@@ -127,28 +164,8 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     @colander.instantiate(missing=colander.drop)
     class relations(colander.SequenceSchema):
         @colander.instantiate()
-        class relation(colander.MappingSchema):
-            type = colander.SchemaNode(
-                colander.String(),
-                validator=deferred_relation_type_validator)
-            position = colander.SchemaNode(colander.Integer(),
-                                           missing=colander.drop)
-            id = colander.SchemaNode(colander.Integer(), missing=colander.drop)
-            target_id = colander.SchemaNode(colander.Integer())
-            _target_name = colander.SchemaNode(colander.String(),
-                                               missing=colander.drop)
-            _target_type = colander.SchemaNode(colander.String(),
-                                               missing=colander.drop)
-            start_date = colander.SchemaNode(colander.Date(), missing=None)
-            end_date = colander.SchemaNode(colander.Date(), missing=None)
-            starting = colander.SchemaNode(colander.String(), missing=None)
-            ending = colander.SchemaNode(colander.String(), missing=None)
-            total = colander.SchemaNode(colander.String(), missing=None)
-            volume = colander.SchemaNode(colander.String(), missing=None)
-            issue = colander.SchemaNode(colander.String(), missing=None)
-            description = colander.SchemaNode(colander.String(), missing=None)
-            location = colander.SchemaNode(colander.String(), missing=None)
-            number = colander.SchemaNode(colander.String(), missing=None)
+        class relation(RelationSchema):
+            pass
 
     @colander.instantiate(missing=colander.drop)
     class contributors(colander.SequenceSchema):

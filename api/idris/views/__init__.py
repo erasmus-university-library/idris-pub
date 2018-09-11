@@ -14,6 +14,7 @@ swagger = Service(name='OpenAPI',
                   path='/__api__',
                   description="OpenAPI documentation")
 
+
 def body_schema_transformer(schema, args):
     validators = args.get('validators', [])
     if colander_bound_repository_body_validator in validators:
@@ -21,6 +22,7 @@ def body_schema_transformer(schema, args):
         schema = colander.MappingSchema()
         schema['body'] = body_schema
     return schema
+
 
 class TypeConverterWithDeferredSupport(TypeConversionDispatcher):
     """

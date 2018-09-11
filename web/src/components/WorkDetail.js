@@ -133,7 +133,7 @@ class WorkDetail extends React.Component {
 				   settings={settings}
 				   Icon={LanguageIcon}
 				   Form={RelationsForm}
-				   fieldLabels = {(value) => ([(settings.relation_types.filter((type) => (type.id === value.type? type.label : null))[0]||{}).label||null, value._target_name])} />
+				   fieldLabels = {(value) => ([(settings.relation_types.filter((type) => (type.id === value.type? type.label : null))[0]||{}).label||null, value._target_name || value.description])} />
 		    <RecordSection label="Identifiers"
 				   errors={errors}
 				   name="identifiers"

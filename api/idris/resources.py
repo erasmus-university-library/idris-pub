@@ -615,8 +615,13 @@ class WorkResource(BaseResource):
             aff_labels = dict([tuple(a.split(':', 1)) for a in hit.affiliations])
             contributors = []
             roles = set()
-            hit.contributors.sort(key=itemgetter('position'))
-            for contributor in hit.contributors:
+
+            # filter out contributor rows with a null id.
+            # this happens with course relations
+            contributor_rows = [c for c in hit.contributors if c.get('id')]
+            contributor_rows.sort(key=itemgetter('position'))
+
+            for contributor in contributor_rows:
                 if contributor['person_id'] in contributor_role_ids:
                     roles.add(contributor['role'])
                 if (contributors and

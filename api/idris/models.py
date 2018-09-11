@@ -206,6 +206,7 @@ class Relation(Base):
 
     __tablename__ = 'relations'
     id = Column(Integer, Sequence('relations_id_seq'), primary_key=True)
+
     work_id = Column(BigInteger,
                      ForeignKey('works.id'),
                      index=True)
@@ -215,14 +216,14 @@ class Relation(Base):
     target_id = Column(BigInteger,
                        ForeignKey('works.id'),
                        index=True,
-                       nullable=False)
+                       nullable=True)
     target = relationship('Work',
                           foreign_keys=[target_id])
     type = Column(Unicode(32),
                   ForeignKey('relation_type_schemes.key'),
                   index=True,
                   nullable=False)
-
+    description = Column(UnicodeText, nullable=True)
     location = Column(Unicode(1024), nullable=True)
     starting = Column(Unicode(128), nullable=True)
     ending = Column(Unicode(128), nullable=True)
@@ -233,20 +234,23 @@ class Relation(Base):
     during = Column(DateRangeType, nullable=True)
     position = Column(Integer, nullable=False)
 
-    description = Column(UnicodeText, nullable=True)
-
     def to_dict(self):
         start_date = end_date = None
         if self.during:
             start_date, end_date = parse_duration(self.during)
+
+        target_name = target_type = None
+        if self.target_id:
+            target_name = self.target.title
+            target_type = self.target.type
 
         result = {'id': self.id,
                   'type': self.type,
                   'work_id': self.work_id,
                   '_work_name': self.work.title,
                   'target_id': self.target_id,
-                  '_target_name': self.target.title,
-                  '_target_type': self.target.type,
+                  '_target_name': target_name,
+                  '_target_type': target_type,
                   'location': self.location,
                   'starting': self.starting,
                   'ending': self.ending,
@@ -457,22 +461,9 @@ class Work(Base):
         result['relations'] = []
         for relation in self.relations:
             relation = relation.to_dict()
-            result['relations'].append(
-                {'id': relation['id'],
-                 'target_id': relation['target_id'],
-                 '_target_name': relation['_target_name'],
-                 '_target_type': relation['_target_type'],
-                 'type': relation['type'],
-                 'location': relation['location'],
-                 'start_date': relation['start_date'],
-                 'end_date': relation['end_date'],
-                 'starting': relation['starting'],
-                 'ending': relation['ending'],
-                 'total': relation['total'],
-                 'volume': relation['volume'],
-                 'issue': relation['issue'],
-                 'number': relation['number'],
-                 'position': relation['position']})
+            del relation['work_id']
+            del relation['_work_name']
+            result['relations'].append(relation)
 
         return result
 
