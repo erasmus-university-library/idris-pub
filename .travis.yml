@@ -7,7 +7,7 @@ language:
   python
 
 python:
-  - "3.5"
+  - "3.6"
 
 dist:
   - "trusty"
@@ -20,11 +20,10 @@ before_install:
 
 install:
   - pip install -e .
-  - pip install tox
-  - export TOXENV=py${TRAVIS_PYTHON_VERSION//./}
+  - pip install pytest webtest
 
 script:
-  - tox -e ${TOXENV}
+  - pytest tests
 
 services:
   - postgresql
