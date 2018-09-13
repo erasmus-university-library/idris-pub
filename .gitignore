@@ -19,3 +19,4 @@ api/pip-selfcheck.json
 api/idris/static/dist/web
 idris-gae.ini
 idris-cloudsql.ini
+var

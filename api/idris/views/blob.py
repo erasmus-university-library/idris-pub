@@ -100,8 +100,7 @@ class BlobRecordAPI(object):
 
         self.request.response.status = 201
         result = BlobSchema().to_json(blob.to_dict())
-        result['upload_url'] = self.request.repository.blob.upload_url(
-            result['id'])
+        result['upload_url'] = self.request.repository.blob.upload_url(blob)
         return result
 
     @view(
@@ -141,7 +140,7 @@ class BlobRecordAPI(object):
             self.request.errors.add(
                 'body', '', 'file is missing (not uploaded yet?)')
             return
-        self.context.model.finalized = True
+        blobstore.finalize_blob(self.context)
         blobstore.transform_blob(self.context)
         return self.context.model.to_dict()
 

@@ -1,3 +1,4 @@
+import os
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPFound
@@ -6,6 +7,14 @@ from idris.security import add_role_principals
 
 
 def main(global_config, **settings):
+
+    gcp_project = settings.get('idris.google_cloud_project')
+    gcp_auth = settings.get('idris.google_application_credentials')
+    if gcp_project and gcp_auth:
+        os.environ['GOOGLE_CLOUD_PROJECT'] = gcp_project
+        os.environ[
+            'GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(gcp_auth)
+
     config = Configurator(settings=settings)
     config.include('cornice')
     config.include('cornice_swagger')

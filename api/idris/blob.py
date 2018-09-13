@@ -1,4 +1,6 @@
+
 import os
+import codecs
 import uuid
 import hashlib
 import subprocess
@@ -6,6 +8,7 @@ import tempfile
 import base64
 
 from zope.interface import implementer
+from google.cloud import storage
 
 from idris.interfaces import IBlobStoreBackend, IBlobTransform
 
@@ -18,8 +21,8 @@ class BlobStore(object):
     def blob_exists(self, blob_id):
         return self.backend.blob_exists(blob_id)
 
-    def upload_url(self, blob_id):
-        return self.backend.upload_url(blob_id)
+    def upload_url(self, blob):
+        return self.backend.upload_url(blob)
 
     def download_url(self, blob_id):
         return self.backend.download_url(blob_id)
@@ -36,14 +39,12 @@ class BlobStore(object):
         if not blob.model.checksum:
             blob.model.checksum = self.backend.blob_checksum(
                 blob.model.id)
-            blob.model.finalize = True
-            blob.put()
+        if not blob.model.finalized:
+            blob.model.finalized = True
+        blob.put()
         return True
 
     def transform_blob(self, blob):
-        if not blob.model.finalized:
-            self.finalize_blob(blob)
-
         transformer = self.registry.queryUtility(IBlobTransform,
                                                  blob.model.format)
         output = {'status': 'ok'}
@@ -52,13 +53,18 @@ class BlobStore(object):
             output['transformer'] = None
             return output
         output['transformer'] = transformer.name
-        transformer(blob).execute(self.backend.local_path(blob.model.id))
+        local_blob_path = self.backend.local_path(blob.model.id)
+        transformer(blob).execute(local_blob_path)
+        if self.backend.remote_storage is True:
+            os.remove(local_blob_path)
+
         blob.model.transform_name = transformer.name
         blob.put()
 
 
 @implementer(IBlobStoreBackend)
 class LocalBlobStore(object):
+    remote_storage = False
 
     def __init__(self, repo_config):
         self.repository = repo_config
@@ -88,10 +94,10 @@ class LocalBlobStore(object):
         "Determine if a blob exists in the filesystem"
         return os.path.isfile(self._blob_path(blob_id))
 
-    def upload_url(self, blob_id):
+    def upload_url(self, blob):
         "Create an upload url that can be used to POST bytes"
         return '%s/api/v1/blob/upload/%s' % (self.repository.api_host_url,
-                                             blob_id)
+                                             blob.id)
 
     def local_path(self, blob_id):
         return self._blob_path(blob_id)
@@ -110,6 +116,62 @@ class LocalBlobStore(object):
             fp.write(request.body)
         blob.model.checksum = hashlib.md5(request.body).hexdigest()
         blob.put()
+
+
+@implementer(IBlobStoreBackend)
+class GCSBlobStore(object):
+    remote_storage = True
+
+    def __init__(self, repo_config):
+        self.repository = repo_config
+        self.bucket_name = '%s-%s' % (
+            repo_config.registry.settings['idris.blob_root_prefix'],
+            self.repository.namespace)
+        self.client = storage.Client()
+        self.bucket = self.client.get_bucket(self.bucket_name)
+        self.blob_path = 'blobs'
+
+    def _blob_path(self, blob_id):
+        return os.path.join(self.blob_path,
+                            str(blob_id)[-3:],
+                            str(blob_id))
+
+    def blob_exists(self, blob_id):
+        "Determine if a blob exists in the filesystem"
+        return self.bucket.get_blob(self._blob_path(blob_id)) is not None
+
+    def blob_checksum(self, blob_id):
+        hash = self.bucket.get_blob(
+            self._blob_path(blob_id)).md5_hash.encode('utf8')
+        return codecs.encode(
+            codecs.decode(hash, 'base64'), 'hex').decode('utf8')
+
+    def upload_url(self, blob):
+        "Create an upload url that can be used to POST bytes"
+        path = self._blob_path(blob.id)
+        gcs_blob = storage.Blob(name=path, bucket=self.bucket)
+        return gcs_blob.create_resumable_upload_session(
+            content_type=blob.format,
+            size=blob.bytes)
+
+    def local_path(self, blob_id):
+        target = tempfile.mktemp(prefix='gcs-%s-%s-' % (
+            self.repository.namespace, blob_id))
+        blob = self.bucket.get_blob(self._blob_path(blob_id))
+        blob.download_to_filename(target)
+        return target
+
+    def serve_blob(self, request, response, blob):
+        "Modify the response to servce bytes from blob_key"
+        # XXX this sucks. we can't use the 'X-AppEngine-BlobKey' header
+        # like we do in AE standard
+        # maybe come up with something so at least nginx can serve the
+        # files instead of Gunicorn
+
+        response.content_type = blob.model.format
+        blob = self.bucket.get_blob(self._blob_path(blob.model.id))
+        blob.download_to_file(response)
+        return response
 
 
 @implementer(IBlobTransform)
@@ -182,6 +244,9 @@ def includeme(config):
     config.registry.registerUtility(LocalBlobStore,
                                     IBlobStoreBackend,
                                     'local')
+    config.registry.registerUtility(GCSBlobStore,
+                                    IBlobStoreBackend,
+                                    'gcs')
     config.registry.registerUtility(PDFTransform,
                                     IBlobTransform,
                                     'application/pdf')
