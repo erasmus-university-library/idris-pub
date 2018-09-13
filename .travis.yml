@@ -20,10 +20,10 @@ before_install:
 
 install:
   - pip install -e .
-  - pip install pytest webtest
+  - pip install pytest webtest codecov pytest-cov
 
 script:
-  - export TESTENV=travis && pytest tests
+  - export TESTENV=travis && pytest --cov=./idris tests
 
 services:
   - postgresql
@@ -38,3 +38,6 @@ before_script:
   - psql -c 'GRANT ALL PRIVILEGES ON DATABASE idris to idris' -U postgres;
   - psql idris -c 'CREATE EXTENSION ltree' -U postgres
   - initialize_db idris-dev.ini
+
+after_success:
+  - codecov
