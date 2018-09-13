@@ -75,32 +75,8 @@ class BlobListingRequestSchema(colander.MappingSchema):
 class BlobRecordAPI(object):
     def __init__(self, request, context):
         self.request = request
+        self.response = request.response
         self.context = context
-
-    @view(permission='view',
-          response_schemas={
-              '200': BlobResponseSchema(description='Ok'),
-              '401': ErrorResponseSchema(description='Unauthorized'),
-              '403': ErrorResponseSchema(description='Forbidden'),
-              '404': ErrorResponseSchema(description='Not Found'),
-          })
-    def get(self):
-        "Retrieve a Blob"
-
-        result = BlobSchema().to_json(self.context.model.to_dict())
-        return result
-
-    @view(permission='delete',
-          response_schemas={
-              '200': StatusResponseSchema(description='Ok'),
-              '401': ErrorResponseSchema(description='Unauthorized'),
-              '403': ErrorResponseSchema(description='Forbidden'),
-              '404': ErrorResponseSchema(description='Not Found'),
-          })
-    def delete(self):
-        "Delete an Blob"
-        self.context.delete()
-        return {'status': 'ok'}
 
     @view(permission='add',
           schema=BlobPostSchema(),
@@ -128,34 +104,46 @@ class BlobRecordAPI(object):
             result['id'])
         return result
 
-    @view(permission='view',
-          schema=BlobListingRequestSchema(),
-          validators=(colander_validator),
-          cors_origins=('*', ),
-          response_schemas={
-              '200': BlobListingResponseSchema(description='Ok'),
-              '400': ErrorResponseSchema(description='Bad Request'),
-              '401': ErrorResponseSchema(description='Unauthorized')})
-    def collection_get(self):
-        offset = self.request.validated['querystring']['offset']
-        limit = self.request.validated['querystring']['limit']
-        order_by = [Blob.family_name.asc(), Blob.name.asc()]
-        listing = self.context.search(
-            offset=offset,
-            limit=limit,
-            order_by=order_by,
-            format=format,
-            principals=self.request.effective_principals)
-        schema = BlobSchema()
-        result = {'total': listing['total'],
-                  'records': [],
-                  'snippets': [],
-                  'limit': limit,
-                  'offset': offset,
-                  'status': 'ok'}
-        result['records'] = [schema.to_json(blob.to_dict())
-                             for blob in listing['hits']]
-        return result
+    @view(
+        permission='download')
+    def get(self):
+        "Download a Blob"
+        blobstore = self.request.repository.blob
+        if not self.context.model.finalized:
+            self.request.errors.status = 412
+            self.request.errors.add(
+                'body', '', 'blob has not been finalized')
+            return
+        self.response.content_type = self.context.model.format
+        self.content_length = self.context.model.bytes
+        blobstore.serve_blob(self.request,
+                             self.response,
+                             self.context)
+        return self.response
+
+    @view(
+        permission='finalize',
+        cors_origins=('*', ),
+        response_schemas={
+            '200': BlobResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found'),
+        })
+    def put(self):
+        "Finalize a blob"
+        if self.request.content_length != 0:
+            self.request.errors.add('body', '', 'expected empty body')
+            return
+        blobstore = self.request.repository.blob
+        if not blobstore.blob_exists(self.context.model.id):
+            self.request.errors.status = 412
+            self.request.errors.add(
+                'body', '', 'file is missing (not uploaded yet?)')
+            return
+        self.context.model.finalized = True
+        blobstore.transform_blob(self.context)
+        return self.context.model.to_dict()
 
 
 blob_upload = Service(name='BlobUpload',
@@ -166,7 +154,7 @@ blob_upload = Service(name='BlobUpload',
                       cors_origins=('*', ))
 
 
-@blob_upload.post(permission='upload')
+@blob_upload.put(permission='upload')
 def blob_upload_local_view(request):
     blobstore = request.repository.blob
     if blobstore.blob_exists(request.context.model.id):

@@ -287,7 +287,7 @@ class RepositoryConfig(object):
     def blob(self):
         backend = self.registry.queryUtility(
             IBlobStoreBackend,
-            self.registry.settings['idris.blob_storage'])
+            self.registry.settings['idris.blob_backend'])
         return BlobStore(backend(self))
 
     def update_settings(self, settings):

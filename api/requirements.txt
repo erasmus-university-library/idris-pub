@@ -12,3 +12,6 @@ zope.sqlalchemy
 psycopg2
 gunicorn
 intervals
+google-cloud-storage
+google-cloud-bigquery
+google-cloud-logging

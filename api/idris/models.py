@@ -99,6 +99,7 @@ class Blob(Base):
     cover_image = Column(Text)
     thumbnail = Column(Text)
     search_terms = Column(TSVECTOR)
+    finalized = Column(Boolean)
 
     def to_dict(self):
         result = {'id': self.id,

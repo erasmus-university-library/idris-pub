@@ -62,20 +62,23 @@ class LocalBlobStore(object):
 
     def __init__(self, repo_config):
         self.repository = repo_config
-        self._path = self._get_root_path(
-            repo_config.registry.settings['idris.blob_path'])
+        self._path = self.root_path(
+            repo_config.registry.settings['idris.blob_root_prefix'],
+            self.repository.namespace)
 
-    def _get_root_path(self, path):
+    @classmethod
+    def root_path(cls, path, namespace):
         if path.startswith('/'):
             root = path
         else:
             root = os.path.dirname(__file__)
             root = os.path.dirname(root)
+            root = os.path.dirname(root)
             assert root.endswith('src')
             root = os.path.dirname(root)
             root = os.path.join(root,
                                 path,
-                                self.repository.namespace)
+                                namespace)
         return root
 
     def _blob_path(self, blob_id, makedirs=False):

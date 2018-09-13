@@ -4,7 +4,7 @@ from operator import itemgetter
 
 import sqlalchemy as sql
 from pyramid.httpexceptions import HTTPForbidden
-from pyramid.security import Allow, ALL_PERMISSIONS
+from pyramid.security import Allow, Deny, Everyone, ALL_PERMISSIONS
 from pyramid.interfaces import IAuthorizationPolicy
 from sqlalchemy.orm import load_only, aliased
 from sqlalchemy import func
@@ -14,7 +14,7 @@ from idris.models import (
     User, Person, Group, GroupType, GroupAccountType, PersonAccountType,
     Membership, Work, WorkType, Contributor, ContributorRole, Affiliation,
     IdentifierType, MeasureType, DescriptionType, DescriptionFormat, Blob,
-    RelationType, Relation, PositionType)
+    RelationType, Relation, PositionType, Expression)
 from idris.exceptions import StorageError
 
 
@@ -919,5 +919,17 @@ class BlobResource(BaseResource):
     key_col_name = 'id'
 
     def __acl__(self):
+        if self.model:
+            expr = self.session.query(Expression).filter(
+                Expression.blob_id == self.model.id).scalar()
+            if expr is None:
+                # you can't download a blob,
+                # if it's not attached to an expression
+                yield (Deny, Everyone, ['download'])
+            else:
+                # add more check (expression.rights == 'public', etc)
+                # might even check the work permissions.
+                yield (Allow, 'system.Authenticated', ['download'])
+
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
-        yield (Allow, 'system.Authenticated', ['add', 'transform', 'upload'])
+        yield (Allow, 'system.Authenticated', ['add', 'finalize', 'upload'])

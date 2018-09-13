@@ -10,6 +10,7 @@ from idris import main
 from idris.storage import Storage
 from idris.models import User, Owner
 from idris.resources import UserResource
+from idris.blob import LocalBlobStore
 
 
 class BaseTest(unittest.TestCase):
@@ -18,8 +19,8 @@ class BaseTest(unittest.TestCase):
         return {
             'idris.secret': 'sekret',
             'idris.blob_path': '/tmp/idris.files',
-            'idris.blob_storage': 'local',
-            'idris.blob_api': 'http://unittest.localhost/api/v1/blob/upload/',
+            'idris.blob_backend': 'local',
+            'idris.blob_root_prefix': 'var/files',
             'sqlalchemy.url': (
                 'postgresql://idris:c4l31d0@localhost/idris')
         }
@@ -29,9 +30,13 @@ class BaseTest(unittest.TestCase):
         self.app = main({}, **settings)
 
         self.storage = self.app.registry['storage']
-        blob_path = settings['idris.blob_path']
+        blob_path = LocalBlobStore.root_path(
+            settings['idris.blob_root_prefix'],
+            'unittest')
+
         if os.path.isdir(blob_path):
             shutil.rmtree(blob_path)
+
         self.api = WebTestApp(
             self.app,
             extra_environ={'HTTP_HOST': 'unittest.localhost'})
