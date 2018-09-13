@@ -73,9 +73,6 @@ class LocalBlobStore(object):
         else:
             root = os.path.dirname(__file__)
             root = os.path.dirname(root)
-            root = os.path.dirname(root)
-            assert root.endswith('src')
-            root = os.path.dirname(root)
             root = os.path.join(root,
                                 path,
                                 namespace)

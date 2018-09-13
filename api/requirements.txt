@@ -9,7 +9,7 @@ pyramid_tm
 pyramid_retry
 pyramid_jwt
 zope.sqlalchemy
-psycopg2
+psycopg2-binary
 gunicorn
 intervals
 google-cloud-storage
