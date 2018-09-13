@@ -1,5 +1,6 @@
 from core import BaseTest
 
+
 class SchemeTypeTest(BaseTest):
     def test_retrieving_and_updating_group_types(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
@@ -20,13 +21,11 @@ class SchemeTypeTest(BaseTest):
         assert values['organisation'] == 'An Organisation'
         assert 'publisher' in values
 
-
     def test_retrieving_all_types(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.get('/api/v1/schemes/types', headers=headers)
         type_ids = [t['id'] for t in out.json['types']]
         assert 'group' in type_ids
-
 
     def test_repository_settings(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
@@ -43,3 +42,8 @@ class SchemeTypeTest(BaseTest):
         assert settings['title'] == 'Unittest Repository'
         assert settings['foo'] == 'bar'
 
+    def test_client_settings(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get('/api/v1/client', headers=headers)
+        settings = out.json
+        assert 'title' in settings.get('repository', {})

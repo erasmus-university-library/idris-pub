@@ -7,8 +7,10 @@ from idris.security import authenticator_factory
 from idris.utils import OKStatus
 from idris.resources import TypeResource
 
+
 class ClientSchema(colander.MappingSchema):
     status = OKStatus
+
     @colander.instantiate(missing=colander.drop)
     class dev_user(colander.MappingSchema):
         user = colander.SchemaNode(colander.String())
@@ -20,6 +22,7 @@ class ClientSchema(colander.MappingSchema):
         class type(colander.MappingSchema):
             id = colander.SchemaNode(colander.String())
             label = colander.SchemaNode(colander.String())
+
             @colander.instantiate()
             class fields(colander.SequenceSchema):
                 @colander.instantiate()
@@ -27,12 +30,14 @@ class ClientSchema(colander.MappingSchema):
                     id = colander.SchemaNode(colander.String())
                     label = colander.SchemaNode(colander.String())
                     type = colander.SchemaNode(colander.String())
+
             @colander.instantiate()
             class filters(colander.SequenceSchema):
                 @colander.instantiate()
                 class filter(colander.MappingSchema):
                     label = colander.SchemaNode(colander.String())
                     id = colander.SchemaNode(colander.String())
+
                     @colander.instantiate()
                     class values(colander.SequenceSchema):
                         @colander.instantiate()
@@ -47,17 +52,19 @@ class ClientSchema(colander.MappingSchema):
                     id = colander.SchemaNode(colander.String())
                     label = colander.SchemaNode(colander.String())
 
+
 class ClientResponseSchema(colander.MappingSchema):
     body = ClientSchema()
 
 
+client = Service(
+    name='Client',
+    path='/api/v1/client',
+    tags=['config'],
+    cors_origins=('*', ),
+    response_schemas={
+        '200': ClientResponseSchema(description='Ok')})
 
-client = Service(name='Client',
-                 path='/api/v1/client',
-                 tags=['config'],
-                 cors_origins=('*', ),
-                 response_schemas={
-    '200': ClientResponseSchema(description='Ok')})
 
 @client.get()
 def client_config(request):
@@ -70,28 +77,36 @@ def client_config(request):
     work_types.sort(key=itemgetter('label'))
     group_account_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'groupAccount').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'groupAccount').to_dict()['values']]
     person_account_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'personAccount').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'personAccount').to_dict()['values']]
     identifier_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'identifier').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'identifier').to_dict()['values']]
     description_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'description').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'description').to_dict()['values']]
     description_formats = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'descriptionFormat').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'descriptionFormat').to_dict()['values']]
     relation_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'relation').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'relation').to_dict()['values']]
     measure_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'measure').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'measure').to_dict()['values']]
     position_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'position').to_dict()['values']]
+        for v in TypeResource(request.dbsession,
+                              'position').to_dict()['values']]
     user_group_types = [
         {'id': 100, 'label': 'Admin'},
         {'id': 80, 'label': 'Manager'},
@@ -101,8 +116,8 @@ def client_config(request):
 
     contributor_role_types = [
         {'id': v['key'], 'label': v['label']}
-        for v in TypeResource(request.dbsession, 'contributorRole').to_dict()['values']]
-
+        for v in TypeResource(request.dbsession,
+                              'contributorRole').to_dict()['values']]
 
     # palette generated by http://mcg.mbitson.com
     result = {
