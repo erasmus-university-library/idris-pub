@@ -23,7 +23,7 @@ install:
   - pip install pytest webtest
 
 script:
-  - pytest tests --ignore=tests/test_gcs_blobs.py
+  - export TESTENV=travis && pytest tests
 
 services:
   - postgresql

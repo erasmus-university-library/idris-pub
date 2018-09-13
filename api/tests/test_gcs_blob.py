@@ -2,7 +2,11 @@ import os
 from core import BaseTest
 import requests
 
+import pytest
 
+
+@pytest.mark.skipif(os.environ.get('TESTENV') == 'travis',
+                    reason='No GCP support when running in Travis')
 class GCSBlobStorageTest(BaseTest):
 
     def app_settings(self):
