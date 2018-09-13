@@ -233,7 +233,6 @@ class MembershipAuthorzationWebTest(MembershipWebTest):
             '/api/v1/membership/records/%s' % membership_id,
              headers=john_headers, status=200)
 
-
     def test_membership_bulk_import(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         records = {'records': [
@@ -322,6 +321,20 @@ class MembershipRetrievalWebTest(MembershipWebTest):
         assert len(out.json.get('snippets', [])) == 1
         assert out.json['snippets'][0]['person_name'] == 'Doe (Jane)'
         assert out.json['snippets'][0]['groups'][0]['name'] == 'Corp.'
+
+    def test_membership_listing(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get(
+            '/api/v1/membership/listing?person_id=%s&format=snippet' % self.jane_id ,
+            headers=headers, status=200)
+        assert out.json['total'] == 1
+        assert len(out.json.get('snippets', [])) == 1
+        snippet = out.json['snippets'][0]
+        assert snippet['person_name'] == 'Doe (Jane)'
+        assert snippet['groups'][0]['name'] == 'Corp.'
+        assert snippet['earliest'] == '2017-01-01'
+        assert snippet['latest'] == '2018-01-01'
+        assert snippet['memberships'] == 1
 
     def test_sub_group_memberships(self):
         if 'TRAVIS' in os.environ:
