@@ -94,7 +94,7 @@ class BlobStorageTest(BaseTest):
              'type': 'article',
              'expressions': [{'type': 'publication',
                               'format': 'manuscript',
-                              'rights': 'openAccess',
+                              'access': 'public',
                               'description': 'Just a test file..',
                               'blob_id': blob_id}]},
             headers=headers)

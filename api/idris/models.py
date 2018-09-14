@@ -139,7 +139,7 @@ class Expression(Base):
     format = Column(Unicode(32),
                     ForeignKey('expression_format_schemes.key'),
                     nullable=False)
-    rights = Column(Unicode(32),
+    access = Column(Unicode(32),
                     ForeignKey('expression_access_schemes.key'),
                     nullable=False)
     during = Column(DateRangeType)
@@ -164,7 +164,7 @@ class Expression(Base):
         result = {'id': self.id,
                   'type': self.type,
                   'format': self.format,
-                  'rights': self.rights,
+                  'access': self.access,
                   'uri': self.uri,
                   'start_date': start_date,
                   'end_date': end_date,

@@ -95,6 +95,18 @@ def client_config(request):
         {'id': v['key'], 'label': v['label']}
         for v in TypeResource(request.dbsession,
                               'descriptionFormat').to_dict()['values']]
+    expression_types = [
+        {'id': v['key'], 'label': v['label']}
+        for v in TypeResource(request.dbsession,
+                              'expression').to_dict()['values']]
+    expression_formats = [
+        {'id': v['key'], 'label': v['label']}
+        for v in TypeResource(request.dbsession,
+                              'expressionFormat').to_dict()['values']]
+    expression_access = [
+        {'id': v['key'], 'label': v['label']}
+        for v in TypeResource(request.dbsession,
+                              'expressionAccess').to_dict()['values']]
     relation_types = [
         {'id': v['key'], 'label': v['label']}
         for v in TypeResource(request.dbsession,
@@ -132,6 +144,9 @@ def client_config(request):
                               'identifier_types': identifier_types,
                               'description_types': description_types,
                               'description_formats': description_formats,
+                              'expression_types': expression_types,
+                              'expression_formats': expression_formats,
+                              'expression_access': expression_access,
                               'relation_types': relation_types,
                               'measure_types': measure_types},
                      'user': {'type': user_group_types},

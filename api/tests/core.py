@@ -12,6 +12,8 @@ from idris.models import User, Owner
 from idris.resources import UserResource
 from idris.blob import LocalBlobStore
 
+DB_INITIALIZED_TESTS = set()
+
 
 class BaseTest(unittest.TestCase):
 
@@ -45,12 +47,17 @@ class BaseTest(unittest.TestCase):
             extra_environ={'HTTP_HOST': 'unittest.localhost'})
         storage = Storage(self.app.registry)
         self.session = storage.make_session()
-        if 'unittest' in storage.repository_info(self.session):
-            storage.drop_repository(self.session, 'unittest')
-            transaction.commit()
-        storage.create_repository(self.session,
-                                  'unittest',
-                                  'unittest.localhost')
+        if True:  # self.__class__.__name__ not in DB_INITIALIZED_TESTS:
+            DB_INITIALIZED_TESTS.add(self.__class__.__name__)
+            if 'unittest' in storage.repository_info(self.session):
+                storage.drop_repository(self.session, 'unittest')
+                transaction.commit()
+            storage.create_repository(self.session,
+                                      'unittest',
+                                      'unittest.localhost')
+        else:
+            storage.clear_repository(self.session, 'unittest')
+
         storage.initialize_repository(self.session,
                                       'unittest',
                                       'admin',

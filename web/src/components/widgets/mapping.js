@@ -9,8 +9,13 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 
 import _ from 'lodash';
 
-import RelationField from './Relation.js'
+import RelationField from './Relation.js';
+import FileUploadField from './FileUpload.js';
 
+export const mappedFileUpload = (props) => {
+  console.log(props)
+  return <FileUploadField />
+}
 export const mappedRelationField = (props) => {
   const error = props.error;
   const id_input = _.get(props, props.names[0]).input;

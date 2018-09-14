@@ -5,6 +5,7 @@ from pyramid.decorator import reify
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import CreateSchema, DropSchema
+from sqlalchemy.engine import reflection
 import zope.sqlalchemy
 import transaction
 
@@ -89,7 +90,9 @@ DEFAULTS = {
                             'html': 'HTML'},
     'expression_types': {'publication': 'Publication'},
     'expression_formats': {'manuscript': 'Manuscript'},
-    'expression_rights': {'openAccess': 'Open Access'},
+    'expression_access': {'public': 'Public',
+                          'restricted': 'Restricted',
+                          'private': 'Private'},
     'measure_types': {'cites': 'Citations',
                       'openAccess': 'Open Access',
                       'impactFactor': 'Impact Factor'},
@@ -160,6 +163,16 @@ class Storage(object):
             session.execute('SET search_path TO %s, public' % namespace)
         return session
 
+    def clear_repository(self, session, namespace):
+        session.execute('SET search_path TO %s' % namespace)
+        inspector = reflection.Inspector.from_engine(
+            self.registry['engine'])
+        table_names = inspector.get_table_names(namespace)
+
+        session.execute(
+            'TRUNCATE %s RESTART IDENTITY CASCADE' % ', '.join(table_names))
+        session.flush()
+
     def initialize_repository(
             self, session, namespace, admin_userid, admin_credentials):
         session.execute('SET search_path TO %s, public' % namespace)
@@ -204,8 +217,8 @@ class Storage(object):
         expression_formats = DEFAULTS['expression_formats']
         for key, label in expression_formats.items():
             session.add(ExpressionFormat(key=key, label=label))
-        expression_rights = DEFAULTS['expression_rights']
-        for key, label in expression_rights.items():
+        expression_access = DEFAULTS['expression_access']
+        for key, label in expression_access.items():
             session.add(ExpressionAccessRight(key=key, label=label))
         measure_types = DEFAULTS['measure_types']
         for key, label in measure_types.items():
@@ -262,7 +275,7 @@ class RepositoryConfig(object):
                  'description_format': DescriptionFormat,
                  'expression_type': ExpressionType,
                  'expression_format': ExpressionFormat,
-                 'expression_rights': ExpressionAccessRight,
+                 'expression_access': ExpressionAccessRight,
                  'position_type': PositionType,
                  'measure_type': MeasureType}
 

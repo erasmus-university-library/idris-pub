@@ -138,12 +138,12 @@ class RecordSection extends React.Component {
   }
 
   handleAddField = (fields, index=null) => (event) => {
-    console.log('add', fields, index)
+    const defaultValue = this.props.defaults || {};
     if (index === null){
-      fields.push({});
+      fields.push(defaultValue);
       this.handleRowClick(fields.length)()
     } else {
-      fields.insert(index, {})
+      fields.insert(index, defaultValue)
       this.handleRowClick(index)()
     }
   }

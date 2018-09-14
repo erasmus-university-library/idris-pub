@@ -14,7 +14,8 @@ from idris.models import (
     User, Person, Group, GroupType, GroupAccountType, PersonAccountType,
     Membership, Work, WorkType, Contributor, ContributorRole, Affiliation,
     IdentifierType, MeasureType, DescriptionType, DescriptionFormat, Blob,
-    RelationType, Relation, PositionType, Expression)
+    RelationType, Relation, PositionType,
+    Expression, ExpressionType, ExpressionFormat, ExpressionAccessRight)
 from idris.exceptions import StorageError
 
 
@@ -868,6 +869,9 @@ class TypeResource(object):
                'relation': RelationType,
                'description': DescriptionType,
                'descriptionFormat': DescriptionFormat,
+               'expression': ExpressionType,
+               'expressionFormat': ExpressionFormat,
+               'expressionAccess': ExpressionAccessRight,
                'contributorRole': ContributorRole,
                'groupAccount': GroupAccountType,
                'personAccount': PersonAccountType
@@ -877,7 +881,6 @@ class TypeResource(object):
     def __acl__(self):
         yield (Allow, 'system.Authenticated', 'view')
         yield (Allow, 'group:admin', 'edit')
-
 
     def __init__(self, session, scheme_id):
         self.session = session
@@ -927,9 +930,13 @@ class BlobResource(BaseResource):
                 # if it's not attached to an expression
                 yield (Deny, Everyone, ['download'])
             else:
-                # add more check (expression.rights == 'public', etc)
-                # might even check the work permissions.
-                yield (Allow, 'system.Authenticated', ['download'])
+                # XXX maybe also check work permissions?
+                yield (Allow, 'group:manager', ['download'])
+                yield (Allow, 'group:editor', ['download'])
+                if expr.access == 'restricted':
+                    yield (Allow, 'system.Authenticated', ['download'])
+                elif expr.access == 'public':
+                    yield (Allow, Everyone, ['download'])
 
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
         yield (Allow, 'system.Authenticated', ['add', 'finalize', 'upload'])

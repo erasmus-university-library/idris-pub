@@ -75,8 +75,8 @@ def deferred_expression_format_validator(node, kw):
 
 
 @colander.deferred
-def deferred_expression_rights_validator(node, kw):
-    types = kw['repository'].type_config('expression_rights')
+def deferred_expression_access_validator(node, kw):
+    types = kw['repository'].type_config('expression_access')
     return colander.OneOf([t['key'] for t in types])
 
 
@@ -203,10 +203,10 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             format = colander.SchemaNode(
                 colander.String(),
                 validator=deferred_expression_format_validator)
-            rights = colander.SchemaNode(
+            access = colander.SchemaNode(
                 colander.String(),
-                missing=None,
-                validator=deferred_expression_rights_validator)
+                missing='public',
+                validator=deferred_expression_access_validator)
             start_date = colander.SchemaNode(colander.Date(), missing=None)
             end_date = colander.SchemaNode(colander.Date(), missing=None)
             description = colander.SchemaNode(colander.String(), missing=None)

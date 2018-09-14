@@ -10,6 +10,7 @@ import RelationsForm from './forms/RelationsForm';
 import DescriptionsForm from './forms/DescriptionsForm';
 import IdentifiersForm from './forms/IdentifiersForm';
 import MeasuresForm from './forms/MeasuresForm';
+import ExpressionsForm from './forms/ExpressionsForm';
 import RelationsListing from './forms/RelationsListing';
 
 
@@ -154,7 +155,7 @@ class WorkDetail extends React.Component {
 				     settings={settings}
 				     Icon={BubbleChartIcon}
 				     Form={null}
-				     fieldLabels = {(value) => (null)} />
+				     fieldLabels = {(value) => (null, null)} />
 		      <RecordSection label="Measures"
 				   errors={errors}
 				   name="measures"
@@ -162,13 +163,14 @@ class WorkDetail extends React.Component {
 				   Icon={NetworkCheckIcon}
 				   Form={MeasuresForm}
 				   fieldLabels = {(value) => ([(settings.measure_types.filter((type) => (type.id === value.type? type.label : null))[0]||{}).label||null, value.value])} />
-		      <RecordSection label="Expressions / Attachments"
+			<RecordSection label="Expressions / Attachments"
+				       defaults={{access: 'public'}}
 				     errors={errors}
 				     name="expressions"
 				     settings={settings}
 				     Icon={AttachFileIcon}
-				     Form={null}
-				     fieldLabels = {(value) => (null)} />
+				     Form={ExpressionsForm}
+				       fieldLabels = {(value) => ([`${value.type} / ${value.format}`, value.uri || ''])} />
 		  </div>
 		</CardContent>
 		<CardActions>
