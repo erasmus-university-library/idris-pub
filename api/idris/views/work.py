@@ -197,6 +197,7 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     class expressions(colander.SequenceSchema):
         @colander.instantiate()
         class expression(colander.MappingSchema):
+            name = colander.SchemaNode(colander.String())
             type = colander.SchemaNode(
                 colander.String(),
                 validator=deferred_expression_type_validator)

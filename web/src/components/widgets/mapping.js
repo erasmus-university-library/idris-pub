@@ -13,8 +13,14 @@ import RelationField from './Relation.js';
 import FileUploadField from './FileUpload.js';
 
 export const mappedFileUpload = (props) => {
-  console.log(props)
-  return <FileUploadField />
+  const handleUpload = (props) => (blobInfo) => {
+    props.input.onChange(blobInfo.id)
+    if (props.onUpload !== undefined){
+      props.onUpload(blobInfo);
+    }
+  }
+
+  return <FileUploadField value={props.input.value} onUpload={handleUpload(props)}/>
 }
 export const mappedRelationField = (props) => {
   const error = props.error;

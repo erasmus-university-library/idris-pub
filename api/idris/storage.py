@@ -395,8 +395,8 @@ def includeme(config):
         repo_settings = request.environ['idris.repository.settings']
 
         api_host_url = '%s://%s' % (request.scheme, request.host)
-        if request.server_port != 80:
-            api_host_url = '%s:%s' % (api_host_url, request.server_port)
+        #  if request.server_port != 80:
+        #      api_host_url = '%s:%s' % (api_host_url, request.server_port)
 
         repository = RepositoryConfig(request.registry,
                                       session,

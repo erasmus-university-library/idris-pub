@@ -18,7 +18,7 @@ from sqlalchemy.orm.attributes import instance_dict
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import DateRangeType, PasswordType
-from sqlalchemy.dialects.postgresql import JSON, TSVECTOR, UUID
+from sqlalchemy.dialects.postgresql import JSON, TSVECTOR
 from sqlalchemy.orm.attributes import set_attribute
 from idris.utils import parse_duration
 
@@ -142,6 +142,7 @@ class Expression(Base):
     access = Column(Unicode(32),
                     ForeignKey('expression_access_schemes.key'),
                     nullable=False)
+    name = Column(Unicode(1024), nullable=False)
     during = Column(DateRangeType)
     uri = Column(Unicode(1024), nullable=True)
     info = Column(JSON)
@@ -162,6 +163,7 @@ class Expression(Base):
             start_date, end_date = parse_duration(self.during)
 
         result = {'id': self.id,
+                  'name': self.name,
                   'type': self.type,
                   'format': self.format,
                   'access': self.access,

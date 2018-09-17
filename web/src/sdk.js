@@ -9,6 +9,20 @@ let citeproc_client = null;
 import locale_file from '../public/csl/locales/locales-en-US.xml';
 import style_file from '../public/csl/styles/apa.csl';
 
+function futch(url, opts={}, onProgress) {
+  return new Promise( (res, rej)=>{
+    var xhr = new XMLHttpRequest();
+    xhr.open(opts.method || 'get', url);
+    for (var k in opts.headers||{})
+      xhr.setRequestHeader(k, opts.headers[k]);
+    xhr.onload = e => res(e.target.responseText);
+    xhr.onerror = rej;
+    if (xhr.upload && onProgress)
+      xhr.upload.onprogress = onProgress; // event.loaded / event.total * 100 ; //event.lengthComputable
+    xhr.send(opts.body);
+  });
+}
+
 
 export class CiteProc {
     constructor() {
@@ -173,13 +187,22 @@ export class IdrisSDK {
             return fetch(`${this.backendURL}/${type}/records/${id}`,
                          {method: 'PUT',
                           mode: 'cors',
-                          body: JSON.stringify(value),
+                          body: value === null ? '' : JSON.stringify(value),
                           headers: {'Authorization': `Bearer ${this.token}`,
                                     'Content-Type': 'application/json'}});
         }
     }
 
-
+  recordUpload = function(uploadURL, file, onProgress){
+    return futch(uploadURL,
+		 {method: 'PUT',
+		  mode: 'cors',
+		  body: file,
+                  headers: {'Authorization': `Bearer ${this.token}`,
+			    'Content-Type': file.type}
+		 },
+		onProgress);
+  }
     clientConfig = function(){
         return fetch(this.backendURL + '/client',
                      {method: 'GET',

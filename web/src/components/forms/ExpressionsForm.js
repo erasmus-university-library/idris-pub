@@ -6,6 +6,15 @@ import { mappedTextField, mappedSelect, mappedFileUpload } from '../widgets/mapp
 import styles from './formStyles.js';
 @withStyles(styles, { withTheme: true })
 class ExpressionsForm extends React.Component {
+
+  handleUpload = (blobInfo) => {
+    const value = (this.props.fields.get(this.props.fieldIndex));
+    console.log(value);
+    value['name'] = blobInfo.name
+
+    console.log('update', blobInfo.name, this.props)
+
+  }
   render(){
     const { classes, settings, field, fieldIndex } = this.props;
     return (
@@ -20,20 +29,27 @@ class ExpressionsForm extends React.Component {
 		 component={mappedSelect}
 		 options={settings.expression_formats}
 		 label="Format" />
+	  <span className={classes.gutter}> </span>
+          <Field name={`${field}.name`}
+                 component={mappedTextField}
+                 label="Name"
+                 className={classes.flex}
+                 InputLabelProps={{shrink: true}}/>
 	</div>
         <div className={classes.formFieldRow}>
               <Field name={`${field}.blob_id`}
                      component={mappedFileUpload}
                      label="File Upload"
+		     onUpload={this.handleUpload}
                      className={classes.flex}
                      InputLabelProps={{shrink: true}}/>
         </div>
         <div className={classes.formFieldRow}>
-              <Field name={`${field}.uri`}
-                     component={mappedTextField}
-                     label="External URL"
-                     className={classes.flex}
-                     InputLabelProps={{shrink: true}}/>
+          <Field name={`${field}.uri`}
+                 component={mappedTextField}
+                 label="External URL"
+                 className={classes.flex}
+                 InputLabelProps={{shrink: true}}/>
         </div>
         <div className={classes.formFieldRow}>
           <Field name={`${field}.description`}

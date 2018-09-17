@@ -170,7 +170,7 @@ class WorkDetail extends React.Component {
 				     settings={settings}
 				     Icon={AttachFileIcon}
 				     Form={ExpressionsForm}
-				       fieldLabels = {(value) => ([`${value.type} / ${value.format}`, value.uri || ''])} />
+				       fieldLabels = {(value) => ([`${value.type} / ${value.format}`, value.name || ''])} />
 		  </div>
 		</CardContent>
 		<CardActions>
