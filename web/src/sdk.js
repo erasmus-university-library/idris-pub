@@ -193,7 +193,7 @@ export class IdrisSDK {
         }
     }
 
-  recordUpload = function(uploadURL, file, onProgress){
+  blobUpload = function(uploadURL, file, onProgress){
     return futch(uploadURL,
 		 {method: 'PUT',
 		  mode: 'cors',
@@ -203,6 +203,17 @@ export class IdrisSDK {
 		 },
 		onProgress);
   }
+
+  blobDownload = function(blobId, name){
+    // note that the downloads api only works on firefox/chrome
+    browser.downloads.download(
+      {url: `${this.backendURL}/blob/records/${blobId}`,
+       filename: name,
+       headers: [{name: 'Authorization', value: `Bearer ${this.token}`}]
+      });
+
+  }
+
     clientConfig = function(){
         return fetch(this.backendURL + '/client',
                      {method: 'GET',

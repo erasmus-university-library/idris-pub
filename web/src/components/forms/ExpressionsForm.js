@@ -17,6 +17,7 @@ class ExpressionsForm extends React.Component {
   }
   render(){
     const { classes, settings, field, fieldIndex } = this.props;
+    const value = (this.props.fields.get(this.props.fieldIndex));
     return (
       <div key={fieldIndex} className={classes.formItem}>
 	<div className={classes.formFieldRow}>
@@ -41,6 +42,7 @@ class ExpressionsForm extends React.Component {
                      component={mappedFileUpload}
                      label="File Upload"
 		     onUpload={this.handleUpload}
+		     blobName={value.name || null}
                      className={classes.flex}
                      InputLabelProps={{shrink: true}}/>
         </div>

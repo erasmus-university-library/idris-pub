@@ -78,9 +78,10 @@ class FileUploadField extends React.Component {
 	    this.setState({is_initialized: true,
 			   blobId: data.id,
 			   uploadURL: data.upload_url})
-	    sdk.recordUpload(data.upload_url, this.state.file, this.onProgress).then(
+	    sdk.blobUpload(data.upload_url, this.state.file, this.onProgress).then(
 	      response => {
 		this.setState({is_uploaded: true})
+		console.log('uploaded!')
 		sdk.recordSubmit('blob', this.state.blobId, null).then(
 		  response => response.json(),
 		  error => {console.log('FileUploadField Error: ' + error)}
@@ -91,8 +92,13 @@ class FileUploadField extends React.Component {
 		  })
 
 		},
-	      error => {console.log('FileUploadField Error: ' + error) })
+	      error => {console.log('huh');console.log(error);console.log('FileUploadField Error: ' + error) })
 	  });
+  }
+
+  onDownload = () => {
+    console.log('downloading', this.props.value, this.props.name);
+    sdk.blobDownload(this.props.value, this.props.name);
   }
 
   onProgress = (progress) => {
@@ -105,7 +111,7 @@ class FileUploadField extends React.Component {
 	   is_finalized, is_uploaded, is_initialized, is_accepted} = this.state;
     if (value && is_finalized === false) {
       return (<div>
-	      <Button variant="contained">
+	      <Button variant="contained" onClick={this.onDownload}>
 	      Download File
 	      <CloudDownloadIcon className={classes.downloadIcon} />
 	      </Button>

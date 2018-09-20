@@ -1,11 +1,12 @@
-
 import os
 import codecs
-import uuid
+import datetime
 import hashlib
 import subprocess
 import tempfile
 import base64
+
+from pyramid.httpexceptions import HTTPFound
 
 from zope.interface import implementer
 from google.cloud import storage
@@ -162,16 +163,10 @@ class GCSBlobStore(object):
         return target
 
     def serve_blob(self, request, response, blob):
-        "Modify the response to servce bytes from blob_key"
-        # XXX this sucks. we can't use the 'X-AppEngine-BlobKey' header
-        # like we do in AE standard
-        # maybe come up with something so at least nginx can serve the
-        # files instead of Gunicorn
-
-        response.content_type = blob.model.format
         blob = self.bucket.get_blob(self._blob_path(blob.model.id))
-        blob.download_to_file(response)
-        return response
+        signed_url = blob.generate_signed_url(
+            datetime.timedelta(minutes=15), 'GET')
+        raise HTTPFound(location=signed_url)
 
 
 @implementer(IBlobTransform)

@@ -20,7 +20,7 @@ export const mappedFileUpload = (props) => {
     }
   }
 
-  return <FileUploadField value={props.input.value} onUpload={handleUpload(props)}/>
+  return <FileUploadField value={props.input.value} name={props.blobName} onUpload={handleUpload(props)}/>
 }
 export const mappedRelationField = (props) => {
   const error = props.error;

@@ -54,7 +54,6 @@ class GCSBlobStorageTest(BaseTest):
                                  status=201)
         blob_id = out.json['id']
         upload_url = out.json['upload_url']
-
         response = requests.put(upload_url, content)
         assert response.status_code == 200
 
@@ -107,6 +106,8 @@ class GCSBlobStorageTest(BaseTest):
         # now we can download the blob through the work
         out = self.api.get('/api/v1/blob/records/%s' % blob_id,
                            headers=headers,
-                           status=200)
-        assert out.content_type == 'text/plain'
-        assert out.body == b'This is a test!'
+                           status=302)
+        download_url = out.location
+        response = requests.get(download_url)
+        assert response.headers['Content-Type'] == 'text/plain'
+        assert response.content == b'This is a test!'
