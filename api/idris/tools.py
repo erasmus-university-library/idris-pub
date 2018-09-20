@@ -3,12 +3,14 @@ import os
 import json
 
 from pyramid.paster import get_appsettings
-from idris import main
-from idris.models import Person, Group, Work
 import transaction
 import sqlalchemy as sql
-import sqlalchemy.dialects.postgresql  as postgresql
+import sqlalchemy.dialects.postgresql as postgresql
 from sqlalchemy.inspection import inspect
+
+from idris import main
+from idris.models import Person, Group, Work
+
 
 def initialize_db():
     if len(sys.argv) == 1:
@@ -35,6 +37,7 @@ def initialize_db():
         storage.initialize_repository(session, 'test', 'admin', 'admin')
     transaction.commit()
 
+
 def drop_db():
     if len(sys.argv) == 1:
         cmd = os.path.basename(sys.argv[0])
@@ -54,6 +57,7 @@ def drop_db():
         storage.drop_all(session)
     transaction.commit()
 
+
 def bigquery_schema():
     if len(sys.argv) == 1:
         cmd = os.path.basename(sys.argv[0])
@@ -70,6 +74,7 @@ def bigquery_schema():
     else:
         print('Error: unknown kind: %s' % kind)
         sys.exit(1)
+
     def model2schema(model):
         schema = []
         mapper = inspect(model)
