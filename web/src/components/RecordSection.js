@@ -193,7 +193,7 @@ class RecordSection extends React.Component {
   }
 
   renderAccordion = ({fields, field, fieldIndex, error, open}) => {
-    const {classes, label, fieldLabels, Form, settings} = this.props;
+    const {classes, label, fieldLabels, Form, settings, onFormChange} = this.props;
 
     const value = (fields.get(fieldIndex));
     const labels = fieldLabels(value);
@@ -217,7 +217,7 @@ class RecordSection extends React.Component {
 	</ExpansionPanelSummary>
 	{open === true ? ([
 	    <ExpansionPanelDetails key={0} className={classes.editorContent}>
-		<Form settings={settings} fields={fields} field={field} fieldIndex={fieldIndex} error={error}/>
+		<Form settings={settings} fields={fields} field={field} fieldIndex={fieldIndex} error={error} onFormChange={onFormChange}/>
 	      </ExpansionPanelDetails>,
 	  <ExpansionPanelActions key={1} className={classes.editorActions}>
 	    <Button aria-label="Remove"

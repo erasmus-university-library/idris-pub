@@ -89,12 +89,11 @@ class WorkDetail extends React.Component {
 
   render() {
     const { classes, handleSubmit, submittedErrors, onDelete,
-            settings, history, currentTab, formValues,
+            settings, history, currentTab, formValues, onFormChange,
             relationListingState, workSettings, onRelationChange, onRelationFetch } = this.props;
       if (formValues === undefined){
           return null;
       }
-
     const errors = submittedErrors || {};
     const label = this.getLabel(formValues);
     const errorCount = Object.values(errors).length;
@@ -168,6 +167,7 @@ class WorkDetail extends React.Component {
 				     errors={errors}
 				     name="expressions"
 				     settings={settings}
+				     onFormChange={onFormChange}
 				     Icon={AttachFileIcon}
 				     Form={ExpressionsForm}
 				       fieldLabels = {(value) => ([`${value.type} / ${value.format}`, value.name || ''])} />

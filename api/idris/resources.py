@@ -940,3 +940,42 @@ class BlobResource(BaseResource):
 
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
         yield (Allow, 'system.Authenticated', ['add', 'finalize', 'upload'])
+
+
+class CourseResource(object):
+    def __init__(self, request, key=None):
+        self.session = request.dbsession
+
+    def navigation(self):
+        query = """
+        SELECT g.name AS group_name,
+               g.id AS group_id,
+               course_year(w.issued) AS year,
+               COUNT(w.id) AS courses
+        FROM contributors AS c
+        JOIN works AS w ON c.work_id = w.id
+        JOIN groups AS g ON c.group_id = g.id
+        WHERE c.role = 'publisher' AND
+              c.group_id IS NOT NULL AND
+              w.type = 'course'
+        GROUP BY g.name, g.id, year
+        """
+        counts = {}
+
+        for row in self.session.execute(query):
+            fac_count = counts.get(row.group_id)
+            if fac_count is None:
+                fac_count = {'name': row.group_name,
+                             'id': row.group_id,
+                             'total': 0,
+                             'years': {}}
+                counts[row.group_id] = fac_count
+            fac_count['total'] += row.courses
+            fac_count['years'][row.year] = row.courses
+        nav = list(counts.values())
+        nav.sort(key=itemgetter('name'))
+        return nav
+
+    def __acl__(self):
+        yield (Allow, 'system.Authenticated', 'view')
+        yield (Allow, 'group:admin', 'edit')

@@ -8,12 +8,7 @@ import styles from './formStyles.js';
 class ExpressionsForm extends React.Component {
 
   handleUpload = (blobInfo) => {
-    const value = (this.props.fields.get(this.props.fieldIndex));
-    console.log(value);
-    value['name'] = blobInfo.name
-
-    console.log('update', blobInfo.name, this.props)
-
+    this.props.onFormChange(`${this.props.field}.name`, blobInfo.name);
   }
   render(){
     const { classes, settings, field, fieldIndex } = this.props;

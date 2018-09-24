@@ -81,7 +81,6 @@ class FileUploadField extends React.Component {
 	    sdk.blobUpload(data.upload_url, this.state.file, this.onProgress).then(
 	      response => {
 		this.setState({is_uploaded: true})
-		console.log('uploaded!')
 		sdk.recordSubmit('blob', this.state.blobId, null).then(
 		  response => response.json(),
 		  error => {console.log('FileUploadField Error: ' + error)}
@@ -92,7 +91,7 @@ class FileUploadField extends React.Component {
 		  })
 
 		},
-	      error => {console.log('huh');console.log(error);console.log('FileUploadField Error: ' + error);error.target.onload() })
+	      error => {console.log('FileUploadField Error: ' + error);})
 	  });
   }
 

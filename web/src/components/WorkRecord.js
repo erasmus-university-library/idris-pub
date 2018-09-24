@@ -9,7 +9,7 @@ import { getListingState, getDetailState, getDetailSettings, getDetailSubmitErro
 import { updateListingState, fetchRecordListing,
          updateDetailState, fetchRecordDetail, postRecordDetail,
          changeAppHeader, deleteRecordDetail } from '../actions';
-import { arrayRemoveAll, arrayPush, getFormValues } from 'redux-form';
+import { arrayRemoveAll, arrayPush, getFormValues, change } from 'redux-form';
 
 class WorkRecord extends Component {
 
@@ -31,6 +31,7 @@ class WorkRecord extends Component {
                                 submittedErrors={detailErrors}
                                 id={match.params.id}
                                 formValues={this.props.formValues}
+                                onFormChange={this.props.FormChange}
                                 settings={this.props.detailSettings}
                                 history={this.props.history}
                                 onDetailChange={this.props.updateWorkState}
@@ -62,19 +63,20 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        FormArrayRemoveAll: (field) => {dispatch(arrayRemoveAll('work', field))},
-        FormArrayPush: (field, value) => {dispatch(arrayPush('work', field, value))},
-        changeAppHeader: (title) => {dispatch(changeAppHeader(title))},
-        updateListingState: (state) => {dispatch(updateListingState('work', state))},
-        fetchRecordListing: (query, filters, offset, limit) => {dispatch(
-            fetchRecordListing('work', query, filters, offset, limit))},
-        updateWorkState: (state) => {dispatch(updateDetailState('work', state))},
-        fetchWorkRecord: (id) => {dispatch(fetchRecordDetail('work', id))},
-        postWorkRecord: (id, data) => {dispatch(postRecordDetail('work', id, data))},
-        deleteWorkRecord: (id) => {dispatch(deleteRecordDetail('work', id))},
-        fetchRelationListing: (query, filters, offset, limit) => {dispatch(
-            fetchRecordListing('workContributor', query, filters, offset, limit))},
-        updateRelationListingState: (state) => {dispatch(updateListingState('workContributor', state))},
+      FormArrayRemoveAll: (field) => {dispatch(arrayRemoveAll('work', field))},
+      FormArrayPush: (field, value) => {dispatch(arrayPush('work', field, value))},
+      FormChange: (field, value) => {dispatch(change('work', field, value))},
+      changeAppHeader: (title) => {dispatch(changeAppHeader(title))},
+      updateListingState: (state) => {dispatch(updateListingState('work', state))},
+      fetchRecordListing: (query, filters, offset, limit) => {dispatch(
+        fetchRecordListing('work', query, filters, offset, limit))},
+      updateWorkState: (state) => {dispatch(updateDetailState('work', state))},
+      fetchWorkRecord: (id) => {dispatch(fetchRecordDetail('work', id))},
+      postWorkRecord: (id, data) => {dispatch(postRecordDetail('work', id, data))},
+      deleteWorkRecord: (id) => {dispatch(deleteRecordDetail('work', id))},
+      fetchRelationListing: (query, filters, offset, limit) => {dispatch(
+        fetchRecordListing('workContributor', query, filters, offset, limit))},
+      updateRelationListingState: (state) => {dispatch(updateListingState('workContributor', state))},
 
     };
 }

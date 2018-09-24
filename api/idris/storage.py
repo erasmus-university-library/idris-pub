@@ -50,6 +50,23 @@ BEGIN
  RETURN ((r1 << 16) + l1);
 END;
 $$ LANGUAGE plpgsql strict immutable;
+
+create or replace function course_year(date) returns text as $$
+declare
+  current_year int;
+  current_month int;
+  starting text;
+  ending text;
+begin
+  current_year := cast(extract(year from $1) as int);
+  current_month := cast(extract(month from $1) as int);
+  starting := cast(case when current_month >= 8 then current_year else current_year - 1 end as text);
+  ending := cast(case when current_month >= 8 then current_year + 1 else current_year end as text);
+  return concat(starting, '-', ending);
+end
+$$ language plpgsql;
+
+
 """
 
 DEFAULTS = {
@@ -58,7 +75,8 @@ DEFAULTS = {
                     60: 'Editor',
                     40: 'Owner',
                     10: 'Viewer'},
-    'group_types': {'organisation': 'Organisation'},
+    'group_types': {'organisation': 'Organisation',
+                    'faculty': 'Faculty'},
     'contributor_roles': {'author': 'Author',
                           'editor': 'Editor',
                           'publisher': 'Publisher',
@@ -71,6 +89,7 @@ DEFAULTS = {
                              'wikipedia': 'Wikipedia'},
     'relation_types': {'isPartOf': 'is part of',
                        'references': 'references',
+                       'toc': 'Table Of Contents',
                        'isFormatOf': 'is format of',
                        'isVersionOf': 'is version of',
                        'isReplacedBy': 'is replaced by'},
