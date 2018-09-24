@@ -12,6 +12,7 @@ import style_file from '../public/csl/styles/apa.csl';
 function futch(url, opts={}, onProgress) {
   return new Promise( (res, rej)=>{
     var xhr = new XMLHttpRequest();
+    xhr.mode = opts.mode;
     xhr.open(opts.method || 'get', url);
     for (var k in opts.headers||{})
       xhr.setRequestHeader(k, opts.headers[k]);
@@ -197,7 +198,8 @@ export class IdrisSDK {
     return futch(uploadURL,
 		 {method: 'PUT',
 		  mode: 'cors',
-		  body: file,
+		  body: new Blob([file], {type: file.type}),
+		  //body: file,
                   headers: {'Authorization': `Bearer ${this.token}`,
 			    'Content-Type': file.type}
 		 },

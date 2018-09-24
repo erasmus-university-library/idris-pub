@@ -22,8 +22,8 @@ class BlobStore(object):
     def blob_exists(self, blob_id):
         return self.backend.blob_exists(blob_id)
 
-    def upload_url(self, blob):
-        return self.backend.upload_url(blob)
+    def upload_url(self, blob, origin=None):
+        return self.backend.upload_url(blob, origin)
 
     def download_url(self, blob_id):
         return self.backend.download_url(blob_id)
@@ -95,7 +95,7 @@ class LocalBlobStore(object):
         "Determine if a blob exists in the filesystem"
         return os.path.isfile(self._blob_path(blob_id))
 
-    def upload_url(self, blob):
+    def upload_url(self, blob, origin=None):
         "Create an upload url that can be used to POST bytes"
         return '%s/api/v1/blob/upload/%s' % (self.repository.api_host_url,
                                              blob.id)
@@ -147,13 +147,14 @@ class GCSBlobStore(object):
         return codecs.encode(
             codecs.decode(hash, 'base64'), 'hex').decode('utf8')
 
-    def upload_url(self, blob):
+    def upload_url(self, blob, origin=None):
         "Create an upload url that can be used to POST bytes"
         path = self._blob_path(blob.id)
         gcs_blob = storage.Blob(name=path, bucket=self.bucket)
         return gcs_blob.create_resumable_upload_session(
-            content_type=blob.format,
-            size=blob.bytes)
+            content_type=blob.format.encode('utf8'),
+            size=blob.bytes,
+            origin=origin)
 
     def local_path(self, blob_id):
         target = tempfile.mktemp(prefix='gcs-%s-%s-' % (

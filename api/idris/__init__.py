@@ -33,6 +33,8 @@ def main(global_config, **settings):
     config.scan("idris.views")
 
     config.add_route('debug', '/debug')
+    config.add_route('liveness_check', '/check/live')
+    config.add_route('readiness_check', '/check/ready')
 
     config.add_route('api_without_slash', '/api')
     config.add_view(lambda _, __: HTTPFound('/api/'),

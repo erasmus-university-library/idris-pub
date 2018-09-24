@@ -100,7 +100,8 @@ class BlobRecordAPI(object):
 
         self.request.response.status = 201
         result = BlobSchema().to_json(blob.to_dict())
-        result['upload_url'] = self.request.repository.blob.upload_url(blob)
+        result['upload_url'] = self.request.repository.blob.upload_url(
+            blob, self.request.headers.get('Origin'))
         return result
 
     @view(

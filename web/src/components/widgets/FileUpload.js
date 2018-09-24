@@ -92,7 +92,7 @@ class FileUploadField extends React.Component {
 		  })
 
 		},
-	      error => {console.log('huh');console.log(error);console.log('FileUploadField Error: ' + error) })
+	      error => {console.log('huh');console.log(error);console.log('FileUploadField Error: ' + error);error.target.onload() })
 	  });
   }
 
