@@ -5,6 +5,7 @@ export const getAppHeader = (state) => ({title: state.app.ui.title,
                                          seeAlsoName: state.app.ui.seeAlsoName || null});
 export const getSideBarOpen = (state) => (state.app.ui.sideBarOpen);
 export const getAppState = (state) => (state.app.ui.appState);
+export const getNavigation = (state) => (state.app.ui.nav||[]);
 export const getCustomTheme = (state) => (state.app.ui.theme);
 export const getShowProgress = (state) => (state.app.ui.isFetching);
 export const getFlashMessage = (state) => (state.app.ui.flashMessage || null);

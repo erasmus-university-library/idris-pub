@@ -19,6 +19,8 @@ export const setRedirectURL = createAction('UI_UPDATE', (url) => ({redirectURL: 
 export const updateLoginState = createAction('UI_LOGIN_UPDATE', (state) => (state));
 
 export const updateSettingsState = createAction('RECORD_SETTINGS_UPDATE');
+export const updateNavigation = createAction('NAVIGATION_UPDATE');
+
 export const updateListingState = createAction('RECORD_LISTING_UPDATE',
                                                (kind, state) => (state),
                                                (kind, state) => (kind));
@@ -27,7 +29,7 @@ export const updateDetailState = createAction('RECORD_DETAIL_UPDATE',
                                               (kind, state) => (kind));
 
 export const setUser = createAction('USER_UPDATE', (user) => {
-    sdk.token = user.token;
+  sdk.token = user.token;
     return user});
 
 
@@ -185,6 +187,21 @@ export const initializeApp = () => {
                               dispatch(setUser(data.dev_user));
                           }
                           dispatch(changeAppState('initialized'));
+                      } else {
+                          dispatch(errorMessage(data));
+                      }
+                  });
+    };
+}
+
+export const courseNavigation = () => {
+    return dispatch => {
+      return sdk.load('course', 'nav')
+                  .then(response => response.json(),
+                        error => dispatch(errorMessage(error)))
+                  .then(data => {
+                      if (data.length > 0) {
+			  dispatch(updateNavigation(data));
                       } else {
                           dispatch(errorMessage(data));
                       }

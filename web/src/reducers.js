@@ -42,6 +42,11 @@ const reducer = handleActions({
         user: {...state.user,
                ...action.payload}
     }),
+  NAVIGATION_UPDATE: (state, action) => ({
+    ...state,
+    ui: {...state.ui,
+	 nav: action.payload}
+  }),
     RECORD_SETTINGS_UPDATE: (state, action) => ({
         ...state,
         record: {...state.record,

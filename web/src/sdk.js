@@ -222,6 +222,15 @@ export class IdrisSDK {
                       mode: 'cors'})
 
     }
+
+  load = function(type, path){
+    return fetch(`${this.backendURL}/${type}/${path}`,
+                 {method: 'GET',
+                  mode: 'cors',
+                  headers: {'Authorization': `Bearer ${this.token}`,
+                            'Content-Type': 'application/json'}});
+
+  }
 }
 
 export default IdrisSDK
