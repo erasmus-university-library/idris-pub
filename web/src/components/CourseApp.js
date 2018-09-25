@@ -6,7 +6,6 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
-import Badge from '@material-ui/core/Badge';
 import Avatar from '@material-ui/core/Avatar';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
@@ -14,12 +13,8 @@ import MenuIcon from '@material-ui/icons/Menu';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText  from '@material-ui/core/ListItemText';
-import StyleIcon from '@material-ui/icons/Style';
 import SchoolIcon from '@material-ui/icons/School';
-import GroupIcon from '@material-ui/icons/Group';
-import FaceIcon from '@material-ui/icons/Face';
 import { Link, Switch, Route, withRouter } from 'react-router-dom';
 import Snackbar from '@material-ui/core/Snackbar';
 import CloseIcon from '@material-ui/icons/Close';
@@ -28,6 +23,7 @@ import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import Chip from '@material-ui/core/Chip';
 
 import LoginForm from './LoginForm';
+import CourseRecord from './CourseRecord';
 
 import { getAppHeader, getSideBarOpen, getFlashMessage, getErrorMessage, getAppState, getCustomTheme, getNavigation,
          getShowProgress, getRedirectURL, getLoggedInUser, getLoginState } from '../selectors';
@@ -233,7 +229,7 @@ class App extends Component {
               </div>
             </Drawer>
             <Switch>
-              <Route exact path="/course/" component={null} />
+              <Route exact path="/group/:id" component={CourseRecord} />
             </Switch>
           </div>
           </MuiThemeProvider>
