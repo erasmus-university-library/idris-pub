@@ -942,12 +942,36 @@ class BlobResource(BaseResource):
         yield (Allow, 'system.Authenticated', ['add', 'finalize', 'upload'])
 
 
-class CourseResource(object):
-    def __init__(self, request, key=None):
-        self.session = request.dbsession
+class CourseResource(BaseResource):
+
+    def courses(self, group_id, course_year=None):
+        query = sql.text("""
+        SELECT w.id AS id,
+               w.title AS title,
+               to_char(lower(w.during), 'YYYY-mm-dd') as start_date,
+               to_char(upper(w.during), 'YYYY-mm-dd') as end_date,
+               MAX(CASE WHEN i.type = 'courseCode'
+                        THEN i.value
+                        ELSE NULL
+                   END) AS code,
+               COUNT(distinct r.target_id) AS literature
+        FROM works AS w
+        JOIN contributors AS c ON c.work_id = w.id
+        LEFT JOIN identifiers AS i ON i.work_id = w.id
+        LEFT JOIN relations AS r ON r.work_id = w.id
+        WHERE c.role = 'publisher' AND
+              c.group_id = :group_id AND
+              course_year(w.issued) = :course_year
+        GROUP BY w.id, w.title, start_date, end_date
+        """)
+        params = dict(group_id=group_id, course_year=course_year)
+        listing = []
+        for row in self.session.execute(query, params):
+            listing.append(dict(row))
+        return listing
 
     def navigation(self):
-        query = """
+        query = sql.text("""
         SELECT g.name AS group_name,
                g.id AS group_id,
                course_year(w.issued) AS year,
@@ -959,7 +983,7 @@ class CourseResource(object):
               c.group_id IS NOT NULL AND
               w.type = 'course'
         GROUP BY g.name, g.id, year
-        """
+        """)
         counts = {}
 
         for row in self.session.execute(query):

@@ -56,3 +56,15 @@ class CourseWebTest(BaseTest):
         assert out.json[0]['name'] == 'Faculty X'
         assert out.json[0]['total'] == 1
         assert out.json[0]['years']['2017-2018'] == 1
+
+    def test_course_listing(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get(
+            '/api/v1/course/records?group_id=%s&course_year=%s' % (
+                self.corp_id, '2017-2018'),
+            headers=headers)
+        assert len(out.json) == 1
+        assert out.json[0]['title'] == 'Course X'
+        assert out.json[0]['code'] is None
+        assert out.json[0]['literature'] == 1
+        assert out.json[0]['start_date'] == '2018-02-27'
