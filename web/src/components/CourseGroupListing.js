@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
+import { Link } from 'react-router-dom';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import ListItemText  from '@material-ui/core/ListItemText';
 import Avatar from '@material-ui/core/Avatar';
-import Chip from '@material-ui/core/Chip';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Input from '@material-ui/core/Input';
@@ -14,96 +15,111 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import FormControl from '@material-ui/core/FormControl';
 import SearchIcon from '@material-ui/icons/Search';
 import IconButton from '@material-ui/core/IconButton';
-import AddIcon from '@material-ui/icons/Add';
-import Button from '@material-ui/core/Button';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableFooter from '@material-ui/core/TableFooter';
-import TablePagination from '@material-ui/core/TablePagination';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
-import TextField from '@material-ui/core/TextField';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import WorkIcon from '@material-ui/icons/Work';
+import Divider from '@material-ui/core/Divider';
+
+import IdrisSDK from '../sdk.js';
+const sdk = new IdrisSDK();
 
 const styles = theme => ({
   formControl: {
     width: '100%',
   },
-  courseYearLabel: {
-    display: 'inline',
-    marginRight: '0.5em'
-  },
-  dateField: {
-      width: 180,
-  },
-  link: {
-     color: 'black',
-     marginRight: '0.5em',
-     textDecoration: 'none',
-      '&:hover': {
-          textDecoration: 'underline'
-      }
-  },
   formControlSelect: {
       minWidth: 200,
       maxWidth: 350,
-  },
-  table: {
-      marginTop: theme.spacing.unit
-  },
-  nobr: {
-      whiteSpace: 'nowrap'
-  },
-  fabButtonRight: {
-      padding: theme.spacing.unit,
-      display: 'flex',
-      justifyContent: 'flex-end',
-  },
-  chips: {
-    display: 'flex',
-    flexWrap: 'wrap',
-  },
-  chip: {
-    margin: theme.spacing.unit / 4,
   },
 });
 
 @withStyles(styles)
 class CourseGroupListing extends Component {
 
-  state = {groupId: null,
-	   courseYear: null}
+  state = {query: '',
+	   loading: false,
+	   courseYear: null};
+  courseYears = [];
+  groupName = '';
+  courses = [];
+  filteredCourses = null;
 
-    handleRowClick = (record) => (event) => {
-        this.props.history.push(`/course/work/${record.id}`);
-        this.props.onChange({selected: record.id});
-    }
-
-  handleYearChange = (e) => {
-    console.log('year change');
+  componentDidMount(props){
+    this.selectCourseYears();
   }
 
-  render(){
-    const { classes, navigation, id } = this.props;
-    let groupName = null;
-    let courseYears = [];
-    let startYear = ''
+  componentDidUpdate(prevProps, prevState){
+    if (this.state.courseYear === null && this.props.navigation.length){
+      this.selectCourseYears();
+    }
+
+    if (this.props.id && this.props.id !== prevProps.id){
+      this.setState({query: '', courseYear: null});
+    }
+
+    if (this.state.courseYear !== prevState.courseYear && this.state.courseYear !== null){
+      this.setState({loading: true});
+      sdk.load('course',
+	       `records?group_id=${this.props.id}&course_year=${this.state.courseYear}`).then(
+		 response => response.json(),
+                 error => {console.log('RelationField Error: ' + error)})
+        .then(data => {
+	  this.courses = data;
+	  this.setState({loading: false});
+        });
+    }
+
+    if (this.state.query !== prevState.query){
+      const query = this.state.query.toLowerCase();
+      this.filteredCourses = [];
+      this.courses.forEach((course) => {
+	if (course.title.toLowerCase().indexOf(query) !== -1){
+	  this.filteredCourses.push(course);
+	}
+      });
+      // note, that filtering does not change state or props
+      // so we need to force a render
+      this.forceUpdate();
+    }
+
+  }
+
+  handleYearChange = (e) => {
+    this.setState({courseYear: e.target.value});
+  }
+
+  handleQueryChange = (e) => {
+    this.setState({query: e.target.value});
+  }
+
+  selectCourseYears = () => {
+    const { navigation, id } = this.props;
+    this.groupName = null;
+    this.courseYears = [];
     navigation.forEach((group) => {
       if ( group.id == id ) {
-	groupName = group.name;
+	this.groupName = group.name;
 	const years = Object.keys(group.years);
 	years.sort();
 	years.reverse();
 	years.forEach((year) => {
-	  courseYears.push({'year': year, 'courses': group.years[year]})
+	  this.courseYears.push({'year': year, 'courses': group.years[year]})
 	});
-	if (courseYears.length > 0){
-	  startYear = courseYears[0].year;
+	if (this.courseYears.length > 0){
+	  this.setState({courseYear: this.courseYears[0].year});
 	}
       }
     })
+
+  }
+
+  render(){
+    const { query, courseYear, loading } = this.state;
+    const { classes } = this.props;
+    const groupName = this.groupName;
+    const courseYears = this.courseYears;
     return (
       <Paper>
         <AppBar position="static" color="default">
@@ -113,16 +129,16 @@ class CourseGroupListing extends Component {
               <Input
                 id="search"
                 type="text"
-                value={''}
+                value={query}
                 onChange={this.handleQueryChange}
                 endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
 		/>
             </FormControl>
             <FormControl className={classes.formControlSelect}>
-              <InputLabel htmlFor="course-year">Course Year</InputLabel>
+              <InputLabel shrink={true} htmlFor="course-year">Course Year</InputLabel>
               <Select
-		value={startYear}
-		onChange={this.yearChange}
+		value={courseYear||''}
+		onChange={this.handleYearChange}
 		inputProps={{
 		  name: 'course_year',
 		  id: 'course-year',
@@ -140,6 +156,25 @@ class CourseGroupListing extends Component {
         </FormControl>
 	</Toolbar>
 	</AppBar>
+	{loading? <LinearProgress /> : null}
+	<List dense>
+	{(this.filteredCourses || this.courses).map((course) => {
+	  const datefmt = { month: 'long', day: 'numeric' };
+	  const startDate = new Date(Date.parse(course.start_date));
+	  const endDate = new Date(Date.parse(course.end_date));
+	  const days = ((endDate - startDate) / 60 / 60 / 24 / 1000);
+	  const message = `${course.literature===0?'no':course.literature} literature item${course.literature === 1?'':'s'}, ${days} day${days===1?'':'s'} from ${startDate.toLocaleDateString('en-us', datefmt)} until ${endDate.toLocaleDateString('en-us', datefmt)}`;
+
+	return (
+	  [<ListItem key={course.id} button to={`/course/${course.id}`} component={Link}>
+	    <Avatar><WorkIcon /></Avatar>
+  	    <ListItemText primary={course.title}
+			  secondary={message}/>
+	   </ListItem>,
+	   <Divider inset key={`${course.id}-divider`} />]
+	   )})}
+	 </List>
+
       </Paper>);
     }
 }
