@@ -83,4 +83,4 @@ class CourseWebTest(BaseTest):
         toc_item = out.json['toc_items'].get(toc_item_id)
         assert toc_item
         assert toc_item['title'] == 'Test Publication'
-        assert toc_item['authors'] == ['John Doe, et al.']
+        assert toc_item['author'] == [{'literal': 'John Doe, et al.'}]
