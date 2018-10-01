@@ -19,7 +19,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import WorkIcon from '@material-ui/icons/Work';
+import AssignmentIcon from '@material-ui/icons/Assignment';
 import Divider from '@material-ui/core/Divider';
 
 import IdrisSDK from '../sdk.js';
@@ -33,6 +33,10 @@ const styles = theme => ({
       minWidth: 200,
       maxWidth: 350,
   },
+  searchText: {
+    maxWidth: '85%',
+    textOverflow: 'ellipsis'
+  }
 });
 
 @withStyles(styles)
@@ -122,10 +126,14 @@ class CourseGroupListing extends Component {
     const courseYears = this.courseYears;
     return (
       <Paper>
-        <AppBar position="static" color="default">
+        <AppBar position="sticky" color="default">
           <Toolbar>
             <FormControl fullWidth className={classes.formControl}>
-              <InputLabel htmlFor="search">{`${groupName} courses`}</InputLabel>
+              <InputLabel htmlFor="search" classes={{root: classes.searchText}}>
+                <Typography variant="body1" color="inherit" noWrap>
+		  {`${groupName} courses`}
+		</Typography>
+	      </InputLabel>
               <Input
                 id="search"
                 type="text"
@@ -167,7 +175,7 @@ class CourseGroupListing extends Component {
 
 	return (
 	  [<ListItem key={course.id} button to={`/course/${course.id}`} component={Link}>
-	    <Avatar><WorkIcon /></Avatar>
+	    <Avatar><AssignmentIcon /></Avatar>
   	    <ListItemText primary={course.title}
 			  secondary={message}/>
 	   </ListItem>,

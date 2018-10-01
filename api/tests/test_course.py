@@ -26,6 +26,9 @@ class CourseWebTest(BaseTest):
         out = self.api.post_json('/api/v1/work/records',
                                  {'title': 'Test Publication',
                                   'type': 'article',
+                                  'contributors': [
+                                      {'role': 'author',
+                                       'description': 'John Doe, et al.'}],
                                   'issued': '2018-02-27'},
                                  headers=headers,
                                  status=201)
@@ -57,7 +60,7 @@ class CourseWebTest(BaseTest):
         assert out.json[0]['total'] == 1
         assert out.json[0]['years']['2017-2018'] == 1
 
-    def test_course_listing(self):
+    def test_group_course_listing(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.get(
             '/api/v1/course/records?group_id=%s&course_year=%s' % (
@@ -68,3 +71,16 @@ class CourseWebTest(BaseTest):
         assert out.json[0]['code'] is None
         assert out.json[0]['literature'] == 1
         assert out.json[0]['start_date'] == '2018-02-27'
+
+    def test_course_toc_listing(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get(
+            '/api/v1/course/records/%s' % self.course_id,
+            headers=headers)
+        assert 'course' in out.json and 'toc_items' in out.json
+        assert len(out.json['course']['toc']) == 1
+        toc_item_id = str(out.json['course']['toc'][0]['id'])
+        toc_item = out.json['toc_items'].get(toc_item_id)
+        assert toc_item
+        assert toc_item['title'] == 'Test Publication'
+        assert toc_item['authors'] == ['John Doe, et al.']

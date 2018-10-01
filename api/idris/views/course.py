@@ -37,7 +37,7 @@ class CourseRecordAPI(object):
         self.context = context
 
     @view(
-        permission='view',
+        permission='course_list',
         schema=CourseListingRequestSchema(),
         validators=(colander_validator),
         cors_origins=('*', ))
@@ -49,6 +49,32 @@ class CourseRecordAPI(object):
         self.response.content_type = 'application/json'
         self.response.write(json.dumps(listing).encode('utf8'))
         return self.response
+
+    @view(
+        permission='course_view',
+        validators=(colander_validator),
+        cors_origins=('*', ))
+    def get(self):
+        "Retrieve a course"
+
+        course = self.context.model
+        result = {'title': course.title,
+                  'id': course.id,
+                  'start_date': course.during.lower.strftime('%Y-%m-%d'),
+                  'end_date': course.during.upper.strftime('%Y-%m-%d'),
+                  'toc': []}
+        for rel in course.relations:
+            if rel.type == 'toc':
+                toc = {'id': rel.id,
+                       'target_id': rel.target_id,
+                       'comment': rel.description}
+            if rel.location == 'module':
+                toc['module'] = rel.description
+                del toc['comment']
+            result['toc'].append(toc)
+
+        return {'course': result,
+                'toc_items': self.context.toc_items(course.id)}
 
 
 course_nav = Service(name='CourseNavigation',

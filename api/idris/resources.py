@@ -943,6 +943,77 @@ class BlobResource(BaseResource):
 
 
 class CourseResource(BaseResource):
+    orm_class = Work
+    key_col_name = 'id'
+
+    def toc_items(self, course_id):
+        query = sql.text("""
+        SELECT
+          w.id,
+          w.type,
+          w.issued,
+          w.title,
+          MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
+          MAX(CASE WHEN m.type='pageCount' THEN m.value ELSE NULL END) AS pages,
+          MAX(CASE WHEN r.type='journal' THEN r.description ELSE NULL END) AS journal_name,
+          MAX(CASE WHEN r.type='journal' THEN r.volume ELSE NULL END) AS journal_volume,
+          MAX(CASE WHEN r.type='journal' THEN r.issue ELSE NULL END) AS journal_issue,
+          MAX(CASE WHEN r.type='journal' THEN r.starting ELSE NULL END) AS journal_ending,
+          MAX(CASE WHEN r.type='journal' THEN r.ending  ELSE NULL END) AS journal_starting,
+          MAX(CASE WHEN r.type='book' THEN r.description ELSE NULL END) AS book_name,
+          MAX(CASE WHEN r.type='book' THEN r.total ELSE NULL END) AS book_total,
+          MAX(CASE WHEN r.type='book' THEN r.starting ELSE NULL END) AS book_ending,
+          MAX(CASE WHEN r.type='book' THEN r.ending ELSE NULL END) AS book_starting,
+          array_agg(CASE WHEN c.role = 'author' THEN c.description ELSE NULL END ORDER BY c.position) AS authors,
+          array_agg(CASE WHEN c.role = 'publisher' THEN c.description ELSE NULL END ORDER BY c.position) AS publishers
+        FROM relations AS toc
+        JOIN works w ON toc.target_id = w.id
+        LEFT JOIN contributors c ON c.work_id = w.id
+        LEFT JOIN measures m ON m.work_id = w.id
+        LEFT JOIN relations r ON r.work_id = w.id
+        WHERE toc.work_id=:course_id
+        GROUP BY
+          w.id,
+          w.type,
+          w.issued,
+          w.title""")
+        params = dict(course_id=course_id)
+        result = {}
+        for row in self.session.execute(query, params):
+            csl = {'title': row.title,
+                   'id': row.id,
+                   'type': {'article': 'article-journal',
+                            'courseArticle': 'article-journal',
+                            'chapter': 'chapter',
+                            'book': 'book',
+                            'report': 'report'}.get(row.type, 'entry')}
+            date_parts = []
+            if row.issued:
+                date_parts.append(row.issued.year)
+                if not (row.issued.month == 1 and row.issued.day == 1):
+                    date_parts.append(row.issued.month)
+                if row.issued.day != 1:
+                    date_parts.append(row.issued.day)
+            if row.journal_name:
+                csl['container-title'] = row.journal_name
+            if row.journal_issue:
+                csl['issue'] = row.journal_issue
+            if row.journal_volume:
+                csl['volume'] = row.journal_volume
+            if row.journal_starting and row.journal_ending:
+                csl['page'] = '%s-%s' % (row.journal_starting,
+                                         row.journal_ending)
+
+            csl['issued'] = {'date-parts': [date_parts]}
+            csl['author'] = []
+            for author in row.authors:
+                if not author or author in csl['author']:
+                    continue
+                csl['author'].append(author)
+            csl['author'] = [{'literal': a} for a in csl['author']]
+            csl['publisher'] = [{'literal': p, 'name': p} for p in row.publishers if p]
+            result[row.id] = csl
+        return result
 
     def courses(self, group_id, course_year=None):
         query = sql.text("""
@@ -1001,5 +1072,10 @@ class CourseResource(BaseResource):
         return nav
 
     def __acl__(self):
+        if self.model:
+            if self.model.type != 'course':
+                # only course works can be accessed through this api
+                yield (Deny, Everyone, ALL_PERMISSIONS)
+
         yield (Allow, 'system.Authenticated', 'view')
-        yield (Allow, 'group:admin', 'edit')
+        yield (Allow, 'group:admin', ALL_PERMISSIONS)

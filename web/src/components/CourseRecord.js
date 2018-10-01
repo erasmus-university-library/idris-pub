@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
 import CourseGroupListing from './CourseGroupListing';
+import CourseListing from './CourseListing';
 
 import { getNavigation } from '../selectors';
 import { courseNavigation } from '../actions';
@@ -16,9 +17,11 @@ class CourseRecord extends Component {
   }
   render() {
     const { match } = this.props;
-    if (match.path === '/group/:id'){
+    if (match.path === '/group/:id') {
       return (
 	<CourseGroupListing id={match.params.id} navigation={this.props.navigation} />)
+    } else if (match.path === '/course/:id') {
+      return (<CourseListing id={match.params.id} />)
     } else {
       return null
     }

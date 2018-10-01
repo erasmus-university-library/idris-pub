@@ -144,7 +144,7 @@ class Expression(Base):
                     nullable=False)
     name = Column(Unicode(1024), nullable=False)
     during = Column(DateRangeType)
-    uri = Column(Unicode(1024), nullable=True)
+    uri = Column(UnicodeText, nullable=True)
     info = Column(JSON)
     description = Column(UnicodeText, nullable=True)
     blob_id = Column(BigInteger,

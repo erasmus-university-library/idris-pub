@@ -230,6 +230,7 @@ class App extends Component {
             </Drawer>
             <Switch>
               <Route exact path="/group/:id" component={CourseRecord} />
+              <Route exact path="/course/:id" component={CourseRecord} />
             </Switch>
           </div>
           </MuiThemeProvider>
