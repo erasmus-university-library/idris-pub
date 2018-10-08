@@ -1079,3 +1079,37 @@ class CourseResource(BaseResource):
 
         yield (Allow, 'system.Authenticated', 'view')
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
+
+    def from_course_data(self, data):
+        data['issued'] = data['start_date']
+        if 'toc_items' in data:
+            del data['toc_items']
+        if 'toc' in data:
+            for toc in data.get('toc', []):
+                toc['type'] = 'toc'
+                if toc.get('module'):
+                    toc['location'] = 'module'
+                    toc['description'] = toc.pop('module')
+                elif toc.get('comment'):
+                    toc['description'] = toc.pop('comment')
+            data['relations'] = data.pop('toc')
+
+        self.model.update_dict(data)
+
+    def to_course_data(self):
+        course = self.model
+        result = {'title': course.title,
+                  'id': course.id,
+                  'start_date': course.during.lower,
+                  'end_date': course.during.upper,
+                  'toc': []}
+        for rel in course.relations:
+            if rel.type == 'toc':
+                toc = {'id': rel.id,
+                       'target_id': rel.target_id,
+                       'comment': rel.description}
+            if rel.location == 'module':
+                toc['module'] = rel.description
+                del toc['comment']
+            result['toc'].append(toc)
+        return result

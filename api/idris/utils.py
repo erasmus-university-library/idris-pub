@@ -22,6 +22,7 @@ OKStatus = colander.SchemaNode(colander.String(),
 ErrorStatus = colander.SchemaNode(colander.String(),
                                   validator=colander.OneOf(['error']))
 
+
 class JsonMappingSchemaSerializerMixin(object):
     def to_json(self, appstruct):
         def json_serialize(key, value, context):
@@ -40,6 +41,9 @@ class JsonMappingSchemaSerializerMixin(object):
                 for item in value:
                     new_value.append(json_serialize(None, item, child_node))
                 value = new_value
+            elif (isinstance(node.typ, colander.Mapping) and
+                  getattr(node, 'unknown', 'ignore') == 'preserve'):
+                pass
             elif isinstance(node.typ, colander.Mapping):
                 cstruct = {}
                 for item_key, item_value in value.items():
@@ -110,4 +114,3 @@ def colander_bound_repository_body_validator(request,
         kwargs['response_schemas'][method] = kwargs[
             'response_schemas'][method].bind(repository=request.repository)
     return colander_body_validator(request, schema=schema, **kwargs)
-

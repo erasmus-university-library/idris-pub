@@ -6,12 +6,41 @@ from cornice.validators import colander_validator
 import colander
 
 from idris.resources import ResourceFactory, CourseResource
+from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
                          StatusResponseSchema,
                          OKStatusResponseSchema,
                          OKStatus,
                          JsonMappingSchemaSerializerMixin,
                          colander_bound_repository_body_validator)
+
+
+class CourseSchema(colander.MappingSchema,
+                   JsonMappingSchemaSerializerMixin):
+    @colander.instantiate()
+    class course(colander.MappingSchema):
+        id = colander.SchemaNode(colander.Int())
+        title = colander.SchemaNode(colander.String())
+        start_date = colander.SchemaNode(colander.Date(), missing=None)
+        end_date = colander.SchemaNode(colander.Date(), missing=None)
+
+        @colander.instantiate(missing=colander.drop)
+        class toc(colander.SequenceSchema):
+            @colander.instantiate()
+            class toc_item(colander.MappingSchema):
+                id = colander.SchemaNode(colander.Int(), missing=colander.drop)
+                target_id = colander.SchemaNode(colander.Int(),
+                                                missing=colander.drop)
+                module = colander.SchemaNode(colander.String(),
+                                             missing=colander.drop)
+                comment = colander.SchemaNode(colander.String(),
+                                              missing=colander.drop)
+
+    @colander.instantiate()
+    class toc_items(colander.MappingSchema):
+        def __init__(self, unknown='preserve'):
+            super(self.__class__, self).__init__(
+                unknown=unknown, missing=colander.drop)
 
 
 class CourseListingRequestSchema(colander.MappingSchema,
@@ -53,28 +82,41 @@ class CourseRecordAPI(object):
     @view(
         permission='course_view',
         validators=(colander_validator),
-        cors_origins=('*', ))
+        cors_origins=('*', ),
+        response_schemas={
+            '200': CourseSchema(),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
         "Retrieve a course"
+        return CourseSchema().to_json(
+            {'course': self.context.to_course_data(),
+             'toc_items': self.context.toc_items(self.context.model.id)})
 
-        course = self.context.model
-        result = {'title': course.title,
-                  'id': course.id,
-                  'start_date': course.during.lower.strftime('%Y-%m-%d'),
-                  'end_date': course.during.upper.strftime('%Y-%m-%d'),
-                  'toc': []}
-        for rel in course.relations:
-            if rel.type == 'toc':
-                toc = {'id': rel.id,
-                       'target_id': rel.target_id,
-                       'comment': rel.description}
-            if rel.location == 'module':
-                toc['module'] = rel.description
-                del toc['comment']
-            result['toc'].append(toc)
+    @view(
+        permission='course_update',
+        schema=CourseSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        cors_origins=('*', ),
+        response_schemas={
+            '200': CourseSchema(),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
+    def put(self):
+        "Update a course"
+        body = self.request.validated
+        body['id'] = int(self.request.matchdict['id'])
+        self.context.from_course_data(body['course'])
+        try:
+            self.context.put()
+        except StorageError as err:
+            self.request.errors.status = 400
+            self.request.errors.add('body', err.location, str(err))
+            return
 
-        return {'course': result,
-                'toc_items': self.context.toc_items(course.id)}
+        return CourseSchema().to_json(
+            {'course': self.context.to_course_data(),
+             'toc_items': self.context.toc_items(self.context.model.id)})
 
 
 course_nav = Service(name='CourseNavigation',

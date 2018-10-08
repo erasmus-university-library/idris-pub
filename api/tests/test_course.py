@@ -84,3 +84,56 @@ class CourseWebTest(BaseTest):
         assert toc_item
         assert toc_item['title'] == 'Test Publication'
         assert toc_item['author'] == [{'literal': 'John Doe, et al.'}]
+
+    def test_course_update(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get(
+            '/api/v1/course/records/%s' % self.course_id,
+            headers=headers)
+
+        course = out.json['course']
+        assert course['title'] == 'Course X'
+        assert len(course['toc']) == 1
+        assert course['toc'][0]['id'] == 1
+        course['title'] = 'An introduction to X'
+        out = self.api.put_json(
+            '/api/v1/course/records/%s' % self.course_id,
+            {'course': course},
+            headers=headers)
+        course = out.json['course']
+        assert course['title'] == 'An introduction to X'
+        assert len(course['toc']) == 1
+        assert course['toc'][0]['id'] == 1
+        # let's do an update without including the toc
+        # the toc should be preserved
+        del course['toc']
+        course['title'] = 'An updated introduction to X'
+        out = self.api.put_json(
+            '/api/v1/course/records/%s' % self.course_id,
+            {'course': course},
+            headers=headers)
+        course = out.json['course']
+        assert course['title'] == 'An updated introduction to X'
+        assert len(course['toc']) == 1
+        assert course['toc'][0]['id'] == 1
+        # now let's clear the toc
+        course['toc'] = []
+        out = self.api.put_json(
+            '/api/v1/course/records/%s' % self.course_id,
+            {'course': course},
+            headers=headers)
+        course = out.json['course']
+        assert len(course['toc']) == 0
+        # one more test adding two toc items
+        course['toc'].append({'module': 'Week 1'})
+        course['toc'].append({'target_id': self.pub_id,
+                              'comment': 'required reading'})
+        out = self.api.put_json(
+            '/api/v1/course/records/%s' % self.course_id,
+            {'course': course},
+            headers=headers)
+        course = out.json['course']
+        assert len(course['toc']) == 2
+        assert course['toc'][0]['module'] == 'Week 1'
+        assert course['toc'][1]['target_id'] == self.pub_id
+        assert course['toc'][1]['comment'] == 'required reading'
