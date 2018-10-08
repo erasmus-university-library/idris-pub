@@ -63,6 +63,8 @@ class CourseLiteratureItem extends Component {
     this.props.onEditComment(module, id, comment);
   }
 
+
+
   render() {
     const { classes, id, comment, module, tocItem } = this.props;
     const { optionsAnchorEl } = this.state;
@@ -92,7 +94,7 @@ class CourseLiteratureItem extends Component {
 	  </ListItemSecondaryAction>
 	</ListItem>
       );
-      resultEl.push(<Divider inset key={`${id}-divider`} />);
+      //resultEl.push(<Divider inset key={`${id}-divider`} component="li" />);
 
     } else if (module){
       resultEl.push(

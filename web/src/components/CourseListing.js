@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
+import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc';
+
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
@@ -17,6 +19,7 @@ import Select from '@material-ui/core/Select';
 import List from '@material-ui/core/List';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import AddIcon from '@material-ui/icons/Add';
+import Zoom from '@material-ui/core/Zoom';
 import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -47,7 +50,19 @@ const styles = theme => ({
     maxWidth: '85%',
     textOverflow: 'ellipsis'
   },
+  AddButton: {
+    position: 'fixed',
+    left: '100%',
+    top: '100%',
+    marginLeft: -70,
+    marginTop: -70
+  },
+  DragHelper: {
+    border: 'dashed 2px #bdbdbd'
+  }
+
 });
+
 
 @withStyles(styles)
 class CourseListing extends Component {
@@ -173,6 +188,10 @@ class CourseListing extends Component {
 		   commentText: comment || ''});
   }
 
+  handleReorder = (event, previousIndex, nextIndex, fromId, toId) => {
+    console.log(event, previousIndex, nextIndex, fromId, toId);
+  }
+
   handleSubmitComment = () => {
     const toc = this.state.course.toc;
     for (let i=0; i < toc.length ; i++){
@@ -192,12 +211,53 @@ class CourseListing extends Component {
 		   course: {...this.state.course,
 			    toc: toc}});
   }
+  handleSortStart = (info, event) => {
+    console.log(event)
+    event.stopPropagation();
+  }
+  handleSortEnd = ({oldIndex, newIndex}) => {
+    this.setState({
+      course: {...this.state.course,
+	       toc: arrayMove(this.state.course.toc, oldIndex, newIndex)}
+   });
+  }
+
+  renderSortableItem = SortableElement((value) => {
+    return (<CourseLiteratureItem {...value} />);
+  });
+
+  renderSortableList = SortableContainer(({items}) => {
+    const SortableItem = this.renderSortableItem;
+  /*return (
+    <ul>
+      {items.map((value, index) => (
+        <SortableItem key={`item-${index}`} index={index} value={value} />
+      ))}
+    </ul>
+  );*/
+    return (
+      <List dense>
+	{items.map((item, index) => (
+	  <SortableItem key={item.id}
+			index={index}
+			id={item.target_id}
+			comment={item.comment}
+			module={item.module}
+			onEditModuleName={this.handleEditModuleName}
+			onEditComment={this.handleEditComment}
+			tocItem={this.tocItems[item.target_id]||{}} />
+	))}
+      </List>
+    );
+  });
+
 
   render(){
     const { query, loading, course, module,
 	    newModuleDialogOpen, newModuleName,
 	    commentDialogOpen, commentText} = this.state;
     const { classes } = this.props;
+    const SortableList = this.renderSortableList;
     if (course === null) {
       return null;
     }
@@ -300,8 +360,17 @@ class CourseListing extends Component {
 	</Toolbar>
 	</AppBar>
 	{loading? <LinearProgress /> : null}
+
+
+	<SortableList lockAxis="y"
+                      helperClass={classes.DragHelper}
+      useDragHandle={false}
+      onSortEnd={this.handleSortEnd}
+      distance={5}
+                      items={this.filteredToc === null ? (course||{}).toc||[] : this.filteredToc}/>
+      {/*
 	<List dense>
-	{(this.filteredToc === null ? (course||{}).toc||[] : this.filteredToc
+      {(this.filteredToc === null ? (course||{}).toc||[] : this.filteredToc
 	 ).map((item, index) => (
 	  <CourseLiteratureItem key={item.id}
 				id={item.target_id}
@@ -310,8 +379,14 @@ class CourseListing extends Component {
 				onEditModuleName={this.handleEditModuleName}
 				onEditComment={this.handleEditComment}
 				tocItem={this.tocItems[item.target_id]||{}} />
-	))}
-      	 </List>
+	 ))}
+      </List>
+       */}
+	<Zoom in={true} className={classes.AddButton}>
+	<Button variant="fab" type="submit" color="primary">
+          <AddIcon />
+	</Button>
+	</Zoom>
       </Paper>);
     }
 }

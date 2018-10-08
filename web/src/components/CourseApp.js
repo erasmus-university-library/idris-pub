@@ -209,9 +209,9 @@ class App extends Component {
                     }}>
               <div className={classes.drawerHeader}>
                 <div>
-                    <img src={logo_img} alt="logo" style={{width:240}}/>
-                    <IconButton onClick={this.handleDrawerClose} align="right"><ChevronLeftIcon /></IconButton>
+                    <img src={logo_img} alt="logo" />
                 </div>
+                    <IconButton onClick={this.handleDrawerClose} align="right"><ChevronLeftIcon /></IconButton>
               </div>
               <div tabIndex={0}
                    role="button"

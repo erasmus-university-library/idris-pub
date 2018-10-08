@@ -39,7 +39,7 @@ class LoginForm extends Component {
 
     }
     return (
-        <Dialog open={this.props.open !== false} onClose={() => this.props.onChange({open: false})}>
+        <Dialog open={this.props.open !== false}>
           <DialogTitle>Login</DialogTitle>
           <DialogContent>
             <DialogContentText>
