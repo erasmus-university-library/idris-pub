@@ -54,3 +54,19 @@ class IBlobTransform(Interface):
 
     def execute(self, blob_path):
         "run the transform returning the bytes/text or dict result"
+        pass
+
+
+class IDataLookupService(Interface):
+    id = Attribute('The id of the lookup')
+    name = Attribute('The name of the lookup')
+    supported_kind = Attribute('Which kind of data the lookup returns')
+    query_param_name = Attribute('The name of the param used for querying')
+
+    def __init__(self, settings):
+        "intialize the service with settings frm the registry"
+        pass
+
+    def query(self, query):
+        "run the data lookup returning the json metadata"
+        pass
