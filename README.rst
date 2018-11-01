@@ -3,11 +3,11 @@
 Idris, a Research Intelligence platform
 =========================================
 
-.. image:: https://travis-ci.org/jascoul/idris-pub.svg?branch=master
-    :target: https://travis-ci.org/jascoul/idris-pub
+.. image:: https://travis-ci.org/erasmus-university-library/idris-pub.svg?branch=master
+    :target: https://travis-ci.org/erasmus-university-library/idris-pub
 
-.. image:: https://codecov.io/gh/jascoul/idris-pub/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/jascoul/idris-pub
+.. image:: https://codecov.io/gh/erasmus-university-library/idris-pub/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/erasmus-university-library/idris-pub
 
 This is a work-in-progress, research project from Erasmus University Library Rotterdam.
 
