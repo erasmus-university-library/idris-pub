@@ -18,7 +18,11 @@ import IdrisSDK from '../../sdk.js';
 const sdk = new IdrisSDK();
 
 const styles = theme => ({
+  root : {
+    marginTop: 8
+  },
   uploadCard: {
+    marginTop: 4,
     display: 'flex',
     width: 500,
     height: 150,
@@ -118,7 +122,7 @@ class FileUploadField extends React.Component {
     }
 
     return (
-      <div>
+      <div className={classes.root}>
 	<InputLabel className={classes.uploadLabel}>File Upload</InputLabel>
 	{is_accepted === false ?
 	<Dropzone onDrop={this.onDrop} style={{}} multiple={false}>

@@ -1,26 +1,31 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
-
 import { Link } from 'react-router-dom';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import ListItemText  from '@material-ui/core/ListItemText';
-import Avatar from '@material-ui/core/Avatar';
+
+import AddIcon from '@material-ui/icons/Add';
 import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Input from '@material-ui/core/Input';
-import InputLabel from '@material-ui/core/InputLabel';
-import InputAdornment from '@material-ui/core/InputAdornment';
+import AssignmentIcon from '@material-ui/icons/Assignment';
+import Avatar from '@material-ui/core/Avatar';
+import Button from '@material-ui/core/Button';
+import Divider from '@material-ui/core/Divider';
 import FormControl from '@material-ui/core/FormControl';
-import SearchIcon from '@material-ui/icons/Search';
 import IconButton from '@material-ui/core/IconButton';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
+import Input from '@material-ui/core/Input';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import InputLabel from '@material-ui/core/InputLabel';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import AssignmentIcon from '@material-ui/icons/Assignment';
-import Divider from '@material-ui/core/Divider';
+import ListItemText  from '@material-ui/core/ListItemText';
+import MenuItem from '@material-ui/core/MenuItem';
+import Paper from '@material-ui/core/Paper';
+import SearchIcon from '@material-ui/icons/Search';
+import Select from '@material-ui/core/Select';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Zoom from '@material-ui/core/Zoom';
+
+import CourseAddForm from './forms/CourseAddForm';
 
 import IdrisSDK from '../sdk.js';
 const sdk = new IdrisSDK();
@@ -36,6 +41,13 @@ const styles = theme => ({
   searchText: {
     maxWidth: '85%',
     textOverflow: 'ellipsis'
+  },
+  AddButton: {
+    position: 'fixed',
+    left: '100%',
+    top: '100%',
+    marginLeft: -70,
+    marginTop: -70
   }
 });
 
@@ -63,8 +75,9 @@ class CourseGroupListing extends Component {
       this.setState({query: '', courseYear: null});
     }
 
-    if (this.state.courseYear !== prevState.courseYear && this.state.courseYear !== null){
-      this.setState({loading: true});
+    if ((this.state.courseYear !== prevState.courseYear &&
+	 this.state.courseYear !== null) || this.state.refresh === true){
+      this.setState({loading: true, refresh: false});
       sdk.load('course',
 	       `records?group_id=${this.props.id}&course_year=${this.state.courseYear}`).then(
 		 response => response.json(),
@@ -119,13 +132,32 @@ class CourseGroupListing extends Component {
 
   }
 
+  handleAddCourseSubmit = (courseData) => {
+    this.setState({loading: true});
+    courseData['group'] = this.props.id;
+    sdk.courseAdd({course: courseData}).then(
+      response => response.json(),
+      error => {console.log('CourseAdd Error: ' + error)})
+      .then(data => {
+	this.setState({refresh: true});
+	this.handleAddCourseClose();
+      });
+  }
+
+  handleAddCourseClose = () => {
+    this.props.history.push(`/group/${this.props.id}`);
+  }
+
   render(){
     const { query, courseYear, loading } = this.state;
-    const { classes } = this.props;
+    const { classes, id, openAddDialog } = this.props;
     const groupName = this.groupName;
     const courseYears = this.courseYears;
     return (
       <Paper>
+	<CourseAddForm open={openAddDialog}
+		       onClose={this.handleAddCourseClose}
+		       onSubmit={this.handleAddCourseSubmit} />
         <AppBar position="sticky" color="default">
           <Toolbar>
             <FormControl fullWidth className={classes.formControl}>
@@ -147,7 +179,7 @@ class CourseGroupListing extends Component {
               <Select
 		value={courseYear||''}
 		onChange={this.handleYearChange}
-		inputProps={{
+ 		inputProps={{
 		  name: 'course_year',
 		  id: 'course-year',
 		}}
@@ -174,7 +206,7 @@ class CourseGroupListing extends Component {
 	  const message = `${course.literature===0?'no':course.literature} literature item${course.literature === 1?'':'s'}, ${days} day${days===1?'':'s'} from ${startDate.toLocaleDateString('en-us', datefmt)} until ${endDate.toLocaleDateString('en-us', datefmt)}`;
 
 	return (
-	  [<ListItem key={course.id} button to={`/course/${course.id}`} component={Link}>
+	  [<ListItem key={course.id} button to={`/group/${id}/course/${course.id}`} component={Link}>
 	    <Avatar><AssignmentIcon /></Avatar>
   	    <ListItemText primary={course.title}
 			  secondary={message}/>
@@ -182,7 +214,15 @@ class CourseGroupListing extends Component {
 	   <Divider inset key={`${course.id}-divider`} />]
 	   )})}
 	 </List>
-
+	<Zoom in={true} className={classes.AddButton}>
+	  <Button variant="fab"
+		  to={`/group/${id}/add`}
+		  component={Link}
+		  type="submit"
+		  color="primary">
+            <AddIcon />
+	  </Button>
+	</Zoom>
       </Paper>);
     }
 }

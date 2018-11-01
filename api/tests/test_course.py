@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from core import BaseTest
 
 
@@ -137,3 +138,18 @@ class CourseWebTest(BaseTest):
         assert course['toc'][0]['module'] == 'Week 1'
         assert course['toc'][1]['target_id'] == self.pub_id
         assert course['toc'][1]['comment'] == 'required reading'
+
+    def test_course_doi_lookup(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        doi = '10.1038/nphys1170'
+        out = self.api.get(
+            '/api/v1/course/lookup/doi?doi=%s' % quote(doi),
+            headers=headers)
+        course = out.json['course']
+        assert course['title'] == (
+            'Measured measurement: Quantum tomography')
+        assert course['volume'] == '5'
+        assert course['issue'] == '1'
+        assert course['start_page'] == '11'
+        assert course['end_page'] == '12'
+        assert course['journal'] == 'Nature Physics'

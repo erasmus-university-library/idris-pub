@@ -1082,8 +1082,18 @@ class CourseResource(BaseResource):
 
     def from_course_data(self, data):
         data['issued'] = data['start_date']
+        if 'group' in data:
+            data.setdefault('contributors', []).append(
+                {'role': 'publisher', 'group_id': data.pop('group')})
         if 'toc_items' in data:
             del data['toc_items']
+        for key in [key for key in data if key.endswith('_id')]:
+            value = data.pop(key)
+            id_key = key[:-3]
+            if id_key == 'course':
+                id_key = 'courseCode'
+            data.setdefault('identifiers', []).append(
+                {'type': id_key, 'value': value})
         if 'toc' in data:
             for toc in data.get('toc', []):
                 toc['type'] = 'toc'
@@ -1093,7 +1103,6 @@ class CourseResource(BaseResource):
                 elif toc.get('comment'):
                     toc['description'] = toc.pop('comment')
             data['relations'] = data.pop('toc')
-
         self.model.update_dict(data)
 
     def to_course_data(self):
@@ -1102,7 +1111,17 @@ class CourseResource(BaseResource):
                   'id': course.id,
                   'start_date': course.during.lower,
                   'end_date': course.during.upper,
+                  'group': None,
                   'toc': []}
+        for contrib in course.contributors:
+            if contrib.role == 'publisher':
+                result['group'] = contrib.group_id
+        for identifier in course.identifiers:
+            if identifier.type == 'courseCode':
+                id_key = 'course_id'
+            else:
+                id_key = '%s_id' % identifier.type
+            result[id_key] = identifier.value
         for rel in course.relations:
             if rel.type == 'toc':
                 toc = {'id': rel.id,

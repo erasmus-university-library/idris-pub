@@ -17,11 +17,19 @@ class CourseRecord extends Component {
   }
   render() {
     const { match } = this.props;
-    if (match.path === '/group/:id') {
+    if (match.path === '/group/:group_id' || match.path === '/group/:group_id/add') {
       return (
-	<CourseGroupListing id={match.params.id} navigation={this.props.navigation} />)
-    } else if (match.path === '/course/:id') {
-      return (<CourseListing id={match.params.id} />)
+	<CourseGroupListing id={match.params.group_id}
+			    openAddDialog={match.path === '/group/:group_id/add'}
+			    history={this.props.history}
+			    navigation={this.props.navigation} />)
+    } else if (match.path === '/group/:group_id/course/:course_id' ||
+	       match.path === '/group/:group_id/course/:course_id/add') {
+      return (
+	<CourseListing id={match.params.course_id}
+		       openAddDialog={match.path === '/group/:group_id/course/:course_id/add'}
+		       history={this.props.history}
+		       groupId={match.params.group_id}/>)
     } else {
       return null
     }

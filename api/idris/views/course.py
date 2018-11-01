@@ -7,6 +7,8 @@ import colander
 
 from idris.resources import ResourceFactory, CourseResource
 from idris.exceptions import StorageError
+from idris.models import Work
+from idris.lookup import lookup_factory, LookupError
 from idris.utils import (ErrorResponseSchema,
                          StatusResponseSchema,
                          OKStatusResponseSchema,
@@ -19,10 +21,16 @@ class CourseSchema(colander.MappingSchema,
                    JsonMappingSchemaSerializerMixin):
     @colander.instantiate()
     class course(colander.MappingSchema):
-        id = colander.SchemaNode(colander.Int())
+        id = colander.SchemaNode(colander.Int(), missing=None)
         title = colander.SchemaNode(colander.String())
         start_date = colander.SchemaNode(colander.Date(), missing=None)
         end_date = colander.SchemaNode(colander.Date(), missing=None)
+        group = colander.SchemaNode(colander.Int(), missing=None)
+
+        course_id = colander.SchemaNode(
+            colander.String(), missing=colander.drop)
+        canvas_id = colander.SchemaNode(
+            colander.String(), missing=colander.drop)
 
         @colander.instantiate(missing=colander.drop)
         class toc(colander.SequenceSchema):
@@ -50,6 +58,12 @@ class CourseListingRequestSchema(colander.MappingSchema,
         group_id = colander.SchemaNode(colander.Int())
         course_year = colander.SchemaNode(colander.String(),
                                           description='format: "YYYY-YYYY"')
+class CourseDOILookupSchema(colander.MappingSchema,
+                            JsonMappingSchemaSerializerMixin):
+    @colander.instantiate()
+    class querystring(colander.MappingSchema):
+        doi = colander.SchemaNode(colander.String(),
+                                  description='format: "10.XXX/XXX"')
 
 
 @resource(name='Course',
@@ -84,7 +98,7 @@ class CourseRecordAPI(object):
         validators=(colander_validator),
         cors_origins=('*', ),
         response_schemas={
-            '200': CourseSchema(),
+            '200': CourseSchema(description='Ok'),
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
@@ -99,7 +113,7 @@ class CourseRecordAPI(object):
         validators=(colander_bound_repository_body_validator,),
         cors_origins=('*', ),
         response_schemas={
-            '200': CourseSchema(),
+            '200': CourseSchema(description='Ok'),
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def put(self):
@@ -118,6 +132,35 @@ class CourseRecordAPI(object):
             {'course': self.context.to_course_data(),
              'toc_items': self.context.toc_items(self.context.model.id)})
 
+    @view(
+        permission='course_add',
+        schema=CourseSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        cors_origins=('*', ),
+        response_schemas={
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '201': CourseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
+    def collection_post(self):
+        "Add a course"
+        body = self.request.validated
+        body['course']['type'] = 'course'
+        self.context.model = Work()
+        body['course'].pop('id', None)
+        self.context.from_course_data(body['course'])
+        try:
+            self.context.put()
+        except StorageError as err:
+            self.request.errors.status = 400
+            self.request.errors.add('body', err.location, str(err))
+            return
+
+        self.request.response.status = 201
+        return CourseSchema().to_json(
+            {'course': self.context.to_course_data(),
+             'toc_items': self.context.toc_items(self.context.model.id)})
+
+
 
 course_nav = Service(name='CourseNavigation',
                      path='/api/v1/course/nav',
@@ -133,4 +176,45 @@ def course_nav_view(request):
     response.content_type = 'application/json'
     response.write(
         json.dumps(request.context.navigation()).encode('utf8'))
+    return response
+
+doi_lookup = Service(name='CourseDOILookup',
+                     path='/api/v1/course/lookup/doi',
+                     factory=ResourceFactory(CourseResource),
+                     api_security=[{'jwt': []}],
+                     tags=['course'],
+                     cors_origins=('*', ))
+
+
+@doi_lookup.get(permission='view',
+                schema=CourseDOILookupSchema(),
+                validators=(colander_validator))
+def doi_lookup_view(request):
+    response = request.response
+    response.content_type = 'application/json'
+    doi = request.validated['querystring']['doi']
+    lookup = lookup_factory(request.registry, 'crossref')
+    try:
+        data = lookup.query(doi)
+    except LookupError:
+        data = None
+    result = {'course': {}}
+    if data:
+        result['course']['title'] = data['title']
+        authors = []
+        for contributor in data.get('contributors', []):
+            if contributor['role'] == 'author':
+                authors.append(contributor['description'])
+        result['course']['authors'] = ', '.join(authors)
+        for rel in data.get('relations', []):
+            if rel['type'] != 'journal':
+                continue
+            result['course']['journal'] = rel['description']
+            result['course']['volume'] = rel['volume']
+            result['course']['issue'] = rel['issue']
+            result['course']['start_page'] = rel['start_page']
+            result['course']['end_page'] = rel['end_page']
+
+    response.write(
+        json.dumps(result).encode('utf8'))
     return response

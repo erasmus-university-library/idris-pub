@@ -76,7 +76,8 @@ class Blob(Base):
     5. use work/expression to auth blob download
 
     - Make blob_id a random large integer (uuid4 int)
-    - Store expression id in the blob so it can not be used / changed for other expressions
+    - Store expression id in the blob so it can not be used / changed
+      for other expressions
 
 
     """

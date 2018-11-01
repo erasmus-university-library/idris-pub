@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
+import { SortableHandle } from 'react-sortable-hoc';
 import { Link } from 'react-router-dom';
 import Typography from '@material-ui/core/Typography';
 import ListItemText  from '@material-ui/core/ListItemText';
@@ -14,6 +15,7 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 import BookIcon from '@material-ui/icons/Book';
 import EditIcon from '@material-ui/icons/Edit';
 import MessageIcon from '@material-ui/icons/Message';
+import UnfoldMoreIcon from '@material-ui/icons/UnfoldMore';
 import BookmarkBorderIcon from '@material-ui/icons/BookmarkBorder';
 import Divider from '@material-ui/core/Divider';
 import Menu from '@material-ui/core/Menu';
@@ -30,10 +32,17 @@ const styles = theme => ({
   }
 });
 
+
+const DragHandle = SortableHandle(() => (
+  <Avatar style={{cursor: 'ns-resize'}}>
+      <UnfoldMoreIcon />
+  </Avatar>));
+
 @withStyles(styles)
 class CourseLiteratureItem extends Component {
 
-  state = {optionsAnchorEl: null};
+  state = {optionsAnchorEl: null,
+	   draggable: false};
 
   shouldComponentUpdate(nextProps, nextState){
     if (nextProps.id === this.props.id &&
@@ -63,18 +72,25 @@ class CourseLiteratureItem extends Component {
     this.props.onEditComment(module, id, comment);
   }
 
+  handleStartDrag = () => {
+    this.closeOptionsMenu();
+    this.setState({draggable: true});
+  }
 
 
   render() {
     const { classes, id, comment, module, tocItem } = this.props;
-    const { optionsAnchorEl } = this.state;
+    const { optionsAnchorEl, draggable } = this.state;
     const resultEl = [];
     if (id) {
       resultEl.push(
 	<ListItem key={id} button to={`/work/${id}`} component={Link}>
 	  <ListItemIcon><BookmarkBorderIcon /></ListItemIcon>
-  	  <ListItemText inset primary={<Citation citation={tocItem} />} secondary={comment}/>
+  	  <ListItemText  inset primary={<Citation citation={tocItem} />} secondary={comment}/>
  	  <ListItemSecondaryAction>
+	  { draggable ?
+	    <DragHandle/>
+	      :<div>
   	    <IconButton aria-label="Options"
 			aria-owns={optionsAnchorEl ? 'moduleOptionsMenu' : null}
 			onClick={this.openOptionsMenu}
@@ -85,12 +101,19 @@ class CourseLiteratureItem extends Component {
 		  anchorEl={optionsAnchorEl}
 		  onClose={this.closeOptionsMenu}
 		  open={Boolean(optionsAnchorEl)} >
-	      <MenuItem onClick={this.handleEditComment(null, id, comment || null)}>
+ 	      <MenuItem onClick={this.handleEditComment(null, id, comment || null)}>
 		<ListItemIcon>
 		  <MessageIcon />
 		</ListItemIcon> Add Comment
 	      </MenuItem>
-	    </Menu>
+ 	      <MenuItem onClick={this.handleStartDrag}>
+		<ListItemIcon>
+		  <UnfoldMoreIcon />
+		</ListItemIcon> Change Position
+	      </MenuItem>
+	      </Menu>
+	      </div>
+	    }
 	  </ListItemSecondaryAction>
 	</ListItem>
       );
@@ -99,10 +122,13 @@ class CourseLiteratureItem extends Component {
     } else if (module){
       resultEl.push(
 	<ListItem key={module} className={classes.moduleItem}>
-	  <Avatar><BookIcon /></Avatar>
+	  <ListItemIcon><BookIcon /></ListItemIcon>
   	  <ListItemText primary={<Typography variant="headline">{module}</Typography>}
 	                secondary={comment} />
 	  <ListItemSecondaryAction>
+	  { draggable ?
+	    <DragHandle/>
+	      :<div>
   	    <IconButton aria-label="Options"
 			aria-owns={optionsAnchorEl ? 'moduleOptionsMenu' : null}
 			onClick={this.openOptionsMenu}
@@ -123,7 +149,13 @@ class CourseLiteratureItem extends Component {
 		  <MessageIcon />
 		</ListItemIcon> Add Comment
 	      </MenuItem>
-	    </Menu>
+ 	      <MenuItem onClick={this.handleStartDrag}>
+		<ListItemIcon>
+		  <UnfoldMoreIcon />
+		</ListItemIcon> Change Position
+	      </MenuItem>
+	      </Menu>
+	    </div>}
 	  </ListItemSecondaryAction>
  	</ListItem>
       )

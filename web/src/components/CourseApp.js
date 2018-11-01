@@ -229,8 +229,10 @@ class App extends Component {
               </div>
             </Drawer>
             <Switch>
-              <Route exact path="/group/:id" component={CourseRecord} />
-              <Route exact path="/course/:id" component={CourseRecord} />
+              <Route exact path="/group/:group_id" component={CourseRecord} />
+              <Route exact path="/group/:group_id/add" component={CourseRecord} />
+              <Route exact path="/group/:group_id/course/:course_id" component={CourseRecord} />
+              <Route exact path="/group/:group_id/course/:course_id/add" component={CourseRecord} />
             </Switch>
           </div>
           </MuiThemeProvider>

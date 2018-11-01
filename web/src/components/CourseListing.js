@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
 import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc';
+import { Link } from 'react-router-dom';
 
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Typography from '@material-ui/core/Typography';
@@ -31,6 +32,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 
 
 import CourseLiteratureItem from './CourseLiteratureItem';
+import CourseLiteratureAddForm from './forms/CourseLiteratureAddForm';
 
 import IdrisSDK from '../sdk.js';
 const sdk = new IdrisSDK();
@@ -69,6 +71,7 @@ class CourseListing extends Component {
 
   state = {query: '',
 	   loading: false,
+	   needsUpdate: false,
 	   module: 'all',
 	   course: null,
 	   newModuleDialogOpen: false,
@@ -85,7 +88,10 @@ class CourseListing extends Component {
   }
 
   componentDidUpdate = (prevProps, prevState) => {
-
+    if (this.state.needsUpdate){
+      this.saveCourse();
+      this.setState({needsUpdate: false});
+    }
     if (this.state.query !== prevState.query ||
 	this.state.module !== prevState.module){
       const query = this.state.query.toLowerCase();
@@ -130,7 +136,7 @@ class CourseListing extends Component {
 
   loadCourse = () => {
     this.setState({loading: true});
-    sdk.load('course', `records/${this.props.id}`).then(
+    sdk.courseLoad(this.props.id).then(
       response => response.json(),
       error => {console.log('RelationField Error: ' + error)})
       .then(data => {
@@ -139,6 +145,17 @@ class CourseListing extends Component {
       });
   }
 
+
+  saveCourse = () => {
+    this.setState({loading: true});
+    sdk.courseUpdate(this.props.id, {course: this.state.course}).then(
+      response => response.json(),
+      error => {console.log('RelationField Error: ' + error)})
+      .then(data => {
+	this.tocItems = data.toc_items;
+	this.setState({course: data.course, loading: false});
+      });
+  }
 
   handleModuleChange = (e) => {
     const value = e.target.value;
@@ -150,9 +167,11 @@ class CourseListing extends Component {
       this.setState({module: e.target.value});
     }
   }
+
   handleQueryChange = (e) => {
     this.setState({query: e.target.value});
   }
+
   handleSubmitModuleName = () => {
     const toc = this.state.course.toc;
 
@@ -170,6 +189,7 @@ class CourseListing extends Component {
     }
     this.setState({newModuleDialogOpen: false,
 		   newModuleName: '',
+		   needsUpdate: true,
 		   selectedModuleName: null,
 		   course: {...this.state.course,
 			    toc: toc}});
@@ -208,19 +228,23 @@ class CourseListing extends Component {
 		   commentText: '',
 		   selectedModuleName: null,
 		   selectedTocItem: null,
+		   needsUpdate: true,
 		   course: {...this.state.course,
 			    toc: toc}});
   }
-  handleSortStart = (info, event) => {
-    console.log(event)
-    event.stopPropagation();
-  }
+
   handleSortEnd = ({oldIndex, newIndex}) => {
     this.setState({
+      needsUpdate: true,
       course: {...this.state.course,
 	       toc: arrayMove(this.state.course.toc, oldIndex, newIndex)}
    });
   }
+
+  handleAddLiteratureClose = () => {
+    this.props.history.push(`/group/${this.props.groupId}/course/${this.props.id}`);
+  }
+
 
   renderSortableItem = SortableElement((value) => {
     return (<CourseLiteratureItem {...value} />);
@@ -228,13 +252,6 @@ class CourseListing extends Component {
 
   renderSortableList = SortableContainer(({items}) => {
     const SortableItem = this.renderSortableItem;
-  /*return (
-    <ul>
-      {items.map((value, index) => (
-        <SortableItem key={`item-${index}`} index={index} value={value} />
-      ))}
-    </ul>
-  );*/
     return (
       <List dense>
 	{items.map((item, index) => (
@@ -256,13 +273,16 @@ class CourseListing extends Component {
     const { query, loading, course, module,
 	    newModuleDialogOpen, newModuleName,
 	    commentDialogOpen, commentText} = this.state;
-    const { classes } = this.props;
+    const { classes, openAddDialog, id, groupId } = this.props;
     const SortableList = this.renderSortableList;
     if (course === null) {
-      return null;
+      return <LinearProgress />;
     }
     return (
       <Paper>
+	<CourseLiteratureAddForm open={openAddDialog}
+				 onClose={this.handleAddLiteratureClose}
+				 onSubmit={this.handleAddLiteratureSubmit} />
 	{newModuleDialogOpen ? (
           <Dialog open={newModuleDialogOpen} onClose={() => {this.setState({newModuleDialogOpen: false})}}>
             <DialogTitle>
@@ -359,32 +379,19 @@ class CourseListing extends Component {
 	     }
 	</Toolbar>
 	</AppBar>
-	{loading? <LinearProgress /> : null}
-
-
+	{loading ? <LinearProgress /> : null }
 	<SortableList lockAxis="y"
-                      helperClass={classes.DragHelper}
-      useDragHandle={false}
+      helperClass={classes.DragHelper}
+      useDragHandle={true}
       onSortEnd={this.handleSortEnd}
-      distance={5}
-                      items={this.filteredToc === null ? (course||{}).toc||[] : this.filteredToc}/>
-      {/*
-	<List dense>
-      {(this.filteredToc === null ? (course||{}).toc||[] : this.filteredToc
-	 ).map((item, index) => (
-	  <CourseLiteratureItem key={item.id}
-				id={item.target_id}
-				comment={item.comment}
-				module={item.module}
-				onEditModuleName={this.handleEditModuleName}
-				onEditComment={this.handleEditComment}
-				tocItem={this.tocItems[item.target_id]||{}} />
-	 ))}
-      </List>
-       */}
+      items={this.filteredToc === null ? (course||{}).toc||[] : this.filteredToc} />
 	<Zoom in={true} className={classes.AddButton}>
-	<Button variant="fab" type="submit" color="primary">
-          <AddIcon />
+	  <Button variant="fab"
+		  to={`/group/${groupId}/course/${id}/add`}
+		  component={Link}
+		  type="submit"
+		  color="primary">
+        <AddIcon />
 	</Button>
 	</Zoom>
       </Paper>);

@@ -68,5 +68,6 @@ class IDataLookupService(Interface):
         pass
 
     def query(self, query):
-        "run the data lookup returning the json metadata"
+        """run the data lookup returning metadata as a dict,
+        or None if not found"""
         pass

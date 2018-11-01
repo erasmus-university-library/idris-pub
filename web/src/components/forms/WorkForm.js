@@ -24,7 +24,11 @@ class WorkForm extends React.Component {
             <div className={classes.formFieldRow}>
               <Field name="type" component={mappedSelect} options={settings.type} label="Type" className={classes.flex}/>
               <span className={classes.gutter}> </span>
-              <Field name="issued" component={mappedTextField} label="Issued Date" type="date" className={classes.dateField} />
+              <Field name="issued"
+		     component={mappedTextField}
+		     label="Issued Date" type="date"
+                     InputLabelProps={{shrink: true}}
+		     className={classes.dateField} />
             </div>
             <div className={classes.formFieldRow}>
               <Field name="title"

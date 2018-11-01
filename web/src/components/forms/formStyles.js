@@ -17,7 +17,7 @@ const styles = theme => ({
   },
   formFieldRow: {
       display:'flex',
-      marginBottom: theme.spacing.unit*2
+      /*marginBottom: theme.spacing.unit*2*/
   },
   formControlSelect: {
       width: 180
@@ -58,6 +58,17 @@ const styles = theme => ({
   dateField: {
       width: 180,
   },
+  gutteredRightField: {
+    marginLeft: theme.spacing.unit,
+  },
+  gutteredLeftField: {
+    marginRight: theme.spacing.unit,
+  },
+  guttered: {
+    marginRight: theme.spacing.unit,
+    marginLeft: theme.spacing.unit,
+  },
+
   formItem: {
       width: '100%',
   },
@@ -127,6 +138,9 @@ const styles = theme => ({
     marginTop: '8px',
     width: '40px',
     height: '40px'
+  },
+  FullStepper: {
+    padding: 0,
   },
 });
 export default styles
