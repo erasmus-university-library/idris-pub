@@ -189,6 +189,16 @@ class PDFTransform(object):
         self.blob.put()
 
     def pdf_cover(self, path, thumbnail_height=200):
+        """This command uses imageMagick.
+        By default form version 6, you will have to change the line:
+        <policy domain="coder" rights="none" pattern="PDF" />
+        into:
+        <policy domain="coder" rights="read" pattern="PDF" />
+        So ImageMagick will read the PDF files
+        For more information on policy.xml see:
+        https://imagemagick.org/script/security-policy.php
+        """
+
         jpg_file = tempfile.mktemp(prefix='pdfjson-', suffix='.jpg')
         self._call_with_timeout('convert', [path+'[0]', jpg_file])
         thumb_file = tempfile.mktemp(prefix='pdfjson-thumb-', suffix='.jpg')
