@@ -231,6 +231,7 @@ export class IdrisSDK {
                   headers: {'Authorization': `Bearer ${this.token}`,
                             'Content-Type': 'application/json'}});
   }
+
   courseUpdate = function(courseId, courseData){
     return fetch(`${this.backendURL}/course/records/${courseId}`,
                  {method: 'PUT',
@@ -240,6 +241,7 @@ export class IdrisSDK {
                             'Content-Type': 'application/json'}});
 
   }
+
   courseAdd = function(courseData){
     return fetch(`${this.backendURL}/course/records`,
                  {method: 'POST',
@@ -248,6 +250,14 @@ export class IdrisSDK {
                   headers: {'Authorization': `Bearer ${this.token}`,
                             'Content-Type': 'application/json'}});
 
+  }
+
+  courseDOILookup = function(doi){
+    return fetch(`${this.backendURL}/course/lookup/doi?doi=${encodeURIComponent(doi)}`,
+                 {method: 'GET',
+                  mode: 'cors',
+                  headers: {'Authorization': `Bearer ${this.token}`,
+                            'Content-Type': 'application/json'}});
   }
 
   load = function(type, path){

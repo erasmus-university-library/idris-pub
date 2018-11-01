@@ -17,7 +17,6 @@ import EditIcon from '@material-ui/icons/Edit';
 import MessageIcon from '@material-ui/icons/Message';
 import UnfoldMoreIcon from '@material-ui/icons/UnfoldMore';
 import BookmarkBorderIcon from '@material-ui/icons/BookmarkBorder';
-import Divider from '@material-ui/core/Divider';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 

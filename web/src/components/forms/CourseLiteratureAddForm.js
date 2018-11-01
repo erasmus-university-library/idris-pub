@@ -1,42 +1,43 @@
 import React, { Component } from 'react';
-
 import { withStyles } from '@material-ui/core/styles';
+
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
-import Typography from '@material-ui/core/Typography';
-import TextField from '@material-ui/core/TextField';
-import Tooltip from '@material-ui/core/Tooltip';
+import CardContent from '@material-ui/core/CardContent';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import Stepper from '@material-ui/core/Stepper';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
 import Step from '@material-ui/core/Step';
 import StepContent from '@material-ui/core/StepContent';
 import StepLabel from '@material-ui/core/StepLabel';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import FormLabel from '@material-ui/core/FormLabel';
+import Stepper from '@material-ui/core/Stepper';
+import TextField from '@material-ui/core/TextField';
+import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
 
 import styles from './formStyles';
 import FileUploadField from '../widgets/FileUpload';
+
+import IdrisSDK from '../../sdk.js';
+const sdk = new IdrisSDK();
 
 @withStyles(styles)
 class CourseLiteratureAddForm extends Component {
 
   state = {
     activeStep: 0,
+    processing: false,
     title: '',
     authors: '',
     year: '',
-    startPage: '',
-    endPage: '',
+    start_page: '',
+    end_page: '',
     totalPages: '',
     bookTitle: '',
     journal: '',
@@ -45,7 +46,8 @@ class CourseLiteratureAddForm extends Component {
     doi: '',
     link: '',
     pdf: '',
-    type: 'article'
+    type: 'article',
+    error: null
   }
 
   handleChange = (name) => (event) => {
@@ -53,7 +55,28 @@ class CourseLiteratureAddForm extends Component {
   }
 
   handleSubmitAddLiterature = (event) => {
-    this.setState({activeStep: 1});
+    if (this.state.doi){
+      if (this.state.doi.indexOf('10.') == -1){
+	this.setState({error: 'doi'});
+      } else {
+	const doi = this.state.doi.substr(this.state.doi.indexOf('10.'));
+	this.setState({activeStep: 1,
+		       doi,
+		       error: null,
+		       processing: true});
+	sdk.courseDOILookup(doi).then(
+	  response => response.json(),
+	  error => {console.log('DOI Lookup Error: ' + error)})
+	  .then(data => {
+	    this.setState({...data.course,
+			   processing: false});
+      });
+      }
+
+    } else {
+      this.setState({activeStep: 1,
+		     processing: false});
+    }
   }
 
   handleSubmitDescribeLiterature = (event) => {
@@ -70,7 +93,7 @@ class CourseLiteratureAddForm extends Component {
 
   render() {
     const { classes } = this.props;
-    const { activeStep } = this.state;
+    const { activeStep, processing } = this.state;
 
     return (
       <Dialog open={this.props.open !== false}
@@ -79,7 +102,7 @@ class CourseLiteratureAddForm extends Component {
 	  New Course Literature
 	</DialogTitle>
         <DialogContent style={{minWidth: 550}}>
-	  <Stepper activeStep={this.state.activeStep}
+	  <Stepper activeStep={activeStep}
 		   orientation="vertical"
 		   className={classes.FullStepper}>
 	    <Step key={0}>
@@ -94,7 +117,8 @@ class CourseLiteratureAddForm extends Component {
 		  <div className={classes.formFieldRow}>
 		    <TextField
 		      id="doi"
-		      label="Article DOI"
+		      label={this.state.error === 'doi' ? 'Invalid DOI': "Article DOI"}
+		      error={this.state.error === 'doi'}
 		      value={this.state.doi}
 		      className={classes.flex}
 		      disabled={this.state.link !== '' ? true : false}
@@ -136,6 +160,7 @@ class CourseLiteratureAddForm extends Component {
 		  <span>Describe Literature</span>
 		</Tooltip>
 	      </StepLabel>
+	      { processing ? <StepContent className={classes.processing}><CircularProgress size={50} /></StepContent> :
 	      <StepContent>
 		<form className={classes.formItem}
 		      noValidate autoComplete="off"
@@ -205,7 +230,7 @@ class CourseLiteratureAddForm extends Component {
 		      label="Year"
 		      value={this.state.year}
 		      className={classes.gutteredLeftField}
-		      onChange={this.handleChange('startPage')}
+		      onChange={this.handleChange('start_page')}
 		      margin="dense"
 			/>
 		    : null }
@@ -231,11 +256,11 @@ class CourseLiteratureAddForm extends Component {
 		    : null }
 		    {this.state.type === 'article'  || this.state.type === 'bookChapter' ?
 		    <TextField
-		      id="startPage"
+		      id="start_page"
 		      label="Start Page"
-		      value={this.state.startPage}
+		      value={this.state.start_page}
 		      className={classes.guttered}
-		      onChange={this.handleChange('startPage')}
+		      onChange={this.handleChange('start_page')}
 		      margin="dense"
 			/>
 		    : null }
@@ -243,9 +268,9 @@ class CourseLiteratureAddForm extends Component {
 		    <TextField
 		      id="ending"
 		      label="End Page"
-		      value={this.state.endPage}
+		      value={this.state.end_page}
 		      className={this.state.type === 'bookChapter' ? classes.guttered :classes.gutteredRightField}
-		      onChange={this.handleChange('endPage')}
+		      onChange={this.handleChange('end_page')}
 		      margin="dense"
 			/>
 		    : null }
@@ -285,7 +310,7 @@ class CourseLiteratureAddForm extends Component {
 		  </Button>
 		  </DialogActions>
 		</form>
-	      </StepContent>
+	      </StepContent>}
 	    </Step>
 	    <Step key={2}>
 	      <StepLabel>Confirm Literature</StepLabel>

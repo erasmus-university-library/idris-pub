@@ -142,5 +142,11 @@ const styles = theme => ({
   FullStepper: {
     padding: 0,
   },
+  processing : {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 340
+  }
 });
 export default styles
