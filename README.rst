@@ -14,7 +14,7 @@ Idris is a repository platform for storing research output and publications. The
 * A metadata editor (encompassing the whole Idris data model)
 * A learning material repository (providing royalty management, learning analytics and deep LTI integration)
 * A reporting / dashboard frontend (for Research Intelligence purposes, utilizing Google BigQuery)
-* An institutional repository frontend (storing fulltext output, and student theses)
+* An institutional repository frontend (storing academic output and student theses)
 * A journal website frontend
 
 This is a work-in-progress, research project from Erasmus University Library Rotterdam.
