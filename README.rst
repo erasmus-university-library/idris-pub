@@ -9,6 +9,14 @@ Idris, a Research Intelligence platform
 .. image:: https://codecov.io/gh/erasmus-university-library/idris-pub/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/erasmus-university-library/idris-pub
 
+Idris is a repository platform for storing research output and publications. The platform provides a well documented API layer that can be used to build applications on top of. Current / planned applications include:
+
+* A metadata editor (encompassing the whole Idris data model)
+* A learning material repository (providing a royalty calculator and deep LTI integration)
+* A reporting / dashboard frontend (for Research Intelligence purposes, utilizing Google BigQuery)
+* An institutional repository frontend (storing fulltext output, and student theses)
+* A journal website frontend
+
 This is a work-in-progress, research project from Erasmus University Library Rotterdam.
 
 Setting up Idris API
