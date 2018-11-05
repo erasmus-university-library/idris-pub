@@ -946,7 +946,41 @@ class CourseResource(BaseResource):
     orm_class = Work
     key_col_name = 'id'
 
-    def toc_items(self, course_id):
+
+    def toc_items_royalty(self):
+        query = sql.text("""
+        SELECT
+          w.id,
+          w.type,
+          w.issued,
+          MAX(e.uri) AS uri,
+          MAX(e.blob_id) as blob_id,
+          MAX(CASE WHEN d.type='rights' THEN d.value ELSE NULL END) AS rights,
+          MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
+          MAX(CASE WHEN m.type='pageCount' THEN m.value ELSE NULL END) AS pages,
+          MAX(CASE WHEN r.type='book' THEN r.description ELSE NULL END) AS book_title,
+          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.total ELSE NULL END) AS total,
+          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.starting ELSE NULL END) AS ending,
+          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.ending ELSE NULL END) AS starting,
+        FROM relations AS toc
+        JOIN works w ON toc.target_id = w.id
+        LEFT JOIN measures m ON m.work_id = w.id
+        LEFT JOIN relations r ON r.work_id = w.id
+        LEFT JOIN descriptions d ON d.work_id = w.id
+        LEFT JOIN expressions e on e.work_id = w.id
+        WHERE toc.work_id=:course_id
+         GROUP BY
+          w.id,
+          w.type,
+          w.issued,
+          w.title""")
+        params = dict(course_id=self.model.id)
+        result = {}
+        for row in self.session.execute(query, params):
+            result[row.id] = dict(row)
+        return result
+
+    def toc_items_csl(self):
         query = sql.text("""
         SELECT
           w.id,
@@ -977,7 +1011,7 @@ class CourseResource(BaseResource):
           w.type,
           w.issued,
           w.title""")
-        params = dict(course_id=course_id)
+        params = dict(course_id=self.model.id)
         result = {}
         for row in self.session.execute(query, params):
             csl = {'title': row.title,
@@ -1080,6 +1114,14 @@ class CourseResource(BaseResource):
         yield (Allow, 'system.Authenticated', 'view')
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
 
+    def from_course_material_data(self, data):
+        work = {
+            'title': data['title'],
+            'type': data['type'],
+            'issued': datetime.date(data['year'], 1, 1)
+        }
+        return Work.from_dict(work)
+
     def from_course_data(self, data):
         data['issued'] = data['start_date']
         if 'group' in data:
@@ -1097,11 +1139,13 @@ class CourseResource(BaseResource):
         if 'toc' in data:
             for toc in data.get('toc', []):
                 toc['type'] = 'toc'
-                if toc.get('module'):
+                comment = toc.pop('comment', None)
+                module = toc.pop('module', None)
+                if module:
                     toc['location'] = 'module'
-                    toc['description'] = toc.pop('module')
-                elif toc.get('comment'):
-                    toc['description'] = toc.pop('comment')
+                    toc['description'] = module
+                elif comment:
+                    toc['description'] = comment
             data['relations'] = data.pop('toc')
         self.model.update_dict(data)
 

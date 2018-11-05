@@ -153,3 +153,42 @@ class CourseWebTest(BaseTest):
         assert course['start_page'] == '11'
         assert course['end_page'] == '12'
         assert course['journal'] == 'Nature Physics'
+
+    def test_course_new(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        new_course = {'title': 'The new Course',
+                      'start_date': '2018-11-05',
+                      'end_date': '2018-12-31',
+                      'group': self.corp_id,
+                      'course_id': '1234',
+                      'canvas_id': '5678'}
+        out = self.api.post_json(
+            '/api/v1/course/records',
+            {'course': new_course},
+            headers=headers)
+        assert out.status_code == 201
+        course = out.json['course']
+        for key, value in new_course.items():
+            assert course[key] == value
+        course_id = course['id']
+        out = self.api.get(
+            '/api/v1/course/records?group_id=%s&course_year=2018-2019' % (
+                self.corp_id),
+            headers=headers)
+        assert len([c for c in out.json
+                    if c['id'] == course_id]) == 1
+
+    def test_course_new_material(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        new_material = {'title': 'Yet another article',
+                        'authors': 'Erasmus University',
+                        'type': 'article',
+                        'year': '2018'}
+        out = self.api.post_json(
+            '/api/v1/course/records/%s/materials' % self.course_id,
+            new_material,
+            headers=headers)
+        assert out.status_code == 201
+        course_data = out.json
+        assert len([toc for toc in course_data['toc_items'].values()
+                    if toc['title'] == 'Yet another article']) == 1

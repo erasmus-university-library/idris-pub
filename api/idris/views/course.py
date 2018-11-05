@@ -65,6 +65,27 @@ class CourseDOILookupSchema(colander.MappingSchema,
         doi = colander.SchemaNode(colander.String(),
                                   description='format: "10.XXX/XXX"')
 
+class CourseMaterialSchema(colander.MappingSchema,
+                           JsonMappingSchemaSerializerMixin):
+    title =  colander.SchemaNode(colander.String())
+    type =  colander.SchemaNode(colander.String())
+    authors = colander.SchemaNode(colander.String())
+    year = colander.SchemaNode(colander.Int())
+    start_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
+    end_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
+    totalPages = colander.SchemaNode(colander.Int(), missing=colander.drop)
+    bookTitle = colander.SchemaNode(colander.String(), missing=colander.drop)
+    journal = colander.SchemaNode(colander.String(), missing=colander.drop)
+    volume = colander.SchemaNode(colander.String(), missing=colander.drop)
+    issue = colander.SchemaNode(colander.String(), missing=colander.drop)
+    doi = colander.SchemaNode(colander.String(), missing=colander.drop)
+    link = colander.SchemaNode(colander.String(), missing=colander.drop)
+    words = colander.SchemaNode(colander.Int(), missing=colander.drop)
+    pages = colander.SchemaNode(colander.Int(), missing=colander.drop)
+    blob_id = colander.SchemaNode(colander.Int(), missing=colander.drop)
+    rights = colander.SchemaNode(colander.String(), missing=colander.drop)
+
+
 
 @resource(name='Course',
           collection_path='/api/v1/course/records',
@@ -105,7 +126,7 @@ class CourseRecordAPI(object):
         "Retrieve a course"
         return CourseSchema().to_json(
             {'course': self.context.to_course_data(),
-             'toc_items': self.context.toc_items(self.context.model.id)})
+             'toc_items': self.context.toc_items_csl()})
 
     @view(
         permission='course_update',
@@ -130,7 +151,7 @@ class CourseRecordAPI(object):
 
         return CourseSchema().to_json(
             {'course': self.context.to_course_data(),
-             'toc_items': self.context.toc_items(self.context.model.id)})
+             'toc_items': self.context.toc_items_csl()})
 
     @view(
         permission='course_add',
@@ -158,8 +179,43 @@ class CourseRecordAPI(object):
         self.request.response.status = 201
         return CourseSchema().to_json(
             {'course': self.context.to_course_data(),
-             'toc_items': self.context.toc_items(self.context.model.id)})
+             'toc_items': self.context.toc_items_csl()})
 
+
+course_material_add = Service(name='CourseMaterialAdd',
+                              path='/api/v1/course/records/{id}/materials',
+                              factory=ResourceFactory(CourseResource),
+                              schema=CourseMaterialSchema(),
+                              api_security=[{'jwt': []}],
+                              tags=['course'],
+                              cors_origins=('*', ))
+
+@course_material_add.post(permission='course_material_add',
+                          validators=colander_bound_repository_body_validator)
+def course_material_add_view(request):
+    context = request.context
+    work = context.from_course_material_data(request.validated)
+    try:
+        context.put(work)
+    except StorageError as err:
+        request.errors.status = 400
+        request.errors.add('body', err.location, str(err))
+        return
+    course_data = context.to_course_data()
+    course_data['toc'].append({'target_id': work.id})
+    context.from_course_data(course_data)
+    try:
+        context.put()
+    except StorageError as err:
+        request.errors.status = 400
+        request.errors.add('body', err.location, str(err))
+        return
+    # force reload the course from db to retrieve the new toc
+    context.session.refresh(context.model)
+    request.response.status_code = 201
+    return CourseSchema().to_json(
+        {'course': context.to_course_data(),
+         'toc_items': context.toc_items_csl()})
 
 
 course_nav = Service(name='CourseNavigation',
