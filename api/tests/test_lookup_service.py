@@ -1,7 +1,8 @@
 import warnings
+import datetime
 
 from idris import main
-from idris.lookup import lookup_factory, LookupError
+from idris.services.lookup import lookup_factory, LookupError
 
 from core import BaseTest
 
@@ -28,6 +29,7 @@ class CrossRefLookupTest(BaseTest):
             warnings.warn('Error connecting to "%s"' % self.lookup.base_url)
             return
         assert result['title'] == 'Measured measurement: Quantum tomography'
+        assert result['issued'] == datetime.date(2009, 1, 1)
 
     def test_crossref_notfound(self):
         doi = '10.123456/foobar'

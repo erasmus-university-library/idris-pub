@@ -149,6 +149,7 @@ class CourseWebTest(BaseTest):
         assert course['title'] == (
             'Measured measurement: Quantum tomography')
         assert course['volume'] == '5'
+        assert course['year'] == '2009'
         assert course['issue'] == '1'
         assert course['start_page'] == '11'
         assert course['end_page'] == '12'
@@ -183,12 +184,26 @@ class CourseWebTest(BaseTest):
         new_material = {'title': 'Yet another article',
                         'authors': 'Erasmus University',
                         'type': 'article',
+                        'link': 'https://eur.nl',
                         'year': '2018'}
         out = self.api.post_json(
             '/api/v1/course/records/%s/materials' % self.course_id,
-            new_material,
+            {'material': new_material},
             headers=headers)
         assert out.status_code == 201
-        course_data = out.json
-        assert len([toc for toc in course_data['toc_items'].values()
-                    if toc['title'] == 'Yet another article']) == 1
+        assert 'material' in out.json
+        assert out.json['material']['authors'] == 'Erasmus University'
+        assert 'csl' in out.json
+        assert out.json['csl']['author'] == [{'literal': 'Erasmus University'}]
+        assert 'royalties' in out.json
+        assert out.json['royalties']['tariff_message'] == 'External URL'
+        # it is also possible to simulate this addition by setting a flag
+        # this is used in the UI to calculate royalties before adding the
+        # material to the course
+        out = self.api.post_json(
+            '/api/v1/course/records/%s/materials' % self.course_id,
+            {'material': new_material, 'dry_run': True},
+            headers=headers)
+        assert out.status_code == 200
+        assert 'royalties' in out.json
+        assert out.json['royalties']['tariff_message'] == 'External URL'

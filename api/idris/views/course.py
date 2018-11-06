@@ -5,6 +5,7 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 import colander
 
+from idris.services.course_royalties import course_royalty_calculator_factory
 from idris.resources import ResourceFactory, CourseResource
 from idris.exceptions import StorageError
 from idris.models import Work
@@ -67,23 +68,27 @@ class CourseDOILookupSchema(colander.MappingSchema,
 
 class CourseMaterialSchema(colander.MappingSchema,
                            JsonMappingSchemaSerializerMixin):
-    title =  colander.SchemaNode(colander.String())
-    type =  colander.SchemaNode(colander.String())
-    authors = colander.SchemaNode(colander.String())
-    year = colander.SchemaNode(colander.Int())
-    start_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
-    end_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
-    totalPages = colander.SchemaNode(colander.Int(), missing=colander.drop)
-    bookTitle = colander.SchemaNode(colander.String(), missing=colander.drop)
-    journal = colander.SchemaNode(colander.String(), missing=colander.drop)
-    volume = colander.SchemaNode(colander.String(), missing=colander.drop)
-    issue = colander.SchemaNode(colander.String(), missing=colander.drop)
-    doi = colander.SchemaNode(colander.String(), missing=colander.drop)
-    link = colander.SchemaNode(colander.String(), missing=colander.drop)
-    words = colander.SchemaNode(colander.Int(), missing=colander.drop)
-    pages = colander.SchemaNode(colander.Int(), missing=colander.drop)
-    blob_id = colander.SchemaNode(colander.Int(), missing=colander.drop)
-    rights = colander.SchemaNode(colander.String(), missing=colander.drop)
+
+    dry_run = colander.SchemaNode(colander.Boolean(), missing=False)
+    @colander.instantiate()
+    class material(colander.MappingSchema):
+        title =  colander.SchemaNode(colander.String())
+        type =  colander.SchemaNode(colander.String())
+        authors = colander.SchemaNode(colander.String())
+        year = colander.SchemaNode(colander.Int())
+        start_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        end_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        totalPages = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        bookTitle = colander.SchemaNode(colander.String(), missing=colander.drop)
+        journal = colander.SchemaNode(colander.String(), missing=colander.drop)
+        volume = colander.SchemaNode(colander.String(), missing=colander.drop)
+        issue = colander.SchemaNode(colander.String(), missing=colander.drop)
+        doi = colander.SchemaNode(colander.String(), missing=colander.drop)
+        link = colander.SchemaNode(colander.String(), missing=colander.drop)
+        words = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        pages = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        blob_id = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        rights = colander.SchemaNode(colander.String(), missing=colander.drop)
 
 
 
@@ -194,28 +199,44 @@ course_material_add = Service(name='CourseMaterialAdd',
                           validators=colander_bound_repository_body_validator)
 def course_material_add_view(request):
     context = request.context
-    work = context.from_course_material_data(request.validated)
-    try:
-        context.put(work)
-    except StorageError as err:
-        request.errors.status = 400
-        request.errors.add('body', err.location, str(err))
-        return
-    course_data = context.to_course_data()
-    course_data['toc'].append({'target_id': work.id})
-    context.from_course_data(course_data)
-    try:
-        context.put()
-    except StorageError as err:
-        request.errors.status = 400
-        request.errors.add('body', err.location, str(err))
-        return
-    # force reload the course from db to retrieve the new toc
-    context.session.refresh(context.model)
-    request.response.status_code = 201
-    return CourseSchema().to_json(
-        {'course': context.to_course_data(),
-         'toc_items': context.toc_items_csl()})
+    dry_run = request.validated['dry_run']
+    material = request.validated['material']
+    work = context.from_course_material_data(material)
+    if not dry_run:
+        try:
+            context.put(work)
+        except StorageError as err:
+            request.errors.status = 400
+            request.errors.add('body', err.location, str(err))
+            return
+        course_data = context.to_course_data()
+        course_data['toc'].append({'target_id': work.id})
+        context.from_course_data(course_data)
+        try:
+            context.put()
+        except StorageError as err:
+            request.errors.status = 400
+            request.errors.add('body', err.location, str(err))
+            return
+        # force reload the course from db to retrieve the new toc
+        context.session.refresh(context.model)
+        request.response.status_code = 201
+
+    course_year = str(context.model.issued.year)
+    royalties = course_royalty_calculator_factory(request.registry,
+                                                  course_year)()
+    royalty_materials = context.toc_items_royalty()
+    if dry_run:
+        material['id'] = -1
+        work.id = -1
+        royalty_materials.append(material)
+    calculated_royalties = {}
+    for royalty_calculation in royalties.calculate(royalty_materials):
+        if royalty_calculation['id'] == work.id:
+            calculated_royalties = royalty_calculation
+    return {'material': material,
+            'csl': context.material_data_to_csl(material),
+            'royalties': calculated_royalties}
 
 
 course_nav = Service(name='CourseNavigation',
@@ -257,6 +278,7 @@ def doi_lookup_view(request):
     result = {'course': {}}
     if data:
         result['course']['title'] = data['title']
+        result['course']['year'] = str(data['issued'].year)
         authors = []
         for contributor in data.get('contributors', []):
             if contributor['role'] == 'author':

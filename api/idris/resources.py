@@ -953,7 +953,7 @@ class CourseResource(BaseResource):
           w.id,
           w.type,
           w.issued,
-          MAX(e.uri) AS uri,
+          MAX(e.uri) AS link,
           MAX(e.blob_id) as blob_id,
           MAX(CASE WHEN d.type='rights' THEN d.value ELSE NULL END) AS rights,
           MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
@@ -961,7 +961,7 @@ class CourseResource(BaseResource):
           MAX(CASE WHEN r.type='book' THEN r.description ELSE NULL END) AS book_title,
           MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.total ELSE NULL END) AS total,
           MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.starting ELSE NULL END) AS ending,
-          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.ending ELSE NULL END) AS starting,
+          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.ending ELSE NULL END) AS starting
         FROM relations AS toc
         JOIN works w ON toc.target_id = w.id
         LEFT JOIN measures m ON m.work_id = w.id
@@ -975,12 +975,56 @@ class CourseResource(BaseResource):
           w.issued,
           w.title""")
         params = dict(course_id=self.model.id)
-        result = {}
+        result = []
         for row in self.session.execute(query, params):
-            result[row.id] = dict(row)
+            result.append(dict(row))
         return result
 
+    def material_data_to_csl(self, material):
+        csl = {'title': material['title'],
+               'id': material.get('id'),
+               'type': {'article': 'article-journal',
+                        'courseArticle': 'article-journal',
+                        'chapter': 'chapter',
+                        'book': 'book',
+                        'report': 'report'}.get(material['type'], 'entry')}
+        date_parts = []
+        if material.get('issued'):
+            date_parts.append(str(material['issued'].year))
+        elif material.get('year'):
+            date_parts.append(str(material['year']))
+        csl['issued'] = {'date-parts': [date_parts]}
+
+        if material.get('journal'):
+            csl['container-title'] = material['journal']
+        if material.get('issue'):
+            csl['issue'] = material['issue']
+        if material.get('volume'):
+            csl['volume'] = material['volume']
+        if material.get('starting') and material.get('ending'):
+            csl['pages'] = '%s-%s' % (material.get('starting'),
+                                      material.get('ending'))
+        elif material.get('ending'):
+            csl['pages'] = '%s' % material.get('starting')
+
+        csl['author'] = []
+        authors = None
+        if isinstance(material.get('authors'), str):
+            authors = [material['authors']]
+        for author in authors or material.get('authors', []):
+            if not author or author in csl['author']:
+                continue
+            csl['author'].append(author)
+        csl['author'] = [{'literal': a} for a in csl['author']]
+        return csl
+
     def toc_items_csl(self):
+        result = {}
+        for material in self.toc_items():
+            result[material['id']] = self.material_data_to_csl(material)
+        return result
+
+    def toc_items(self):
         query = sql.text("""
         SELECT
           w.id,
@@ -989,17 +1033,18 @@ class CourseResource(BaseResource):
           w.title,
           MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
           MAX(CASE WHEN m.type='pageCount' THEN m.value ELSE NULL END) AS pages,
-          MAX(CASE WHEN r.type='journal' THEN r.description ELSE NULL END) AS journal_name,
-          MAX(CASE WHEN r.type='journal' THEN r.volume ELSE NULL END) AS journal_volume,
-          MAX(CASE WHEN r.type='journal' THEN r.issue ELSE NULL END) AS journal_issue,
-          MAX(CASE WHEN r.type='journal' THEN r.starting ELSE NULL END) AS journal_ending,
-          MAX(CASE WHEN r.type='journal' THEN r.ending  ELSE NULL END) AS journal_starting,
-          MAX(CASE WHEN r.type='book' THEN r.description ELSE NULL END) AS book_name,
-          MAX(CASE WHEN r.type='book' THEN r.total ELSE NULL END) AS book_total,
-          MAX(CASE WHEN r.type='book' THEN r.starting ELSE NULL END) AS book_ending,
-          MAX(CASE WHEN r.type='book' THEN r.ending ELSE NULL END) AS book_starting,
-          array_agg(CASE WHEN c.role = 'author' THEN c.description ELSE NULL END ORDER BY c.position) AS authors,
-          array_agg(CASE WHEN c.role = 'publisher' THEN c.description ELSE NULL END ORDER BY c.position) AS publishers
+          MAX(CASE WHEN r.type='journal' THEN r.description ELSE NULL END) AS journal,
+          MAX(CASE WHEN r.type='journal' THEN r.volume ELSE NULL END) AS volume,
+          MAX(CASE WHEN r.type='journal' THEN r.issue ELSE NULL END) AS issue,
+          MAX(r.starting) AS starting,
+          MAX(r.ending) AS ending,
+          MAX(r.total) AS total,
+          MAX(CASE WHEN r.type='book' THEN
+                       r.description ELSE
+                       NULL END) AS book_title,
+          array_agg(CASE WHEN c.role = 'author' THEN
+                       c.description ELSE
+                       NULL END ORDER BY c.position) AS authors
         FROM relations AS toc
         JOIN works w ON toc.target_id = w.id
         LEFT JOIN contributors c ON c.work_id = w.id
@@ -1012,41 +1057,9 @@ class CourseResource(BaseResource):
           w.issued,
           w.title""")
         params = dict(course_id=self.model.id)
-        result = {}
+        result = []
         for row in self.session.execute(query, params):
-            csl = {'title': row.title,
-                   'id': row.id,
-                   'type': {'article': 'article-journal',
-                            'courseArticle': 'article-journal',
-                            'chapter': 'chapter',
-                            'book': 'book',
-                            'report': 'report'}.get(row.type, 'entry')}
-            date_parts = []
-            if row.issued:
-                date_parts.append(row.issued.year)
-                if not (row.issued.month == 1 and row.issued.day == 1):
-                    date_parts.append(row.issued.month)
-                if row.issued.day != 1:
-                    date_parts.append(row.issued.day)
-            if row.journal_name:
-                csl['container-title'] = row.journal_name
-            if row.journal_issue:
-                csl['issue'] = row.journal_issue
-            if row.journal_volume:
-                csl['volume'] = row.journal_volume
-            if row.journal_starting and row.journal_ending:
-                csl['page'] = '%s-%s' % (row.journal_starting,
-                                         row.journal_ending)
-
-            csl['issued'] = {'date-parts': [date_parts]}
-            csl['author'] = []
-            for author in row.authors:
-                if not author or author in csl['author']:
-                    continue
-                csl['author'].append(author)
-            csl['author'] = [{'literal': a} for a in csl['author']]
-            csl['publisher'] = [{'literal': p, 'name': p} for p in row.publishers if p]
-            result[row.id] = csl
+            result.append(dict(row))
         return result
 
     def courses(self, group_id, course_year=None):
@@ -1120,6 +1133,13 @@ class CourseResource(BaseResource):
             'type': data['type'],
             'issued': datetime.date(data['year'], 1, 1)
         }
+        if data.get('link'):
+            work.setdefault('expressions', []).append({
+                'name': 'fulltext',
+                'type': 'publication',
+                'format': 'published',
+                'access': 'public',
+                'uri': data['link']})
         return Work.from_dict(work)
 
     def from_course_data(self, data):

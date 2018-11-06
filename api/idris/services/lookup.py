@@ -101,10 +101,12 @@ class CrossRefLookup(object):
             result.setdefault('contributors', []).append(contributor)
 
             if data['type'] == 'journal-article':
+
                 if '-' in data.get('page'):
                     start_page, end_page = data['page'].split('-', 1)
                 else:
                     start_page = data.get('page')
+                    end_page = None
 
                 relation = {'type': 'journal',
                             'description': data['container-title'][0],
