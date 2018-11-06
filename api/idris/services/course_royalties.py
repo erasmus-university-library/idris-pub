@@ -183,8 +183,6 @@ class ProCourseRoyaltyCalculator2017(object):
                                 tariff,
                                 len(all_chapters),
                                 cost))
-            else:
-                import pdb;pdb.set_trace()
             results.append(result)
         return results
 
