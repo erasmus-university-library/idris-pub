@@ -20,6 +20,16 @@ class ProCourseRoyaltyCalculator2017(object):
         results = []
         for material in materials:
             result = {'id': material['id']}
+
+            if material.get('starting') and material.get('ending'):
+                # instead of the number of pages in the pdf
+                # use the calculated number from the start/end page
+                # if it is larger. This is needed if a pdf contains
+                # multiple (2) pages per page.
+                pages = material['ending'] - material['starting']
+                if pages > material['pages']:
+                    material['pages'] = pages
+
             if material.get('type') is None:
                 result['tariff'] = 'unknown'
                 result['warning'] = 'no_type'

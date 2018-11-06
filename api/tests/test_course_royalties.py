@@ -203,6 +203,24 @@ class CourseRoyaltiesTest(BaseTest):
             'Chapter within 25 page limit')
         assert out['cost'] == 0
 
+    def test_royalties_chapter_middle_pagecount_from_citation(self):
+        # although the pdf is only 40 pages, the start and end page
+        # indicate that 80 pages are used (2 pages per pdf page)
+        chapter = {'id': 0,
+                   'type': 'bookChapter',
+                   'blob_id': 0,
+                   'book_title': 'Introduction to ABC',
+                   'id': 0,
+                   'words': 12000,
+                   'starting': 10,
+                   'ending': 90,
+                   'pages': 40,
+                   'book_pages': 300}
+        out = self.royalties.calculate([chapter])[0]
+        assert out['tariff'] == 'long'
+        assert out['cost_message'] == (
+            '80 pages x 0.325 cents = 26.00')
+
     def test_royalties_oa_chapter(self):
         out = self.royalties.calculate([
             {'id': 0,
