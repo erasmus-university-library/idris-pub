@@ -207,3 +207,75 @@ class CourseWebTest(BaseTest):
         assert out.status_code == 200
         assert 'royalties' in out.json
         assert out.json['royalties']['tariff_message'] == 'External URL'
+
+    def test_course_add_article_material(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        material = {'title': 'An article',
+                    'authors': 'The Authors et al',
+                    'journal': 'Journal',
+                    'issue': '1',
+                    'volume': '2',
+                    'starting': '3',
+                    'ending': '4',
+                    'type': 'article',
+                    'doi': '10.12345',
+                    'link': 'https://eur.nl',
+                    'words': '10',
+                    'pages': '10',
+                    'year': '2018'}
+        out = self.api.post_json(
+            '/api/v1/course/records/%s/materials' % self.course_id,
+            {'material': material},
+            headers=headers)
+        assert out.status_code == 201
+        work_id = out.json['material']['id']
+        out = self.api.get(
+            '/api/v1/work/records/%s' % work_id,
+            headers=headers)
+        work = out.json
+        assert work['title'] == material['title']
+        assert work['type'] == material['type']
+        assert work['issued'].startswith(material['year'])
+        assert work['contributors'][0]['description'] == material['authors']
+        assert work['relations'][0]['description'] == material['journal']
+        assert work['relations'][0]['volume'] == material['volume']
+        assert work['relations'][0]['issue'] == material['issue']
+        assert work['relations'][0]['starting'] == material['starting']
+        assert work['relations'][0]['ending'] == material['ending']
+        assert work['identifiers'][0]['value'] == material['doi']
+        assert work['expressions'][0]['uri'] == material['link']
+        assert [m['value'] for m in work['measures']
+                if m['type'] == 'wordCount'] == [material['words']]
+        assert [m['value'] for m in work['measures']
+                if m['type'] == 'pageCount'] == [material['pages']]
+
+    def test_course_add_chapter_material(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        material = {'title': 'A Book Chapter',
+                    'authors': 'The Authors et al',
+                    'book_title': 'The Book',
+                    'starting': '3',
+                    'ending': '4',
+                    'book_pages': '80',
+                    'type': 'bookChapter',
+                    'rights': 'openAccess',
+                    'link': 'https://eur.nl',
+                    'year': '2018'}
+        out = self.api.post_json(
+            '/api/v1/course/records/%s/materials' % self.course_id,
+            {'material': material},
+            headers=headers)
+        assert out.status_code == 201
+        work_id = out.json['material']['id']
+        out = self.api.get(
+            '/api/v1/work/records/%s' % work_id,
+            headers=headers)
+        work = out.json
+        assert work['title'] == material['title']
+        assert work['type'] == material['type']
+        assert work['issued'].startswith(material['year'])
+        assert work['relations'][0]['description'] == material['book_title']
+        assert work['relations'][0]['starting'] == material['starting']
+        assert work['relations'][0]['ending'] == material['ending']
+        assert work['expressions'][0]['uri'] == material['link']
+        assert work['descriptions'][0]['value'] == material['rights']

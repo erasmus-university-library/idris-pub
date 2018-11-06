@@ -76,10 +76,11 @@ class CourseMaterialSchema(colander.MappingSchema,
         type =  colander.SchemaNode(colander.String())
         authors = colander.SchemaNode(colander.String())
         year = colander.SchemaNode(colander.Int())
-        start_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
-        end_page = colander.SchemaNode(colander.Int(), missing=colander.drop)
-        totalPages = colander.SchemaNode(colander.Int(), missing=colander.drop)
-        bookTitle = colander.SchemaNode(colander.String(), missing=colander.drop)
+        starting = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        ending = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        pages = colander.SchemaNode(colander.Int(), missing=colander.drop)
+        book_title = colander.SchemaNode(colander.String(), missing=colander.drop)
+        book_pages = colander.SchemaNode(colander.Int(), missing=colander.drop)
         journal = colander.SchemaNode(colander.String(), missing=colander.drop)
         volume = colander.SchemaNode(colander.String(), missing=colander.drop)
         issue = colander.SchemaNode(colander.String(), missing=colander.drop)
@@ -209,6 +210,7 @@ def course_material_add_view(request):
             request.errors.status = 400
             request.errors.add('body', err.location, str(err))
             return
+        material['id'] = work.id
         course_data = context.to_course_data()
         course_data['toc'].append({'target_id': work.id})
         context.from_course_data(course_data)

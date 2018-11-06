@@ -959,7 +959,7 @@ class CourseResource(BaseResource):
           MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
           MAX(CASE WHEN m.type='pageCount' THEN m.value ELSE NULL END) AS pages,
           MAX(CASE WHEN r.type='book' THEN r.description ELSE NULL END) AS book_title,
-          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.total ELSE NULL END) AS total,
+          MAX(CASE WHEN (r.type='book') THEN r.total ELSE NULL END) AS book_pages,
           MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.starting ELSE NULL END) AS ending,
           MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.ending ELSE NULL END) AS starting
         FROM relations AS toc
@@ -1038,7 +1038,6 @@ class CourseResource(BaseResource):
           MAX(CASE WHEN r.type='journal' THEN r.issue ELSE NULL END) AS issue,
           MAX(r.starting) AS starting,
           MAX(r.ending) AS ending,
-          MAX(r.total) AS total,
           MAX(CASE WHEN r.type='book' THEN
                        r.description ELSE
                        NULL END) AS book_title,
@@ -1128,11 +1127,49 @@ class CourseResource(BaseResource):
         yield (Allow, 'group:admin', ALL_PERMISSIONS)
 
     def from_course_material_data(self, data):
+        """ Import material data into work record
+        See views.course.CourseMaterialSchema for data format
+        """
         work = {
             'title': data['title'],
             'type': data['type'],
             'issued': datetime.date(data['year'], 1, 1)
         }
+        if data.get('authors'):
+            work.setdefault('contributors', []).append({
+                'role': 'author',
+                'description': data['authors']
+            })
+        if data.get('words'):
+            work.setdefault('measures', []).append(
+                dict(type='wordCount', value=data['words']))
+        if data.get('pages'):
+            work.setdefault('measures', []).append(
+                dict(type='pageCount', value=data['pages']))
+        if data.get('rights'):
+            work.setdefault('descriptions', []).append(
+                dict(type='rights',
+                     format='text',
+                     value=data['rights']))
+        if data.get('journal') or data.get('book_title'):
+            relation = {'issue': data.get('issue'),
+                        'volume': data.get('volume'),
+                        'starting': data.get('starting'),
+                        'ending': data.get('ending')}
+            if data.get('journal'):
+                relation['description'] = data['journal'],
+                relation['type'] = 'journal'
+            else:
+                relation['description'] = data['book_title'],
+                relation['type'] = 'book'
+                relation['total'] = 'book_pages'
+
+            work.setdefault('relations', []).append(relation)
+        if data.get('doi'):
+            if data.get('link') is None:
+                data['link'] = 'https://doi.org/%s' % data['doi']
+            work.setdefault('identifiers', []).append({
+                'type': 'doi', 'value': data['doi']})
         if data.get('link'):
             work.setdefault('expressions', []).append({
                 'name': 'fulltext',
@@ -1140,6 +1177,13 @@ class CourseResource(BaseResource):
                 'format': 'published',
                 'access': 'public',
                 'uri': data['link']})
+        if data.get('blob_id'):
+            work.setdefault('expressions', []).append({
+                'name': 'fulltext',
+                'type': 'publication',
+                'format': 'published',
+                'access': 'public',
+                'blob_id': data['blob_id']})
         return Work.from_dict(work)
 
     def from_course_data(self, data):
