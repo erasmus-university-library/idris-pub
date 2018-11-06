@@ -8,7 +8,7 @@ import colander
 from idris.resources import ResourceFactory, CourseResource
 from idris.exceptions import StorageError
 from idris.models import Work
-from idris.lookup import lookup_factory, LookupError
+from idris.services.lookup import lookup_factory, LookupError
 from idris.utils import (ErrorResponseSchema,
                          StatusResponseSchema,
                          OKStatusResponseSchema,

@@ -71,3 +71,42 @@ class IDataLookupService(Interface):
         """run the data lookup returning metadata as a dict,
         or None if not found"""
         pass
+
+
+class ICourseRoyaltyCalculator(Interface):
+    royalty_agency = Attribute('Registry Agency')
+    tariff_long_cost_per_page_dutch = Attribute(
+        """Ammount of euros (decimal)
+        'Inbreuken, uitgever onbekend (vrijwaringsfonds)'""")
+    tariff_long_cost_per_page_foreign = Attribute(
+        """Ammount of euros (decimal)
+        'Inbreuken, uitgever onbekend (vrijwaringsfonds)'""")
+    tariff_short_max_article_words = Attribute(
+        'Maximum number of words to stay within short article tariff')
+    tariff_short_max_chapter_words = Attribute(
+        'Maximum number of words to stay within short chapter tariff')
+    tariff_short_max_chapter_from_total_work_percentage = Attribute(
+        '''Maximum percentage of pages from book that can be used
+        to stay within short tariff''')
+    tariff_middle_max_from_total_work_percentage = Attribute(
+        '''Maximum percentage of pages from total work that can be used
+        to stay within middle tariff''')
+    tariff_middle_max_pages = Attribute(
+        'Maximum number of pages to stay within middle tariff')
+
+
+    def calculate(self, materials):
+        """run the calculation on materials data as returned from the
+        toc_items_royalty method of the course resource
+
+        returns a list with the following info on each material:
+
+        - id (learning material id)
+        - cost (in cents)
+        - cost_message (description of the cost calculation)
+        - tarif (short/middle/long/excempt/unknown/none)
+        - tarif_message (description of the tarif choice)
+        - warning (incomplete data error)
+        - warning_message (description of the warning)
+        """
+        pass
