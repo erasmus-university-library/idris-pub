@@ -224,8 +224,8 @@ export class IdrisSDK {
     }
 
 
-  courseLoad = function(courseId){
-    return fetch(`${this.backendURL}/course/records/${courseId}`,
+  courseLoad = function(courseId, showRoyalties=true){
+    return fetch(`${this.backendURL}/course/records/${courseId}?show_royalties=${showRoyalties}`,
                  {method: 'GET',
                   mode: 'cors',
                   headers: {'Authorization': `Bearer ${this.token}`,
@@ -246,6 +246,16 @@ export class IdrisSDK {
     return fetch(`${this.backendURL}/course/records`,
                  {method: 'POST',
                   body: JSON.stringify(courseData),
+                  mode: 'cors',
+                  headers: {'Authorization': `Bearer ${this.token}`,
+                            'Content-Type': 'application/json'}});
+
+  }
+
+  courseAddMaterial = function(courseId, materialData, dryRun=false){
+    return fetch(`${this.backendURL}/course/records/${courseId}/materials`,
+                 {method: 'POST',
+                  body: JSON.stringify({dry_run: dryRun, material: materialData}),
                   mode: 'cors',
                   headers: {'Authorization': `Bearer ${this.token}`,
                             'Content-Type': 'application/json'}});

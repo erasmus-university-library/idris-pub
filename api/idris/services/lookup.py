@@ -69,12 +69,20 @@ class CrossRefLookup(object):
         return self.crossref2idris(data)
 
     def crossref2idris(self, data):
-        result = {'type': data['type'],
-                  'identifiers': [dict(type='doi', value=data['DOI'])]
+        result = {
+            'type': {
+                'journal-article': 'article',
+                'book-chapter': 'bookChapter',
+            }.get(data['type'], data['type']),
+            'identifiers': [dict(type='doi', value=data['DOI'])]
         }
-        issued = data['issued']['date-parts'][0]
-        while len(issued) < 3:
-            issued.append(1)
+        for date_field in ['issued', 'created', 'deposited']:
+            issued = data[date_field]['date-parts'][0]
+            if not issued or issued[0] is None:
+                continue
+            while len(issued) < 3 :
+                issued.append(1)
+            break
         result['issued'] = datetime.date(*issued)
 
         for title in data.get('title', []):
@@ -100,44 +108,50 @@ class CrossRefLookup(object):
                 contributor['affiliaiton_info'] = affiliation_info
             result.setdefault('contributors', []).append(contributor)
 
-            if data['type'] == 'journal-article':
+        if data.get('container-title'):
+            if '-' in data.get('page', ''):
+                start_page, end_page = data['page'].split('-', 1)
+            else:
+                start_page = data.get('page')
+                end_page = None
 
-                if '-' in data.get('page'):
-                    start_page, end_page = data['page'].split('-', 1)
+            relation = {
+                'type':
+                  {'book-chapter': 'book'}.get(data['type'], 'journal'),
+                'description': data['container-title'][0],
+                'starting': start_page,
+                'ending': end_page,
+                'volume': data.get('volume'),
+                'issue': data.get('issue')}
+            rel_work = {'title': data['container-title'][0],
+                        'type': relation['type']}
+            if data.get('ISSN'):
+                if len(data['ISSN']) == 2:
+                    issn, essn = data['ISSN']
                 else:
-                    start_page = data.get('page')
-                    end_page = None
+                    issn = data['ISSN']
+                    essn = None
 
-                relation = {'type': 'journal',
-                            'description': data['container-title'][0],
-                            'start_page': start_page,
-                            'end_page': end_page,
-                            'volume': data.get('volume'),
-                            'issue': data.get('issue')}
-                journal = {'title': data['container-title'][0],
-                           'type': 'journal'}
-                if data.get('ISSN'):
-                    if len(data['ISSN']) == 2:
-                        issn, essn = data['ISSN']
-                    else:
-                        issn = data['ISSN']
-                        essn = None
+                rel_work.setdefault(
+                    'identifiers', []).append(dict(type='issn',
+                                                   value=issn))
+                if essn:
+                    rel_work.setdefault(
+                        'identifiers', []).append(dict(type='essn',
+                                                       value=essn))
+            for isbn in data.get('ISBN', []):
+                rel_work.setdefault(
+                    'identifiers', []).append(dict(type='isbn',
+                                                   value=isbn))
 
-                    journal.setdefault(
-                        'identifiers', []).append(dict(type='issn',
-                                                       value=issn))
-                    if essn:
-                        journal.setdefault(
-                            'identifiers', []).append(dict(type='essn',
-                                                           value=essn))
-                if data.get('publisher'):
-                    journal['contributors'] = [{
-                        'type': 'publisher',
-                        'description': data['publisher'],
-                        'group_info': {'international_name': data['publisher'],
-                                       'type': 'publisher'}}]
-                relation['work_info'] = journal
-                result.setdefault('relations', []).append(relation)
+            if data.get('publisher'):
+                rel_work['contributors'] = [{
+                    'type': 'publisher',
+                    'description': data['publisher'],
+                    'group_info': {'international_name': data['publisher'],
+                                   'type': 'publisher'}}]
+            relation['work_info'] = rel_work
+            result.setdefault('relations', []).append(relation)
         return result
 
 def lookup_services(registry):

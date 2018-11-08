@@ -23,6 +23,7 @@ import Typography from '@material-ui/core/Typography';
 
 import styles from './formStyles';
 import FileUploadField from '../widgets/FileUpload';
+import Citation from '../widgets/Citation';
 
 import IdrisSDK from '../../sdk.js';
 const sdk = new IdrisSDK();
@@ -33,67 +34,125 @@ class CourseLiteratureAddForm extends Component {
   state = {
     activeStep: 0,
     processing: false,
-    title: '',
-    authors: '',
-    year: '',
-    start_page: '',
-    end_page: '',
-    totalPages: '',
-    bookTitle: '',
-    journal: '',
-    volume: '',
-    issue: '',
-    doi: '',
-    link: '',
-    pdf: '',
-    type: 'article',
-    error: null
+    material: {title: '',
+	       authors: '',
+	       year: '',
+	       starting: '',
+	       ending: '',
+	       book_pages: '',
+	       book_title: '',
+	       words: '',
+	       pages: '',
+	       journal: '',
+	       volume: '',
+	       issue: '',
+	       doi: '',
+	       link: '',
+	       blob_id: '',
+	       type: ''
+	      },
+    doi_error: null,
+    link_error: null,
+    metadata_error: null,
+    citation: {},
+    royalties: {},
   }
 
   handleChange = (name) => (event) => {
-    this.setState({[name]: event.target.value});
+    const material = this.state.material
+    material[name] = event.target.value;
+    this.setState({material});
   }
 
   handleSubmitAddLiterature = (event) => {
-    if (this.state.doi){
-      if (this.state.doi.indexOf('10.') == -1){
-	this.setState({error: 'doi'});
-      } else {
-	const doi = this.state.doi.substr(this.state.doi.indexOf('10.'));
-	this.setState({activeStep: 1,
-		       doi,
-		       error: null,
-		       processing: true});
-	sdk.courseDOILookup(doi).then(
+    const material = this.state.material;
+    let link_error = null;
+    let doi_error = null;
+    if (material.link &&
+	material.link.substr(0, 4) !== 'http'){
+      link_error = 'Invalid Link';
+    }
+    if (material.doi &&
+	material.doi.indexOf('10.') == -1){
+      doi_error = 'Invalid DOI';
+    }
+
+    if (material.doi && doi_error === null){
+      const doi = material.doi.substr(
+	material.doi.indexOf('10.'));
+      material['doi'] = doi;
+      this.setState({activeStep: 1,
+		     material,
+		     link_error,
+		     doi_error,
+		     processing: true});
+      sdk.courseDOILookup(doi).then(
 	  response => response.json(),
 	  error => {console.log('DOI Lookup Error: ' + error)})
 	  .then(data => {
-	    this.setState({...data.course,
+	    this.setState({material: Object.assign(this.state.material, data.course),
 			   processing: false});
       });
-      }
-
     } else {
-      this.setState({activeStep: 1,
+      this.setState({activeStep: link_error === null && doi_error === null ? 1: 0,
+		     link_error,
+		     doi_error,
 		     processing: false});
     }
   }
 
   handleSubmitDescribeLiterature = (event) => {
-    this.setState({activeStep: 2});
+    this.setState({activeStep: 2,
+		   processing: true});
+    sdk.courseAddMaterial(this.props.courseId, this.state.material, true).then(
+      response => response.json(),
+      error => {console.log('Add Material Error: ' + error)})
+      .then(data => {
+	this.setState({citation: data.csl,
+		       royalties: data.royalties,
+		       processing: false});
+      });
   }
 
+  handleSubmitConfirmLiterature = (event) => {
+    this.setState({processing: true});
+    sdk.courseAddMaterial(this.props.courseId, this.state.material).then(
+      response => response.json(),
+      error => {console.log('Add Material Error: ' + error)})
+      .then(data => {
+	this.handleClose();
+      });
+
+  }
   handleSubmitBack = (event) => {
     this.setState({activeStep: this.state.activeStep - 1});
   }
 
+  handlePDFUpload = (blob) => {
+    const material = this.state.material;
+    material['blob_id'] = blob.id;
+    material['words'] = blob.info.words;
+    material['pages'] = blob.info.pages;
+    if (blob.info.dois.length){
+      material['doi'] = blob.info.dois[0];
+    }
+    this.setState({material: material});
+  }
+
   handleClose = () => {
+    const material = this.state.material;
+    for (var key in material){
+      material[key] = '';
+    }
+    this.setState({material,
+		   activeStep:0});
     this.props.onClose();
   }
 
   render() {
     const { classes } = this.props;
-    const { activeStep, processing } = this.state;
+    const { activeStep, processing, link_error, doi_error,
+	    material, citation, royalties } = this.state;
 
     return (
       <Dialog open={this.props.open !== false}
@@ -113,15 +172,15 @@ class CourseLiteratureAddForm extends Component {
 		</Tooltip>
 	      </StepLabel>
 	      <StepContent>
-		<form className={classes.formItem} noValidate autoComplete="off">
+		<div className={classes.MaterialAddStep}>
+	      	<form className={classes.formItem} noValidate autoComplete="off">
 		  <div className={classes.formFieldRow}>
 		    <TextField
 		      id="doi"
-		      label={this.state.error === 'doi' ? 'Invalid DOI': "Article DOI"}
-		      error={this.state.error === 'doi'}
-		      value={this.state.doi}
+		      label={Boolean(doi_error) ? doi_error: "Article DOI"}
+		      error={Boolean(doi_error)}
+		      value={material.doi}
 		      className={classes.flex}
-		      disabled={this.state.link !== '' ? true : false}
 		      onChange={this.handleChange('doi')}
 		      margin="dense"
 		      />
@@ -129,28 +188,19 @@ class CourseLiteratureAddForm extends Component {
 		  <div className={classes.formFieldRow}>
 		    <TextField
 		      id="link"
-		      label="Website Link"
-		      value={this.state.link}
-		      disabled={this.state.doi !== '' ? true : false}
+		      label={Boolean(link_error) ? link_error: "Website Link"}
+		      error={Boolean(link_error)}
+		      value={material.link}
 		      className={classes.flex}
 		      onChange={this.handleChange('link')}
 		      margin="dense"
 		      />
 		  </div>
 		  <div className={classes.formFieldRow}>
-		    <FileUploadField value={this.state.pdf} name='PDF File Upload'/>
+		    <FileUploadField value={material.blob_id} onUpload={this.handlePDFUpload} name='PDF File Upload'/>
 		  </div>
-		  <DialogActions style={{marginTop:'24px'}}>
-		  <Button onClick={this.handleSubmitAddLiterature}
-			  color="primary"
-			  variant="contained"
-			  disabled={!(Boolean(this.state.doi) ||
-				      Boolean(this.state.link) ||
-			  Boolean(this.state.pdf))}>
-		    Next
-		  </Button>
-		  </DialogActions>
 		</form>
+		</div>
 	      </StepContent>
 	    </Step>
 	    <Step key={1}>
@@ -160,16 +210,18 @@ class CourseLiteratureAddForm extends Component {
 		  <span>Describe Literature</span>
 		</Tooltip>
 	      </StepLabel>
-	      { processing ? <StepContent className={classes.processing}><CircularProgress size={50} /></StepContent> :
-	      <StepContent>
+	      { processing ? <StepContent><div className={classes.processing}>
+		  <CircularProgress size={50} />
+		</div></StepContent> :
+		<StepContent>
+		    <div className={classes.MaterialAddStep}>
 		<form className={classes.formItem}
-		      noValidate autoComplete="off"
-		      style={{minHeight: 340}}>
+		      noValidate autoComplete="off">
 		  <div className={classes.formFieldRow}>
 		    <RadioGroup
 		      name="type"
 		      style={{flexDirection: 'row', flexGrow: 1, justifyContent: 'space-between'}}
-		      value={this.state.type}
+		      value={material.type}
 		      onChange={this.handleChange('type')}
 		      >
 		      <FormControlLabel value="article" control={<Radio  color="primary"/>} label="Article" />
@@ -181,115 +233,119 @@ class CourseLiteratureAddForm extends Component {
 		  </div>
 		  <div className={classes.formFieldRow}>
 		    <TextField
-		      id="title"
-		      label={this.state.type === 'bookChapter' ? 'Chapter Title': 'Title'}
-		      value={this.state.title}
-		      className={classes.flex}
-		      onChange={this.handleChange('title')}
-		      margin="dense"
+			id="title"
+			label={material.type === 'bookChapter' ? 'Chapter Title': 'Title'}
+			value={material.title}
+			multiline
+			rowsMax="3"
+			className={classes.flex}
+			onChange={this.handleChange('title')}
+			margin="dense"
 		      />
 		  </div>
 		  <div className={classes.formFieldRow}>
 		    <TextField
-		      id="authors"
-		      label="Authors"
-		      value={this.state.authors}
-		      className={classes.flex}
-		      onChange={this.handleChange('authors')}
-		      margin="dense"
+			id="authors"
+			label="Authors"
+			multiline
+			rowsMax="3"
+			value={material.authors}
+			className={classes.flex}
+			onChange={this.handleChange('authors')}
+			margin="dense"
 		      />
 		  </div>
-		  {this.state.type === 'article' ?
+		  {material.type === 'article' ?
 		  <div className={classes.formFieldRow}>
 		    <TextField
 		      id="journal"
 		      label="Journal"
-		      value={this.state.journal}
+		      value={material.journal}
 		      className={classes.flex}
 		      onChange={this.handleChange('journal')}
 		      margin="dense"
 		      />
 		    </div>
 		  : null}
-		  {this.state.type === 'bookChapter' ?
+		  {material.type === 'bookChapter' ?
 		  <div className={classes.formFieldRow}>
 		    <TextField
-		      id="bookTitle"
+		      id="book_title"
 		      label="Book Title"
-		      value={this.state.bookTitle}
+		      value={material.book_title}
 		      className={classes.flex}
-		      onChange={this.handleChange('bookTitle')}
+		      onChange={this.handleChange('book_title')}
 		      margin="dense"
 		      />
 		    </div>
 		  : null}
 		  <div className={classes.formFieldRow}>
-		    {this.state.type !== 'report' ?
+		    {material.type !== 'report' ?
 		    <TextField
 		      id="year"
 		      label="Year"
-		      value={this.state.year}
+		      value={material.year}
 		      className={classes.gutteredLeftField}
-		      onChange={this.handleChange('start_page')}
+		      onChange={this.handleChange('starting')}
 		      margin="dense"
 			/>
 		    : null }
-		  {this.state.type === 'article' ?
+		  {material.type === 'article' ?
 		    <TextField
 		      id="volume"
 		      label="Volume"
-		      value={this.state.volume}
+		      value={material.volume}
 		      className={classes.guttered}
 		      onChange={this.handleChange('volume')}
 		      margin="dense"
 			/>
 		    : null }
-		  {this.state.type === 'article' ?
+		  {material.type === 'article' ?
 		    <TextField
 		      id="issue"
 		      label="Issue"
-		      value={this.state.issue}
+		      value={material.issue}
 		      className={classes.guttered}
 		      onChange={this.handleChange('issue')}
 		      margin="dense"
 			/>
 		    : null }
-		    {this.state.type === 'article'  || this.state.type === 'bookChapter' ?
+		    {material.type === 'article'  || material.type === 'bookChapter' ?
 		    <TextField
-		      id="start_page"
+		      id="starting"
 		      label="Start Page"
-		      value={this.state.start_page}
+		      value={material.starting}
 		      className={classes.guttered}
-		      onChange={this.handleChange('start_page')}
+		      onChange={this.handleChange('starting')}
 		      margin="dense"
 			/>
 		    : null }
-		    {this.state.type === 'article'  || this.state.type === 'bookChapter' ?
+		    {material.type === 'article'  || material.type === 'bookChapter' ?
 		    <TextField
 		      id="ending"
 		      label="End Page"
-		      value={this.state.end_page}
-		      className={this.state.type === 'bookChapter' ? classes.guttered :classes.gutteredRightField}
-		      onChange={this.handleChange('end_page')}
+		      value={material.ending}
+		      className={material.type === 'bookChapter' ? classes.guttered :classes.gutteredRightField}
+		      onChange={this.handleChange('ending')}
 		      margin="dense"
 			/>
 		    : null }
-		  {this.state.type === 'bookChapter' ?
+		  {material.type === 'bookChapter' ?
 		    <TextField
-		      id="totalPages"
+		      id="book_pages"
 		      label="Total Pages in Book"
-		      value={this.state.totalPages}
+		      value={material.book_pages}
 		      className={classes.gutteredRightField}
-		      onChange={this.handleChange('totalPages')}
+		      onChange={this.handleChange('book_pages')}
 			margin="dense"
 			style={{minWidth:'200px'}}
 			/>
 		    : null }
-		  {this.state.type === 'annotation' ?
+		  {material.type === 'annotation' ?
 		    <TextField
 		      id="caseName"
 		      label="Case Name"
-		      value={this.state.caseName}
+		      value={material.caseName}
 		      className={classes.gutteredRightField}
 		      onChange={this.handleChange('caseName')}
 			style={{flex: 1}}
@@ -297,48 +353,38 @@ class CourseLiteratureAddForm extends Component {
 			/>
 		    : null }
 		  </div>
-		  <DialogActions style={{marginTop:'24px'}}>
-		  <Button onClick={this.handleSubmitBack} color="primary">
-		    Back
-		  </Button>
-		  <Button onClick={this.handleSubmitDescribeLiterature}
-			  color="primary"
-			  variant="contained"
-			  disabled={!(Boolean(this.state.title) &&
-			  Boolean(this.state.authors))}>
-		    Next
-		  </Button>
-		  </DialogActions>
-		</form>
+		  </form>
+		  </div>
 	      </StepContent>}
 	    </Step>
 	    <Step key={2}>
 	      <StepLabel>Confirm Literature</StepLabel>
-	      <StepContent>
+	      { processing ? <StepContent><div className={classes.processing}>
+		  <CircularProgress size={50} />
+		</div></StepContent> :
+		<StepContent>
+		    <div className={classes.MaterialAddStep}>
+		  <Typography variant="h5" color="textSecondary" gutterBottom>
+		      The following literature will be added to the course:
+		  </Typography>
+
+		    <Citation citation={citation} />
+		      {/*
 		<Card style={{backgroundColor: '#eeeeee'}}>
 		  <CardContent>
 		  <Typography variant="h5" color="textSecondary" gutterBottom>
-		    Adding Literature to Course
+		    Royalty information
 		  </Typography>
 		  <Typography component="p">
-		    Literature bears no additional costs.
+		      {royalties.tariff === 'none' ? `No additional fees required: ${royalties.tariff_message}` : null}
 		  </Typography>
 		  </CardContent>
 		  <CardActions>
 		    <Button size="small">Learn More</Button>
 		  </CardActions>
-		</Card>
-		<DialogActions style={{marginTop:'24px'}}>
-		  <Button onClick={this.handleSubmitBack} color="primary">
-		    Back
-		  </Button>
-		  <Button onClick={this.handleSubmitConfirmLiterature}
-			  color="primary"
-			  variant="contained">
-		    Finish
-		  </Button>
-		</DialogActions>
-	      </StepContent>
+		  </Card>*/}
+		  </div>
+	      </StepContent>}
 	    </Step>
 	  </Stepper>
         </DialogContent>
@@ -346,6 +392,37 @@ class CourseLiteratureAddForm extends Component {
             <Button onClick={this.handleClose} color="primary">
               Cancel
             </Button>
+	    {activeStep > 0 ?
+ 	      <Button onClick={this.handleSubmitBack} color="primary">
+		  Back
+		</Button>
+	      : null}
+	    {activeStep === 0 ?
+		  <Button onClick={this.handleSubmitAddLiterature}
+			  color="primary"
+			  variant="contained"
+			  disabled={!(Boolean(material.doi) ||
+				      Boolean(material.link) ||
+			  Boolean(material.blob_id))}>
+		    Next
+		  </Button>
+	      : null}
+	    {activeStep === 1 ?
+		<Button onClick={this.handleSubmitDescribeLiterature}
+			  color="primary"
+			  variant="contained"
+			  disabled={!(Boolean(material.title) &&
+				      Boolean(material.authors))}>
+		    Next
+		  </Button>
+	      : null}
+	    {activeStep === 2 ?
+		<Button onClick={this.handleSubmitConfirmLiterature}
+			  color="primary"
+			  variant="contained">
+		    Finish
+		  </Button>
+	      : null}
           </DialogActions>
        </Dialog>
     );

@@ -51,6 +51,12 @@ class CourseSchema(colander.MappingSchema,
             super(self.__class__, self).__init__(
                 unknown=unknown, missing=colander.drop)
 
+    @colander.instantiate()
+    class royalties(colander.MappingSchema):
+        def __init__(self, unknown='preserve'):
+            super(self.__class__, self).__init__(
+                unknown=unknown, missing=colander.drop)
+
 
 class CourseListingRequestSchema(colander.MappingSchema,
                                  JsonMappingSchemaSerializerMixin):
@@ -65,6 +71,15 @@ class CourseDOILookupSchema(colander.MappingSchema,
     class querystring(colander.MappingSchema):
         doi = colander.SchemaNode(colander.String(),
                                   description='format: "10.XXX/XXX"')
+
+class CourseMaterialListingRequestSchema(
+        colander.MappingSchema,
+        JsonMappingSchemaSerializerMixin):
+    @colander.instantiate()
+    class querystring(colander.MappingSchema):
+        show_royalties = colander.SchemaNode(colander.Boolean(),
+                                             missing=False)
+
 
 class CourseMaterialSchema(colander.MappingSchema,
                            JsonMappingSchemaSerializerMixin):
@@ -122,6 +137,7 @@ class CourseRecordAPI(object):
 
     @view(
         permission='course_view',
+        schema=CourseMaterialListingRequestSchema(),
         validators=(colander_validator),
         cors_origins=('*', ),
         response_schemas={
@@ -130,9 +146,22 @@ class CourseRecordAPI(object):
             '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
         "Retrieve a course"
+        qs = self.request.validated['querystring']
+        calculated_royalties = {}
+        if qs['show_royalties']:
+            course_year = str(self.context.model.issued.year)
+            royalties = course_royalty_calculator_factory(
+                self.request.registry,
+                course_year)()
+            royalty_materials = self.context.toc_items_royalty()
+            for royalty_calculation in royalties.calculate(royalty_materials):
+                calculated_royalties[
+                    royalty_calculation['id']] = royalty_calculation
+
         return CourseSchema().to_json(
             {'course': self.context.to_course_data(),
-             'toc_items': self.context.toc_items_csl()})
+             'toc_items': self.context.toc_items_csl(),
+             'royalties': calculated_royalties})
 
     @view(
         permission='course_update',
@@ -202,6 +231,7 @@ def course_material_add_view(request):
     context = request.context
     dry_run = request.validated['dry_run']
     material = request.validated['material']
+    material = dict([(k, v) for (k, v) in material.items() if v])
     work = context.from_course_material_data(material)
     if not dry_run:
         try:
@@ -280,6 +310,7 @@ def doi_lookup_view(request):
     result = {'course': {}}
     if data:
         result['course']['title'] = data['title']
+        result['course']['type'] = data['type']
         result['course']['year'] = str(data['issued'].year)
         authors = []
         for contributor in data.get('contributors', []):
@@ -287,13 +318,16 @@ def doi_lookup_view(request):
                 authors.append(contributor['description'])
         result['course']['authors'] = ', '.join(authors)
         for rel in data.get('relations', []):
-            if rel['type'] != 'journal':
+            if rel['type'] == 'journal':
+                result['course']['journal'] = rel['description']
+            elif rel['type'] == 'book':
+                result['course']['book_title'] = rel['description']
+            else:
                 continue
-            result['course']['journal'] = rel['description']
             result['course']['volume'] = rel['volume']
             result['course']['issue'] = rel['issue']
-            result['course']['start_page'] = rel['start_page']
-            result['course']['end_page'] = rel['end_page']
+            result['course']['starting'] = rel['starting']
+            result['course']['ending'] = rel['ending']
 
     response.write(
         json.dumps(result).encode('utf8'))

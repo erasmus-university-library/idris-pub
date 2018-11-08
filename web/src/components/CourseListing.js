@@ -56,8 +56,8 @@ const styles = theme => ({
     position: 'fixed',
     left: '100%',
     top: '100%',
-    marginLeft: -70,
-    marginTop: -70
+    marginLeft: -90,
+    marginTop: -90
   },
   DragHelper: {
     border: 'dashed 2px #bdbdbd'
@@ -79,7 +79,8 @@ class CourseListing extends Component {
 	   commentDialogOpen: false,
 	   commentText: '',
 	   selectedModuleName: null,
-	   selectedTocItem: null};
+	   selectedTocItem: null,
+	   draggableTocItem: null};
   filteredToc = null;
   tocItems = {};
 
@@ -153,7 +154,9 @@ class CourseListing extends Component {
       error => {console.log('RelationField Error: ' + error)})
       .then(data => {
 	this.tocItems = data.toc_items;
-	this.setState({course: data.course, loading: false});
+	this.setState({course: data.course,
+		       draggableTocItem: null,
+		       loading: false});
       });
   }
 
@@ -242,9 +245,13 @@ class CourseListing extends Component {
   }
 
   handleAddLiteratureClose = () => {
+    this.loadCourse();
     this.props.history.push(`/group/${this.props.groupId}/course/${this.props.id}`);
   }
 
+  handleLiteratureDrag = (id) => {
+    this.setState({draggableTocItem: id});
+  }
 
   renderSortableItem = SortableElement((value) => {
     return (<CourseLiteratureItem {...value} />);
@@ -260,6 +267,8 @@ class CourseListing extends Component {
 			id={item.target_id}
 			comment={item.comment}
 			module={item.module}
+			draggable={this.state.draggableTocItem === item.target_id}
+			onStartDrag={this.handleLiteratureDrag}
 			onEditModuleName={this.handleEditModuleName}
 			onEditComment={this.handleEditComment}
 			tocItem={this.tocItems[item.target_id]||{}} />
@@ -281,6 +290,7 @@ class CourseListing extends Component {
     return (
       <Paper>
 	<CourseLiteratureAddForm open={openAddDialog}
+				 courseId={id}
 				 onClose={this.handleAddLiteratureClose}
 				 onSubmit={this.handleAddLiteratureSubmit} />
 	{newModuleDialogOpen ? (

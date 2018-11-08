@@ -147,6 +147,11 @@ const styles = theme => ({
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: 340
+  },
+  MaterialAddStep: {
+    minHeight: 340,
+    minWidth: 510
   }
+
 });
 export default styles

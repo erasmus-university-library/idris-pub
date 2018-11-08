@@ -1,4 +1,5 @@
 import os
+import re
 import codecs
 import datetime
 import hashlib
@@ -182,6 +183,7 @@ class PDFTransform(object):
         self.blob.model.info = info
         text = self.pdf_text(path)
         info['words'] = len(text.split())
+        info['dois'] = re.compile('[\/|:|\s](10\.[\S]+)').findall(text)
         self.blob.model.text = text
         cover, thumb = self.pdf_cover(path)
         self.blob.model.cover_image = base64.b64encode(cover)

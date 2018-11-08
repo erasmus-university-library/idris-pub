@@ -138,12 +138,12 @@ class FileUploadField extends React.Component {
 	  </Dropzone>:
 	  <Card className={classes.fileCard}>
 	      {blob.thumbnail === undefined ? null :
-		<CardMedia image={`data:image/jpeg;base64,${blob.thumbnail}`} style={{width:'100%'}}/>
+		<CardMedia image={`data:image/jpeg;base64,${blob.thumbnail}`} style={{width:'40%'}}/>
 		}
 	      <CardContent className={classes.uploadButton}>
 		  {is_finalized === true ?
 		    <div>
-			<Typography variant="headline">{blob.name}</Typography>
+			<Typography variant="headline" style={{maxWidth:200}}>{blob.name}</Typography>
 			  <Typography variant="subheading">
 			      {prettyBytes(blob.bytes)}
 				{blob.info.pages !== undefined ? ` / ${blob.info.pages} pages` : ''}

@@ -985,7 +985,9 @@ class CourseResource(BaseResource):
                'id': material.get('id'),
                'type': {'article': 'article-journal',
                         'courseArticle': 'article-journal',
-                        'chapter': 'chapter',
+                        'chapter': 'book-chapter',
+                        'bookChapter': 'book-chapter',
+                        'courseBookChapter': 'book-chapter',
                         'book': 'book',
                         'report': 'report'}.get(material['type'], 'entry')}
         date_parts = []
@@ -1002,11 +1004,13 @@ class CourseResource(BaseResource):
         if material.get('volume'):
             csl['volume'] = material['volume']
         if material.get('starting') and material.get('ending'):
-            csl['pages'] = '%s-%s' % (material.get('starting'),
+            csl['page'] = '%s-%s' % (material.get('starting'),
                                       material.get('ending'))
         elif material.get('ending'):
-            csl['pages'] = '%s' % material.get('starting')
+            csl['page'] = '%s' % material.get('starting')
 
+        if material.get('doi'):
+            csl['DOI'] = '10.%s' % material['doi'].split('10.')[-1]
         csl['author'] = []
         authors = None
         if isinstance(material.get('authors'), str):
@@ -1036,6 +1040,7 @@ class CourseResource(BaseResource):
           MAX(CASE WHEN r.type='journal' THEN r.description ELSE NULL END) AS journal,
           MAX(CASE WHEN r.type='journal' THEN r.volume ELSE NULL END) AS volume,
           MAX(CASE WHEN r.type='journal' THEN r.issue ELSE NULL END) AS issue,
+          MAX(CASE WHEN i.type='doi' THEN i.value ELSE NULL END) AS doi,
           MAX(r.starting) AS starting,
           MAX(r.ending) AS ending,
           MAX(CASE WHEN r.type='book' THEN
@@ -1049,6 +1054,7 @@ class CourseResource(BaseResource):
         LEFT JOIN contributors c ON c.work_id = w.id
         LEFT JOIN measures m ON m.work_id = w.id
         LEFT JOIN relations r ON r.work_id = w.id
+        LEFT JOIN identifiers i ON i.work_id = w.id
         WHERE toc.work_id=:course_id
         GROUP BY
           w.id,

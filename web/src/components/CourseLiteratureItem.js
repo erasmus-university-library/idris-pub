@@ -40,11 +40,11 @@ const DragHandle = SortableHandle(() => (
 @withStyles(styles)
 class CourseLiteratureItem extends Component {
 
-  state = {optionsAnchorEl: null,
-	   draggable: false};
+  state = {optionsAnchorEl: null};
 
   shouldComponentUpdate(nextProps, nextState){
     if (nextProps.id === this.props.id &&
+	nextProps.draggable == this.props.draggable &&
 	nextProps.comment === this.props.comment &&
 	nextProps.module === this.props.module &&
         this.state === nextState){
@@ -73,13 +73,13 @@ class CourseLiteratureItem extends Component {
 
   handleStartDrag = () => {
     this.closeOptionsMenu();
-    this.setState({draggable: true});
+    this.props.onStartDrag(this.props.id);
   }
 
 
   render() {
-    const { classes, id, comment, module, tocItem } = this.props;
-    const { optionsAnchorEl, draggable } = this.state;
+    const { classes, id, comment, module, tocItem, draggable } = this.props;
+    const { optionsAnchorEl } = this.state;
     const resultEl = [];
     if (id) {
       resultEl.push(
