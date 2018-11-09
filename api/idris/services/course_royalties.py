@@ -18,9 +18,11 @@ class ProCourseRoyaltyCalculator2017(object):
 
     def calculate(self, materials):
         results = []
+        # make sure all digits are converted to numbers
+        # before proceeding and all pagecounts are
+        # calculated
         for material in materials:
-            result = {'id': material['id']}
-            for number_field in ['starting', 'ending', 'total_pages',
+            for number_field in ['starting', 'ending', 'book_pages',
                                  'words', 'pages']:
                 if (material.get(number_field) and
                     str(material[number_field]).isdigit()):
@@ -36,6 +38,8 @@ class ProCourseRoyaltyCalculator2017(object):
                 if pages > material['pages']:
                     material['pages'] = pages
 
+        for material in materials:
+            result = {'id': material['id']}
             if material.get('type') is None:
                 result['tariff'] = 'unknown'
                 result['warning'] = 'no_type'
@@ -171,7 +175,7 @@ class ProCourseRoyaltyCalculator2017(object):
                 elif 'openAccess' in total_exceptions:
                     result['tariff'] = 'excempt'
                     result['tariff_message'] = 'Chapter published in open access'
-                    result['excempt_message'] = material['exception']
+                    result['excempt_message'] = total_exceptions[0]
                     result['cost'] = 0
                 elif total_exceptions:
                     result['tariff'] = 'excempt'

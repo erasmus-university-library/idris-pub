@@ -291,6 +291,7 @@ class CourseListing extends Component {
       <Paper>
 	<CourseLiteratureAddForm open={openAddDialog}
 				 courseId={id}
+				 tocItems={this.tocItems}
 				 onClose={this.handleAddLiteratureClose}
 				 onSubmit={this.handleAddLiteratureSubmit} />
 	{newModuleDialogOpen ? (

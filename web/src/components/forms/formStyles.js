@@ -151,7 +151,6 @@ const styles = theme => ({
   MaterialAddStep: {
     minHeight: 340,
     minWidth: 510
-  }
-
+  },
 });
 export default styles

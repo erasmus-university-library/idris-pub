@@ -955,13 +955,14 @@ class CourseResource(BaseResource):
           w.issued,
           MAX(e.uri) AS link,
           MAX(e.blob_id) as blob_id,
-          MAX(CASE WHEN d.type='rights' THEN d.value ELSE NULL END) AS rights,
+          MAX(CASE WHEN d.type='rights' THEN d.value ELSE NULL END) AS exception,
           MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
           MAX(CASE WHEN m.type='pageCount' THEN m.value ELSE NULL END) AS pages,
           MAX(CASE WHEN r.type='book' THEN r.description ELSE NULL END) AS book_title,
           MAX(CASE WHEN (r.type='book') THEN r.total ELSE NULL END) AS book_pages,
-          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.starting ELSE NULL END) AS ending,
-          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.ending ELSE NULL END) AS starting
+          MAX(CASE WHEN (
+            r.type='book' OR r.type = 'journal') THEN r.starting ELSE NULL END) AS starting,
+          MAX(CASE WHEN (r.type='book' OR r.type = 'journal') THEN r.ending ELSE NULL END) AS ending
         FROM relations AS toc
         JOIN works w ON toc.target_id = w.id
         LEFT JOIN measures m ON m.work_id = w.id
@@ -999,6 +1000,8 @@ class CourseResource(BaseResource):
 
         if material.get('journal'):
             csl['container-title'] = material['journal']
+        if material.get('book_title'):
+            csl['container-title'] = material['book_title']
         if material.get('issue'):
             csl['issue'] = material['issue']
         if material.get('volume'):
@@ -1037,6 +1040,7 @@ class CourseResource(BaseResource):
           w.title,
           MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
           MAX(CASE WHEN m.type='pageCount' THEN m.value ELSE NULL END) AS pages,
+          MAX(CASE WHEN r.type='book' THEN r.description ELSE NULL END) AS book_title,
           MAX(CASE WHEN r.type='journal' THEN r.description ELSE NULL END) AS journal,
           MAX(CASE WHEN r.type='journal' THEN r.volume ELSE NULL END) AS volume,
           MAX(CASE WHEN r.type='journal' THEN r.issue ELSE NULL END) AS issue,
@@ -1152,23 +1156,23 @@ class CourseResource(BaseResource):
         if data.get('pages'):
             work.setdefault('measures', []).append(
                 dict(type='pageCount', value=data['pages']))
-        if data.get('rights'):
+        if data.get('exception'):
             work.setdefault('descriptions', []).append(
                 dict(type='rights',
                      format='text',
-                     value=data['rights']))
+                     value=data['exception']))
         if data.get('journal') or data.get('book_title'):
             relation = {'issue': data.get('issue'),
                         'volume': data.get('volume'),
                         'starting': data.get('starting'),
                         'ending': data.get('ending')}
-            if data.get('journal'):
+            if data['type'] == 'article':
                 relation['description'] = data['journal'],
                 relation['type'] = 'journal'
-            else:
+            elif data['type'] == 'bookChapter':
                 relation['description'] = data['book_title'],
                 relation['type'] = 'book'
-                relation['total'] = 'book_pages'
+                relation['total'] = data.get('book_pages')
 
             work.setdefault('relations', []).append(relation)
         if data.get('doi'):

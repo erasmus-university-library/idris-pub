@@ -258,7 +258,7 @@ class CourseWebTest(BaseTest):
                     'ending': '4',
                     'book_pages': '80',
                     'type': 'bookChapter',
-                    'rights': 'openAccess',
+                    'exception': 'openAccess',
                     'link': 'https://eur.nl',
                     'year': '2018'}
         out = self.api.post_json(
@@ -275,6 +275,7 @@ class CourseWebTest(BaseTest):
         assert work['type'] == material['type']
         assert work['issued'].startswith(material['year'])
         assert work['relations'][0]['description'] == material['book_title']
+        assert work['relations'][0]['total'] == material['book_pages']
         assert work['relations'][0]['starting'] == material['starting']
         assert work['relations'][0]['ending'] == material['ending']
         assert work['expressions'][0]['uri'] == material['link']

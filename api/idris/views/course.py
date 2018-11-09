@@ -104,7 +104,7 @@ class CourseMaterialSchema(colander.MappingSchema,
         words = colander.SchemaNode(colander.Int(), missing=colander.drop)
         pages = colander.SchemaNode(colander.Int(), missing=colander.drop)
         blob_id = colander.SchemaNode(colander.Int(), missing=colander.drop)
-        rights = colander.SchemaNode(colander.String(), missing=colander.drop)
+        exception = colander.SchemaNode(colander.String(), missing=colander.drop)
 
 
 
@@ -147,7 +147,7 @@ class CourseRecordAPI(object):
     def get(self):
         "Retrieve a course"
         qs = self.request.validated['querystring']
-        calculated_royalties = {}
+        toc_items =  self.context.toc_items_csl()
         if qs['show_royalties']:
             course_year = str(self.context.model.issued.year)
             royalties = course_royalty_calculator_factory(
@@ -155,13 +155,13 @@ class CourseRecordAPI(object):
                 course_year)()
             royalty_materials = self.context.toc_items_royalty()
             for royalty_calculation in royalties.calculate(royalty_materials):
-                calculated_royalties[
-                    royalty_calculation['id']] = royalty_calculation
+                toc_items.get(
+                    royalty_calculation['id'],
+                    {})['royalties'] = royalty_calculation
 
         return CourseSchema().to_json(
             {'course': self.context.to_course_data(),
-             'toc_items': self.context.toc_items_csl(),
-             'royalties': calculated_royalties})
+             'toc_items': toc_items})
 
     @view(
         permission='course_update',

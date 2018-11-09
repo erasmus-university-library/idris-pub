@@ -5,6 +5,7 @@ import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
+import CheckBox from '@material-ui/core/Checkbox';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -20,10 +21,16 @@ import Stepper from '@material-ui/core/Stepper';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import Divider from '@material-ui/core/Divider';
 
 import styles from './formStyles';
 import FileUploadField from '../widgets/FileUpload';
 import Citation from '../widgets/Citation';
+import { CourseLiteratureRoyaltyAvatar } from '../CourseLiteratureItem';
 
 import IdrisSDK from '../../sdk.js';
 const sdk = new IdrisSDK();
@@ -49,7 +56,9 @@ class CourseLiteratureAddForm extends Component {
 	       doi: '',
 	       link: '',
 	       blob_id: '',
-	       type: ''
+	       type: '',
+	       exception: '',
+	       confirmed: '',
 	      },
     doi_error: null,
     link_error: null,
@@ -60,7 +69,17 @@ class CourseLiteratureAddForm extends Component {
 
   handleChange = (name) => (event) => {
     const material = this.state.material
-    material[name] = event.target.value;
+    if (event.target.type === 'checkbox'){
+      material[name] = event.target.checked;
+    } else if (name === 'exception' && event.target.value === 'other'){
+      material[name] = '';
+      material['custom_exception'] = true;
+    } else if (name === 'book_title' && event.target.value === 'other'){
+      material[name] = '';
+      material['customBookTitle'] = true;
+    } else {
+      material[name] = event.target.value;
+    }
     this.setState({material});
   }
 
@@ -153,7 +172,9 @@ class CourseLiteratureAddForm extends Component {
     const { classes } = this.props;
     const { activeStep, processing, link_error, doi_error,
 	    material, citation, royalties } = this.state;
-
+    let bookTitles = new Set();
+    Object.values(this.props.tocItems).forEach(toc => (toc.type === 'book-chapter' ? bookTitles.add(toc['container-title']): null))
+    bookTitles = Array.from(bookTitles);
     return (
       <Dialog open={this.props.open !== false}
 	      onClose={this.handleClose}>
@@ -267,7 +288,7 @@ class CourseLiteratureAddForm extends Component {
 		      />
 		    </div>
 		  : null}
-		  {material.type === 'bookChapter' ?
+		    {material.type === 'bookChapter' && (bookTitles.length === 0 || Boolean(material.customBookTitle))?
 		  <div className={classes.formFieldRow}>
 		    <TextField
 		      id="book_title"
@@ -279,6 +300,26 @@ class CourseLiteratureAddForm extends Component {
 		      />
 		    </div>
 		  : null}
+		    {material.type === 'bookChapter' && bookTitles.length > 0 && Boolean(material.customBookTitle) === false ?
+		   <div className={classes.formFieldRow}>
+		       <FormControl style={{width: '100%'}}>
+			  <InputLabel htmlFor="book-title">Book Title</InputLabel>
+			    <Select
+				value={material.book_title}
+				onChange={this.handleChange('book_title')}
+				inputProps={{
+				  name: 'book_title',
+				  id: 'book-title',
+				}}
+				>
+				{bookTitles.map(item => (
+				  <MenuItem key={item} value={item}>{item}</MenuItem>))}
+		     <Divider />
+		     <MenuItem value="other">Other</MenuItem>
+			      </Select>
+			</FormControl>
+		    </div>
+		    : null}
 		  <div className={classes.formFieldRow}>
 		    {material.type !== 'report' ?
 		    <TextField
@@ -364,25 +405,74 @@ class CourseLiteratureAddForm extends Component {
 		</div></StepContent> :
 		<StepContent>
 		    <div className={classes.MaterialAddStep}>
-		  <Typography variant="h5" color="textSecondary" gutterBottom>
-		      The following literature will be added to the course:
-		  </Typography>
-
-		    <Citation citation={citation} />
-		      {/*
-		<Card style={{backgroundColor: '#eeeeee'}}>
+			<Typography variant="h5" color="textSecondary" gutterBottom>
+			    The following literature will be added to the course:
+			  </Typography>
+			  <div style={{display: 'flex'}}>
+			      <Citation citation={citation} />
+				<div style={{marginLeft: 8}}>
+				    <CourseLiteratureRoyaltyAvatar {...royalties} />
+				  </div>
+			    </div>
+		      {royalties.cost > 0 ?
+		<Card style={{backgroundColor: '#eeeeee', marginTop:16}}>
 		  <CardContent>
 		  <Typography variant="h5" color="textSecondary" gutterBottom>
-		    Royalty information
+		    Royalty Costs
 		  </Typography>
-		  <Typography component="p">
-		      {royalties.tariff === 'none' ? `No additional fees required: ${royalties.tariff_message}` : null}
+		   <Typography component="p">
+		       To use this material in a course, an ammount of
+			 <strong>{` € ${(royalties.cost / 100).toFixed(2)} `}</strong>
+			   has to be paid
+			   <strong> per student </strong>
+			     enrolled in the course.
 		  </Typography>
+		       <Typography component="p"  style={{marginBottom: 8, marginTop:8}}>
+			   Possible Exceptions are:
+			 </Typography>
+			 {Boolean(material.custom_exception) === false ?
+		    <RadioGroup
+		      style={{flexDirection: 'row', flexGrow: 1, justifyContent: 'space-between'}}
+		      value={material.exception}
+		      onChange={this.handleChange('exception')}
+		      >
+			<FormControlLabel
+			    value="openAccess"
+			    control={<Radio  color="primary" style={{height:36}}/>}
+			    label="The material is published in Open Access" />
+			  <FormControlLabel
+			      value="rightsOwner"
+			      control={<Radio  color="primary" style={{height:36}}/>}
+			      label="I am author of the work and full owner of the copyright." />
+			    <FormControlLabel
+				value="other"
+				control={<Radio  color="primary" style={{height:36}}/>}
+				label="Another reason" />
+		       </RadioGroup>
+			  :
+		    <TextField
+			  id="other_exception"
+			  label="Another reason"
+			  value={material.exception}
+			  multiline
+			  fullWidth
+			  rowsMax="3"
+			  onChange={this.handleChange('exception')}
+			  margin="dense"
+		      />
+			 }
+		       <Typography component="p" style={{marginBottom: 8, marginTop:8}}>
+			   To continue,  please confirm:
+			 </Typography>
+		       <FormControlLabel control={
+					   <CheckBox checked={Boolean(material.confirmed)}
+						       onChange={this.handleChange('confirmed')}/>}
+					     label="I declare that the information provided is true and correct to the best of my knowledge, and understand that adding this material can incur significant costs."/>
 		  </CardContent>
 		  <CardActions>
-		    <Button size="small">Learn More</Button>
+		    <Button size="small" href="https://www.stichting-pro.nl/nl/FAQ--Universiteiten" taerget="_blank">Learn More</Button>
 		  </CardActions>
-		  </Card>*/}
+		       </Card> : null}
 		  </div>
 	      </StepContent>}
 	    </Step>
@@ -412,14 +502,16 @@ class CourseLiteratureAddForm extends Component {
 			  color="primary"
 			  variant="contained"
 			  disabled={!(Boolean(material.title) &&
-				      Boolean(material.authors))}>
+				      Boolean(material.authors) &&
+				      material.type === 'bookChapter' ? Boolean(material.book_title): true)}>
 		    Next
 		  </Button>
 	      : null}
 	    {activeStep === 2 ?
 		<Button onClick={this.handleSubmitConfirmLiterature}
 			  color="primary"
-			  variant="contained">
+			  variant="contained"
+			  disabled={!(royalties.cost > 0 ? Boolean(material.confirmed): true)}>
 		    Finish
 		  </Button>
 	      : null}
