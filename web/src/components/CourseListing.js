@@ -139,7 +139,7 @@ class CourseListing extends Component {
     this.setState({loading: true});
     sdk.courseLoad(this.props.id).then(
       response => response.json(),
-      error => {console.log('RelationField Error: ' + error)})
+      error => {console.log('LoadCourse Error: ' + error)})
       .then(data => {
 	this.tocItems = data.toc_items;
 	this.setState({course: data.course, loading: false});
@@ -151,7 +151,7 @@ class CourseListing extends Component {
     this.setState({loading: true});
     sdk.courseUpdate(this.props.id, {course: this.state.course}).then(
       response => response.json(),
-      error => {console.log('RelationField Error: ' + error)})
+      error => {console.log('SaveCourse Error: ' + error)})
       .then(data => {
 	this.tocItems = data.toc_items;
 	this.setState({course: data.course,

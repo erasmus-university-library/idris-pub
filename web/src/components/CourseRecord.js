@@ -39,7 +39,7 @@ class CourseRecord extends Component {
 
 const mapStateToProps = state => {
     return {
-        navigation: getNavigation(state),
+      navigation: getNavigation(state),
     };
 }
 

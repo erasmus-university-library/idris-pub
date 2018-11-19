@@ -21,7 +21,9 @@ RUN pip install -r /app/requirements.txt
 # Add the application source code.
 ADD . /app
 
+# copy the ImageMagick policy file
+COPY ImageMagick-6-policy.xml /etc/ImageMagick-6/policy.xml
+
 # Run a WSGI server to serve the application. gunicorn must be declared as
 # a dependency in requirements.txt.
 CMD gunicorn --paste idris-gae.ini -b :$PORT
-

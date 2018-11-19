@@ -68,7 +68,7 @@ DEFAULTS = {
                          'scopus': 'Scopus',
                          'wos': 'Web of Science',
                          'courseCode': 'Course Code',
-                         'canvas': 'Canvas Id'},
+                         'lti': 'LTI Id'},
     'description_types': {'abstract': 'Abstract',
                           'keywords': 'Keywords',
                           'rights': 'Rights',

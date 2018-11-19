@@ -73,7 +73,8 @@ class App extends Component {
   theme = null;
 
   componentDidMount() {
-    this.props.initializeApp();
+
+    this.props.initializeApp(this.props.token, this.props.path);
   }
 
   toggleSideBar = () => {
@@ -157,7 +158,7 @@ class App extends Component {
 
     render() {
       const { classes, header, sideBarOpen, isInitialized, customTheme, navigation,
-              showProgress, flash, error, redirectURL, loggedInUser, loginState } = this.props;
+              showProgress, flash, error, redirectURL, loggedInUser, loginState, embed } = this.props;
       if (!isInitialized){
         return <LinearProgress />;
       }
@@ -181,8 +182,16 @@ class App extends Component {
         <MuiThemeProvider theme={this.theme}>
         <div className={classes.root}>
         { flash !== null ? this.renderFlash() : null}
-            { error !== null ? this.renderError() : null}
-            <AppBar position="sticky" className={showProgress? classes.appBarWithProgress: null}>
+        { error !== null ? this.renderError() : null}
+	{ embed ? (
+          <div><div>{loggedInUser === null?
+                <LoginForm {...loginState}
+                            onChange={this.props.updateLoginState}
+                           onLogin={this.props.doLogin} />: null }</div>
+	    {showProgress? <LinearProgress />: null}
+	    </div>
+	  ) : (
+	<AppBar position="sticky" className={showProgress? classes.appBarWithProgress: null}>
               <Toolbar>
                 <IconButton className={classes.menuButton} color="default" aria-label="Menu" onClick={this.toggleSideBar}>
                   <MenuIcon />
@@ -202,7 +211,7 @@ class App extends Component {
                  <Button color="inherit" onClick={this.logOut}>Logout</Button>}
               </Toolbar>
               {showProgress? <LinearProgress />: null}
-            </AppBar>
+        </AppBar>)}
             <Drawer open={sideBarOpen}
                     classes={{
                       paper: classes.drawerPaper,
@@ -228,12 +237,13 @@ class App extends Component {
 		</List>
               </div>
             </Drawer>
+	    {loggedInUser !== null ?
             <Switch>
               <Route exact path="/group/:group_id" component={CourseRecord} />
               <Route exact path="/group/:group_id/add" component={CourseRecord} />
               <Route exact path="/group/:group_id/course/:course_id" component={CourseRecord} />
               <Route exact path="/group/:group_id/course/:course_id/add" component={CourseRecord} />
-            </Switch>
+            </Switch> : null}
           </div>
           </MuiThemeProvider>
         )
@@ -261,7 +271,7 @@ const mapDispatchToProps = dispatch => {
     return {
       openSideBar: () => {dispatch(openSideBar())},
       closeSideBar: () => {dispatch(closeSideBar())},
-      initializeApp: () => {dispatch(initializeApp())},
+      initializeApp: (token, path) => {dispatch(initializeApp(token, path))},
       loadCourseNavigation: () => {dispatch(courseNavigation())},
       flashMessage: (message) => {dispatch(flashMessage(message))},
       errorMessage: (message) => {dispatch(errorMessage(message))},

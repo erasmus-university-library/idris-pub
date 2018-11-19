@@ -30,7 +30,8 @@ export const updateDetailState = createAction('RECORD_DETAIL_UPDATE',
 
 export const setUser = createAction('USER_UPDATE', (user) => {
   sdk.token = user.token;
-    return user});
+  console.log('setting user token', user.token);
+  return user});
 
 
 
@@ -173,8 +174,9 @@ export const doLogin = (user, password) => {
     }
 }
 
-export const initializeApp = () => {
-    return dispatch => {
+export const initializeApp = (token) => {
+  return dispatch => {
+    console.log('init', token);
         return sdk.clientConfig()
                   .then(response => response.json(),
                         error => dispatch(errorMessage(error)))
@@ -183,10 +185,12 @@ export const initializeApp = () => {
                           dispatch(changeAppHeader(data.repository.title, null));
                           dispatch(changeTheme(data.repository.theme));
                           dispatch(updateSettingsState(data.settings));
-                          if (data.dev_user && data.dev_user.token){
-                              dispatch(setUser(data.dev_user));
-                          }
-                          dispatch(changeAppState('initialized'));
+			if(token !== null){
+			  dispatch(setUser({token:token, user: 'unknown'}));
+			} else if (data.dev_user && data.dev_user.token){
+                          dispatch(setUser(data.dev_user));
+			}
+			dispatch(changeAppState('initialized'));
                       } else {
                           dispatch(errorMessage(data));
                       }

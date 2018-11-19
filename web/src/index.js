@@ -31,12 +31,18 @@ const store = createStore(combineReducers({app: appReducer,
 class AppChooser extends Component {
   render() {
     const url = new URL(document.location);
+    const token = url.searchParams.get('token');
+    const embed = url.searchParams.get('embed') === 'true';
+    let history = url.hash.substr(1) || null;
+    if (history === '/') {
+      history = null;
+    }
     let path = url.pathname.split('/')[1];
     if (!path){
       path = 'root';
     }
     const App = this.props[path];
-    return <App />
+    return <App token={token} path={history} embed={embed}/>
   }
 }
 

@@ -1,9 +1,11 @@
 import json
+from urllib.parse import parse_qsl
 
 import jwt
+from pylti.common import verify_request_common
 import colander
 from pyramid.view import forbidden_view_config, notfound_view_config
-from pyramid.httpexceptions import HTTPForbidden
+from pyramid.httpexceptions import HTTPForbidden, HTTPFound
 from pyramid.interfaces import IAuthenticationPolicy
 
 from cornice import Service
@@ -11,6 +13,7 @@ from cornice.validators import colander_body_validator
 
 from idris.security import authenticator_factory
 from idris.utils import ErrorResponseSchema, OKStatus
+from idris.models import Identifier, Group
 
 class AuthLoginSchema(colander.MappingSchema):
     user = colander.SchemaNode(colander.String())
@@ -123,3 +126,87 @@ def notfound_view(request):
                                 'description': description or 'Not Found',
                                 'location': 'request'}]}).encode('utf8'))
     return response
+
+
+lti_login = Service(name='LTILogin',
+                    path='/api/v1/auth/lti',
+                    cors_origins=('*', ),
+                    factory=authenticator_factory,
+                    response_schemas={
+        '20O': AuthLoggedInBodySchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
+
+
+@lti_login.get(tags=['auth'])
+def lti_login_view_get(request):
+    return lti_login_view(request)
+
+
+@lti_login.post(tags=['auth'])
+def lti_login_view(request):
+    settings = request.repository.settings
+    if settings['course_lti_enabled'] is not True:
+        raise HTTPForbidden('Not Enabled')
+    params = dict(request.GET)
+    params.update(dict(parse_qsl(request.body.decode('utf8'))))
+
+
+    import logging
+    logging.info('url: %s' % request.url)
+    logging.info('scheme: %s' % request.scheme)
+
+    url = request.url.replace('http://', 'https://')
+
+
+    consumer_key = params['oauth_consumer_key']
+    consumers = {consumer_key: {
+        'secret': settings['course_lti_secret']}}
+    try:
+        is_valid = verify_request_common(consumers,
+                                         url,
+                                         request.method,
+                                         dict(request.headers),
+                                         params)
+    except Exception:
+        is_valid = False
+    if not is_valid:
+        raise HTTPForbidden('Unauthorized')
+    user_id = params['user_id']
+    principals = []
+
+    group = request.dbsession.query(Group).filter(
+        Group.id==consumer_key.split('-')[-1]).first()
+
+    if group:
+        principals.append('member:group:%s' % group.id)
+
+    course = request.dbsession.query(Identifier).filter(
+        Identifier.type=='lti',
+        Identifier.value==params['resource_link_id']).first()
+    if course:
+        course = course.work_id
+
+    if (params['roles'] == 'Instructor' or params['roles'] == 'Administrator'):
+        principals.append('group:course:staff')
+        # XXX for testing
+        principals.append('group:admin')
+        if course:
+            principals.append('owner:course:%s' % course)
+    elif (params['roles'] == 'Student' or params['roles'] == 'Learner'):
+        principals.append('group:course:student')
+        if course:
+            principals.append('viewer:course:%s' % course)
+    token = request.create_jwt_token(user_id, principals=principals)
+    redirect_url = '%s?token=%s&embed=true' % (settings['course_lti_redirect_url'], token)
+    redirect_url = redirect_url.replace('http://', 'https://')
+    if group:
+        redirect_url = '%s#/group/%s' % (redirect_url, group.id)
+    if course:
+        redirect_url = '%s/course/%s' % (redirect_url, course)
+    request.response.content_type = 'application/json'
+    request.response.write(
+        json.dumps({'status': 'ok', 'token': token}).encode('utf8'))
+    request.response.status_code = 303
+    request.response.headers['Location'] = redirect_url
+    return request.response
