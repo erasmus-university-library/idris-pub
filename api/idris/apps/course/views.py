@@ -1,11 +1,11 @@
 import json
-from urllib.parse import parse_qsl
 
 from cornice import Service
 from cornice.resource import resource, view
 from cornice.validators import colander_validator
 import colander
-from pylti.common import verify_request_common
+from pyramid.view import view_config
+from pyramid.httpexceptions import HTTPFound
 
 from idris.apps.course.services import course_royalty_calculator_factory
 from idris.resources import ResourceFactory
@@ -16,6 +16,11 @@ from idris.services.lookup import lookup_factory, LookupError
 from idris.utils import (ErrorResponseSchema,
                          JsonMappingSchemaSerializerMixin,
                          colander_bound_repository_body_validator)
+from idris.apps.course.resources import CourseAppRoot
+
+@view_config(context=CourseAppRoot)
+def home_view(request):
+    raise HTTPFound('/course/')
 
 
 class CourseSchema(colander.MappingSchema,
@@ -334,60 +339,3 @@ def doi_lookup_view(request):
     response.write(
         json.dumps(result).encode('utf8'))
     return response
-
-
-lti_login = Service(name='CourseLTILogin',
-                    path='/api/v1/course/lti',
-                    tags=['course'],
-                    cors_origins=('*', ))
-@lti_login.get()
-def lti_login_get_view(request):
-    return lti_login_view(request)
-
-@lti_login.post()
-def lti_login_view(request):
-    request.response.content_type = 'text/plain'
-    request.response.write(('%s\n\n' % request.url).encode('utf8'))
-    for header in request.headers:
-        request.response.write(
-            ('%s: %s\n' % (header, request.headers[header])).encode('utf8'))
-    request.response.write('\n\n')
-    request.response.write(request.body)
-    request.response.write('\n\n')
-
-    request.response.write('\n\n')
-
-    consumers = {'foobar': {'secret': 'sekret', 'cert': None}}
-    params = dict(request.GET)
-    params.update(dict(parse_qsl(request.body.decode('utf8'))))
-
-    for key, value in params.items():
-        request.response.write(
-            ('%s: %s\n' % (key, value)).encode('utf8'))
-
-    url = request.url.replace('http://', 'https://')
-    """
-    from pylti.common import Request_Fix_Duplicate
-    from pylti.common import LTIOAuthServer, SignatureMethod_HMAC_SHA1_Unicode
-    oauth_server = LTIOAuthServer(consumers)
-    oauth_server.add_signature_method(SignatureMethod_HMAC_SHA1_Unicode())
-    consumer = oauth_server.lookup_consumer('foobar')
-    oauth_request = Request_Fix_Duplicate.from_request('POST', url, headers=dict(request.headers), parameters=params)
-
-    oauth_server.verify_request(oauth_request, consumer, None)
-    """
-    try:
-        result = verify_request_common(consumers,
-                                       url,
-                                       request.method,
-                                       dict(request.headers),
-                                       params)
-    except Exception as err:
-        import pdb;pdb.set_trace()
-
-
-        request.response.write(str(err).encode('utf8'))
-        result = False
-
-    request.response.write(('\n%s\n' % result).encode('utf8'))
-    return request.response

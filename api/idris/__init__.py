@@ -54,11 +54,6 @@ def configure(global_config, **settings):
         lambda _, __: HTTPFound('/edit/'), route_name='edit_without_slash')
     config.add_static_view('edit', path='idris:static/dist/web')
 
-    config.add_route('course_without_slash', '/course')
-    config.add_view(
-        lambda _, __: HTTPFound('/course/'), route_name='course_without_slash')
-    config.add_static_view('course', path='idris:static/dist/web')
-
     return config
 
 def main(global_config, **settings):

@@ -85,10 +85,11 @@ class Blob(Base):
     __table_args__ = (Index('ix_blobs_search_terms',
                             'search_terms',
                             postgresql_using='gin'),)
-    id = Column(
-        Integer,
-        default=text("pseudo_encrypt(nextval('blobs_id_seq')::integer)"),
-        primary_key=True)
+    id = Column(Integer, Sequence('blobs_id_seq'), primary_key=True)
+    #id = Column(
+    #    Integer,
+    #    default=text("pseudo_encrypt(nextval('blobs_id_seq')::integer)"),
+    #    primary_key=True)
     expression = relationship('Expression', back_populates='blob')
     bytes = Column(Integer, nullable=False)
     name = Column(Unicode(1024), nullable=False)
