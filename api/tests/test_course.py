@@ -151,8 +151,8 @@ class CourseWebTest(BaseTest):
         assert course['volume'] == '5'
         assert course['year'] == '2009'
         assert course['issue'] == '1'
-        assert course['start_page'] == '11'
-        assert course['end_page'] == '12'
+        assert course['starting'] == '11'
+        assert course['ending'] == '12'
         assert course['journal'] == 'Nature Physics'
 
     def test_course_new(self):
@@ -162,7 +162,7 @@ class CourseWebTest(BaseTest):
                       'end_date': '2018-12-31',
                       'group': self.corp_id,
                       'course_id': '1234',
-                      'canvas_id': '5678'}
+                      'lti_id': '5678'}
         out = self.api.post_json(
             '/api/v1/course/records',
             {'course': new_course},
@@ -279,4 +279,4 @@ class CourseWebTest(BaseTest):
         assert work['relations'][0]['starting'] == material['starting']
         assert work['relations'][0]['ending'] == material['ending']
         assert work['expressions'][0]['uri'] == material['link']
-        assert work['descriptions'][0]['value'] == material['rights']
+        assert work['descriptions'][0]['value'] == material['exception']
