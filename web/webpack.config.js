@@ -1,6 +1,8 @@
 /*** webpack.config.js ***/
 const path = require('path');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ManifestPlugin = require("webpack-manifest-plugin");
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 const htmlWebpackPlugin = new HtmlWebpackPlugin({
     template: path.join(__dirname, "public/index.html"),
@@ -13,7 +15,7 @@ module.exports = {
   entry: path.join(__dirname, "src/index.js"),
   output: {
     path: path.join(__dirname, "../api/idris/static/dist/web"),
-    filename: "bundle.js"
+    filename: "[name].[contenthash].js"
   },
   module: {
     rules: [
@@ -76,7 +78,7 @@ module.exports = {
       },
     ]
   },
-  plugins: [htmlWebpackPlugin],
+  plugins: [htmlWebpackPlugin, new ManifestPlugin(), new CleanWebpackPlugin(['../api/idris/static/dist/web'])],
   resolve: {
     extensions: [".js", ".jsx"]
   },

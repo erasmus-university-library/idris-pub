@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
@@ -157,9 +158,11 @@ class FileUploadField extends React.Component {
 				is_finalized === false ? 'Finishing Upload': 'Finished'}
 			    </Typography>
 			    <br/>
-			      <CircularProgress
-				  variant={progress === 0? 'indeterminate' : 'determinate'}
-				  value={progress}/>
+			      {is_finalized === true ?
+			      <LinearProgress variant="determinate" value={progress}/>
+			       :
+			      <CircularProgress variant="indeterminate" />
+				}
 			</div>
 			}
 		</CardContent>
