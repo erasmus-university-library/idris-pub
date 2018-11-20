@@ -110,13 +110,14 @@ class Storage(object):
             revisions[repository.namespace] = repository.to_dict()
         return revisions
 
-    def create_repository(self, session, namespace, vhost_name, settings=None):
+    def create_repository(self, session, namespace, vhost_name, app_name, settings=None):
         self.registry['engine'].execute(CreateSchema(namespace))
         repository_secret = uuid.uuid4().hex
         session.add(
             Repository(namespace=namespace,
                        schema_version=self.schema_version,
                        vhost_name=vhost_name,
+                       app=app_name,
                        secret=repository_secret,
                        settings=settings or DEFAULTS['repository_settings']))
         session.flush()
@@ -175,6 +176,7 @@ class Storage(object):
                          credentials=admin_credentials,
                          user_group=100))
         session.flush()
+
         group_types = DEFAULTS['group_types']
         for key, label in group_types.items():
             session.add(GroupType(key=key, label=label))
@@ -270,11 +272,12 @@ class RepositoryConfig(object):
                  'position_type': PositionType,
                  'measure_type': MeasureType}
 
-    def __init__(self, registry, session, namespace, api_host_url,
+    def __init__(self, registry, session, namespace, api_host_url, app_name,
                  config_revision=0, settings=None):
         self.registry = registry
         self.session = session
         self.namespace = namespace
+        self.app_name = app_name
         self.api_host_url = api_host_url
         self._blob_store = None
         self.config_revision = config_revision
@@ -372,6 +375,8 @@ def includeme(config):
                 'idris.repository.config_revision'] = repository.config_revision
             request.environ[
                 'idris.repository.settings'] = repository.settings
+            request.environ[
+                'idris.repository.app'] = repository.app
             session.execute(
                 'SET search_path TO %s, public' % repository.namespace)
         else:
@@ -382,7 +387,7 @@ def includeme(config):
         session = request.dbsession
         namespace = request.environ['idris.repository.namespace']
         rev = request.environ['idris.repository.config_revision']
-
+        app_name = request.environ['idris.repository.app']
         repo_settings = request.environ['idris.repository.settings']
 
         api_host_url = '%s://%s' % (request.scheme, request.host)
@@ -393,6 +398,7 @@ def includeme(config):
                                       session,
                                       namespace,
                                       api_host_url,
+                                      app_name,
                                       config_revision=rev,
                                       settings=repo_settings)
         return repository

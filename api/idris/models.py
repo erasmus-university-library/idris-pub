@@ -1298,6 +1298,7 @@ class Repository(Base):
     config_revision = Column(Integer, nullable=False)
     schema_version = Column(Unicode(32), nullable=False)
     secret = Column(Unicode(32), nullable=False)
+    app = Column(Unicode(32), nullable=False, default='base')
     settings = Column(JSON)
 
     __mapper_args__ = {

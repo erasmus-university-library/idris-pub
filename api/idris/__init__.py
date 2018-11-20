@@ -4,9 +4,14 @@ from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPFound
 
 from idris.security import add_role_principals
+from idris.interfaces import IAppRoot
 
+def root_factory(request):
+    app_name = request.repository.app_name
+    AppRoot = request.registry.queryUtility(IAppRoot, app_name)
+    return AppRoot(request)
 
-def main(global_config, **settings):
+def configure(global_config, **settings):
 
     gcp_project = settings.get('idris.google_cloud_project')
     gcp_auth = settings.get('idris.google_application_credentials')
@@ -15,7 +20,7 @@ def main(global_config, **settings):
         os.environ[
             'GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(gcp_auth)
 
-    config = Configurator(settings=settings)
+    config = Configurator(settings=settings, root_factory=root_factory)
     config.include('cornice')
     config.include('cornice_swagger')
     config.include('pyramid_chameleon')
@@ -24,6 +29,7 @@ def main(global_config, **settings):
     config.include('idris.blob')
     config.include('idris.services.lookup')
     config.include('idris.services.course_royalties')
+    config.include('idris.apps.base')
 
     config.set_authorization_policy(ACLAuthorizationPolicy())
     config.set_jwt_authentication_policy(settings['idris.secret'],
@@ -39,19 +45,22 @@ def main(global_config, **settings):
     config.add_route('readiness_check', '/check/ready')
 
     config.add_route('api_without_slash', '/api')
-    config.add_view(lambda _, __: HTTPFound('/api/'),
-                    route_name='api_without_slash')
+    config.add_view(
+        lambda _, __: HTTPFound('/api/'), route_name='api_without_slash')
     config.add_static_view('api', path='idris:static/dist/swagger')
 
     config.add_route('edit_without_slash', '/edit')
-    config.add_view(lambda _, __: HTTPFound('/edit/'),
-                    route_name='edit_without_slash')
+    config.add_view(
+        lambda _, __: HTTPFound('/edit/'), route_name='edit_without_slash')
     config.add_static_view('edit', path='idris:static/dist/web')
 
     config.add_route('course_without_slash', '/course')
-    config.add_view(lambda _, __: HTTPFound('/course/'),
-                    route_name='course_without_slash')
+    config.add_view(
+        lambda _, __: HTTPFound('/course/'), route_name='course_without_slash')
     config.add_static_view('course', path='idris:static/dist/web')
 
-    config.add_static_view('', path='idris:static/dist/web')
+    return config
+
+def main(global_config, **settings):
+    config = configure(global_config, **settings)
     return config.make_wsgi_app()

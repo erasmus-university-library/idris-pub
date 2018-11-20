@@ -15,24 +15,32 @@ from idris.models import Person, Group, Work
 def initialize_db():
     if len(sys.argv) == 1:
         cmd = os.path.basename(sys.argv[0])
-        print('usage: %s <config_uri> [schema]\n'
+        print('usage: %s <config_uri> [schema] [app]\n'
               'example: "%s development.ini test"' % (cmd, cmd))
         sys.exit(1)
     settings = get_appsettings(sys.argv[1])
     app = main({}, **settings)
     storage = app.registry['storage']
     session = storage.make_session()
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 3:
         repo = sys.argv[2]
-        print('Creating "%s" repository on "%s.localhost"' % (repo, repo))
-        storage.create_repository(session, repo, '%s.localhost' % repo)
+        if len(sys.argv) == 4:
+            app_name = sys.argv[3]
+        else:
+            app_name = 'base'
+        print('Creating %s "%s" repository on "%s.localhost"' % (
+            app_name, repo, repo))
+        storage.create_repository(session, repo, '%s.localhost' % repo, 'base')
         storage.initialize_repository(session, repo, 'admin', 'admin')
     else:
         storage.create_all(session)
-        print('Creating "unittest" repository on "unittest.localhost"')
-        storage.create_repository(session, 'unittest', 'unittest.localhost')
-        print('Creating "test" repository on "localhost"')
-        storage.create_repository(session, 'test', 'localhost')
+        print('Creating base "unittest" repository on "unittest.localhost"')
+        storage.create_repository(session,
+                                  'unittest',
+                                  'unittest.localhost',
+                                  'base')
+        print('Creating base "test" repository on "localhost"')
+        storage.create_repository(session, 'test', 'localhost', 'base')
         print('- Adding user "admin" with password "admin"')
         storage.initialize_repository(session, 'test', 'admin', 'admin')
     transaction.commit()

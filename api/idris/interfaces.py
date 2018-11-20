@@ -110,3 +110,18 @@ class ICourseRoyaltyCalculator(Interface):
         - warning_message (description of the warning)
         """
         pass
+
+class IAppRoot(Interface):
+    """Start of ResourceTree of a specific app.
+    These are defined in the idris.apps module
+    and returned per request by the root factory in idris.__init__.
+
+    This allows apps to have their own url space which can be
+    'plugged in' at request time.
+
+    An example app would be an institutional repository, journal website or lms
+    """
+    def __getitem__(self, key):
+        """The lookup function for specific url paths
+        """
+        pass

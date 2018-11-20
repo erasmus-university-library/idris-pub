@@ -6,7 +6,7 @@ import transaction
 from pyramid import testing
 from webtest import TestApp as WebTestApp
 
-from idris import main
+from idris import configure
 from idris.storage import Storage
 from idris.models import User, Owner
 from idris.resources import UserResource
@@ -33,7 +33,9 @@ class BaseTest(unittest.TestCase):
 
     def setUp(self):
         settings = self.app_settings()
-        self.app = main({}, **settings)
+
+        self.config = configure({}, **settings)
+        self.app = self.config.make_wsgi_app()
 
         self.storage = self.app.registry['storage']
         blob_path = LocalBlobStore.root_path(
@@ -55,7 +57,8 @@ class BaseTest(unittest.TestCase):
                 transaction.commit()
             storage.create_repository(self.session,
                                       'unittest',
-                                      'unittest.localhost')
+                                      'unittest.localhost',
+                                      'base')
         else:
             storage.clear_repository(self.session, 'unittest')
 
