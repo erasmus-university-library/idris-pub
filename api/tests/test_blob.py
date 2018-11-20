@@ -1,5 +1,5 @@
 import os
-from core import BaseTest
+from core import BaseTest, no_google_credentials
 
 
 class BlobStorageTest(BaseTest):
@@ -32,6 +32,7 @@ class BlobStorageTest(BaseTest):
                                 status=200)
         assert out.json['checksum'] == '702edca0b2181c15d457eacac39de39b'
 
+    @no_google_credentials
     def test_pdf_transforms(self):
         content = open(os.path.join(os.path.dirname(__file__),
                                     'blobs',

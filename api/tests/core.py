@@ -1,6 +1,7 @@
 import unittest
 import os
 import shutil
+import pytest
 
 import transaction
 from pyramid import testing
@@ -15,21 +16,36 @@ from idris.blob import LocalBlobStore
 DB_INITIALIZED_TESTS = set()
 
 
+GOOGLE_CREDENTIALS_FILE = '/home/jasper/wip/idris/caleido-eur-service-account.json'
+
+
+def has_google_credentials_file():
+    return os.path.isfile(GOOGLE_CREDENTIALS_FILE)
+
+
+no_google_credentials = pytest.mark.skipif(
+    not has_google_credentials_file(),
+    reason='No GCP support when running locally')
+
+
 class BaseTest(unittest.TestCase):
 
     def app_settings(self):
-        return {
+        settings = {
             'idris.secret': 'sekret',
             'idris.blob_path': '/tmp/idris.files',
             'idris.blob_backend': 'local',
             'idris.blob_root_prefix': 'var/files',
             'idris.google_cloud_project': 'caleido-eur',
             'idris.lookup.crossref.email': 'jasper@artudis.com',
-            'idris.google_application_credentials': (
-                '/home/jasper/wip/idris/caleido-eur-service-account.json'),
             'sqlalchemy.url': (
                 'postgresql://idris:c4l31d0@localhost/idris')
         }
+        if has_google_credentials_file():
+            settings.update({
+                'idris.google_application_credentials': GOOGLE_CREDENTIALS_FILE
+            })
+        return settings
 
     def setUp(self):
         settings = self.app_settings()
