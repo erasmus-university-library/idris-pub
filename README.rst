@@ -32,7 +32,17 @@ Setting up Idris API
     source bin/activate
     pip install -e .
 
-* Create a PostgreSQL database with the same user/password as the idris-dev.ini file (Have a look at the psql commands in the travis.yaml file)
+* Create a PostgreSQL database with the same user/password as the idris-dev.ini
+file (Have a look at the psql commands in the travis.yaml file)::
+  pg_config
+  psql -c 'CREATE DATABASE idris;' -U postgres
+  psql -c "CREATE USER idris WITH PASSWORD '<password>'" -U postgres
+  psql -c 'GRANT ALL PRIVILEGES ON DATABASE idris to idris' -U postgres
+  psql idris -c 'CREATE EXTENSION ltree' -U postgres
+
+* Run the Python setup.py file (which will create the initialize_db command)::
+  $ python setup.py
+
 * Initialize the database with the initialize_db script::
 
     initialize_db idris-dev.ini
