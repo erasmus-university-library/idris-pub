@@ -42,6 +42,7 @@ file (Have a look at the psql commands in the travis.yaml file)::
   psql idris -c 'CREATE EXTENSION ltree' -U postgres
 
 * Run the Python setup.py file (which will create the initialize_db command)::
+
   $ python setup.py
 
 * Initialize the database with the initialize_db script::
