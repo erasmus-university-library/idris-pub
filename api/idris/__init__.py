@@ -28,8 +28,8 @@ def configure(global_config, **settings):
     config.include('idris.storage')
     config.include('idris.blob')
     config.include('idris.services.lookup')
-    config.include('idris.services.course_royalties')
     config.include('idris.apps.base')
+    config.include('idris.apps.course')
 
     config.set_authorization_policy(ACLAuthorizationPolicy())
     config.set_jwt_authentication_policy(settings['idris.secret'],

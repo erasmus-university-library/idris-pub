@@ -222,9 +222,3 @@ def course_royalty_calculator_factory(registry, course_year):
         if course_year == '2017':
             break
     return calculator
-
-def includeme(config):
-    config.registry.registerUtility(
-        ProCourseRoyaltyCalculator2017, ICourseRoyaltyCalculator, '2017')
-    config.registry.registerUtility(
-        ProCourseRoyaltyCalculator2018, ICourseRoyaltyCalculator, '2018')

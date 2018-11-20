@@ -7,15 +7,13 @@ from cornice.validators import colander_validator
 import colander
 from pylti.common import verify_request_common
 
-from idris.services.course_royalties import course_royalty_calculator_factory
-from idris.resources import ResourceFactory, CourseResource
+from idris.apps.course.services import course_royalty_calculator_factory
+from idris.resources import ResourceFactory
+from idris.apps.course.resources import CourseResource
 from idris.exceptions import StorageError
 from idris.models import Work
 from idris.services.lookup import lookup_factory, LookupError
 from idris.utils import (ErrorResponseSchema,
-                         StatusResponseSchema,
-                         OKStatusResponseSchema,
-                         OKStatus,
                          JsonMappingSchemaSerializerMixin,
                          colander_bound_repository_body_validator)
 

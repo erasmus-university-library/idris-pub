@@ -1,5 +1,5 @@
 from idris import main
-from idris.services.course_royalties import course_royalty_calculator_factory
+from idris.apps.course.services import course_royalty_calculator_factory
 from core import BaseTest
 
 class CourseRoyaltiesTest(BaseTest):
