@@ -1,5 +1,5 @@
 import os
-from core import BaseTest
+from core import BaseTest, no_google_credentials
 import requests
 
 import pytest
@@ -7,6 +7,7 @@ import pytest
 
 @pytest.mark.skipif(os.environ.get('TESTENV') == 'travis',
                     reason='No GCP support when running in Travis')
+@no_google_credentials
 class GCSBlobStorageTest(BaseTest):
 
     def app_settings(self):
