@@ -44,7 +44,6 @@ class CrossRefLookupTest(BaseTest):
         assert result['title'] == 'Network Concepts'
         assert result['type'] == 'bookChapter'
         assert result['issued'] == datetime.date(2003, 4, 2)
-        import pdb;pdb.set_trace()
 
 
     def test_crossref_notfound(self):

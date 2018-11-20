@@ -50,7 +50,7 @@ class CourseLTIAuthTest(BaseTest):
         self.api.put_json('/api/v1/schemes/settings',
                           settings,
                           headers=headers)
-        url = 'http://unittest.localhost/api/v1/auth/lti'
+        url = 'https://unittest.localhost/api/v1/auth/lti'
         params = self.generate_lti_request(url, 'foobar-1', 'sekret')
         out = self.api.get('/api/v1/auth/lti?%s' % params)
         assert out.json['status'] == 'ok'
@@ -84,5 +84,5 @@ class CourseLTIAuthTest(BaseTest):
         assert 'owner:course:%s' % course_id in info['principals']
         assert out.status_code == 303
         assert out.headers['Location'] == (
-            'http://unittest.localhost/course/?token=%s'
+            'http://unittest.localhost/course/?token=%s&embed=true'
             '#/group/1/course/1') % out.json['token']

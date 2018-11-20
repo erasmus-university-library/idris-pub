@@ -146,12 +146,11 @@ def lti_login_view_get(request):
 @lti_login.post(tags=['auth'])
 def lti_login_view(request):
     settings = request.repository.settings
+
     if settings['course_lti_enabled'] is not True:
         raise HTTPForbidden('Not Enabled')
     params = dict(request.GET)
     params.update(dict(parse_qsl(request.body.decode('utf8'))))
-
-
     import logging
     logging.info('url: %s' % request.url)
     logging.info('scheme: %s' % request.scheme)
