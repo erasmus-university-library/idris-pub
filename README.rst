@@ -34,6 +34,7 @@ Setting up Idris API
 
 * Create a PostgreSQL database with the same user/password as the idris-dev.ini
 file (Have a look at the psql commands in the travis.yaml file)::
+
   pg_config
   psql -c 'CREATE DATABASE idris;' -U postgres
   psql -c "CREATE USER idris WITH PASSWORD '<password>'" -U postgres
