@@ -158,10 +158,10 @@ class FileUploadField extends React.Component {
 				is_finalized === false ? 'Finishing Upload': 'Finished'}
 			    </Typography>
 			    <br/>
-			      {is_finalized === true ?
-			      <LinearProgress variant="determinate" value={progress}/>
-			       :
+			      {is_uploaded === true && is_finalized === false ?
 			      <CircularProgress variant="indeterminate" />
+			       :
+			      <LinearProgress variant="determinate" value={progress}/>
 				}
 			</div>
 			}

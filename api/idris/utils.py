@@ -1,3 +1,5 @@
+import os
+import json
 from infinity import is_infinite
 
 import colander
@@ -21,6 +23,38 @@ OKStatus = colander.SchemaNode(colander.String(),
                                validator=colander.OneOf(['ok']))
 ErrorStatus = colander.SchemaNode(colander.String(),
                                   validator=colander.OneOf(['error']))
+
+
+WEBINDEXTEMPLATES = {}
+
+def load_web_index_template(filename='index.html', config=None):
+    """Loads/Caches the index.html file from the dist/web
+    directory, and rewrites the asset paths to the /static dir.
+
+    Note that this is only updated on server startup.
+    """
+    html = WEBINDEXTEMPLATES.get(filename)
+    if html is None:
+        dir_name = os.path.join(os.path.dirname(__file__),
+                                'static',
+                                'dist',
+                                'web')
+        manifest = json.load(open(os.path.join(dir_name, 'manifest.json')))
+        with open(os.path.join(dir_name, filename), 'r') as fp:
+            html = fp.read()
+
+        for static_file in manifest.values():
+            if static_file in html:
+                html = html.replace(static_file, '/static/%s' % static_file)
+        WEBINDEXTEMPLATES[filename] = html
+
+    start = html.find('CONFIG=')
+    if start != -1:
+        end = html.find('<', start)
+        html = '%sCONFIG=%s;%s' % (html[:start],
+                                   json.dumps(config or {}),
+                                   html[end:])
+    return html
 
 
 class JsonMappingSchemaSerializerMixin(object):

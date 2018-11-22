@@ -6,6 +6,10 @@ from core import BaseTest
 
 class CourseLTIAuthTest(BaseTest):
 
+    def setUp(self):
+        return super(CourseLTIAuthTest, self).setUp(app_name='course')
+
+
     def generate_lti_request(self, url, consumer_key, consumer_secret):
         """
         This code generated valid LTI 1.0 basic-lti-launch-request request
@@ -39,20 +43,25 @@ class CourseLTIAuthTest(BaseTest):
         signature = client.sign("{}?{}".format(url, urlparams))
         return signature[0].split('?', 1)[1]
 
+    def test_lti_config(self):
+        out = self.api.get('/lti.xml')
+        assert out.content_type == 'application/xml'
+        assert '<cartridge_basiclti_link' in out.text
+
+
     def test_lti_oauth_request(self):
         # first add some course settings to enable the lti authentication
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         settings = self.api.get('/api/v1/schemes/settings',
                                 headers=headers).json
         settings['course_lti_enabled'] = True
-        settings['course_lti_redirect_url'] = '/course/'
         settings['course_lti_secret'] = 'sekret'
         self.api.put_json('/api/v1/schemes/settings',
                           settings,
                           headers=headers)
-        url = 'https://unittest.localhost/api/v1/auth/lti'
+        url = 'https://unittest.localhost/lti'
         params = self.generate_lti_request(url, 'foobar-1', 'sekret')
-        out = self.api.get('/api/v1/auth/lti?%s' % params)
+        out = self.api.get('/lti?%s' % params)
         assert out.json['status'] == 'ok'
         info = jwt.decode(out.json['token'], verify=False)
         assert 'group:course:staff' in info['principals']
@@ -78,11 +87,13 @@ class CourseLTIAuthTest(BaseTest):
             headers=headers,
             status=201)
         course_id = out.json['id']
-        out = self.api.get('/api/v1/auth/lti?%s' % params)
+        out = self.api.get('/lti?%s' % params)
         assert out.json['status'] == 'ok'
         info = jwt.decode(out.json['token'], verify=False)
         assert 'owner:course:%s' % course_id in info['principals']
         assert out.status_code == 303
         assert out.headers['Location'] == (
-            'http://unittest.localhost/course/?token=%s&embed=true'
+            'https://unittest.localhost/?token=%s&embed=true'
             '#/group/1/course/1') % out.json['token']
+        # note that the token is also set as a cookie
+        out.json['token'] in out.headers['Set-Cookie']

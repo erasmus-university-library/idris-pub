@@ -265,6 +265,7 @@ class CourseListing extends Component {
 	  <SortableItem key={item.id}
 			index={index}
 			id={item.target_id}
+			courseId={this.props.id}
 			comment={item.comment}
 			module={item.module}
 			draggable={this.state.draggableTocItem === item.target_id}

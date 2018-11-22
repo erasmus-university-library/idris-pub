@@ -15,7 +15,7 @@ module.exports = {
   entry: path.join(__dirname, "src/index.js"),
   output: {
     path: path.join(__dirname, "../api/idris/static/dist/web"),
-    filename: "[name].[contenthash].js"
+    filename: "[name].[hash].js"
   },
   module: {
     rules: [
@@ -46,7 +46,12 @@ module.exports = {
 	use: [
 	  {
 	    loader: 'file-loader',
-	    options: {}
+	    options: {
+	      name: '[name].[hash].[ext]',
+	      publicPath: function(url) {
+	      return '/static/' + url;
+	      }
+	    }
 	  }
 	]
       },
@@ -83,7 +88,8 @@ module.exports = {
     extensions: [".js", ".jsx"]
   },
   devServer: {contentBase: __dirname + '/src',
-	      publicPath: '/' + (process.env.OUTPUT_PATH || 'edit') + '/',
+	      publicPath: '/static/',
+	      //publicPath: '/' + (process.env.OUTPUT_PATH || 'edit') + '/',
               allowedHosts: ['.localhost']},
   devtool: 'source-map'
 };

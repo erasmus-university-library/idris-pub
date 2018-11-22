@@ -47,7 +47,7 @@ class BaseTest(unittest.TestCase):
             })
         return settings
 
-    def setUp(self):
+    def setUp(self, app_name='base'):
         settings = self.app_settings()
 
         self.config = configure({}, **settings)
@@ -74,7 +74,7 @@ class BaseTest(unittest.TestCase):
             storage.create_repository(self.session,
                                       'unittest',
                                       'unittest.localhost',
-                                      'base')
+                                      app_name)
         else:
             storage.clear_repository(self.session, 'unittest')
 

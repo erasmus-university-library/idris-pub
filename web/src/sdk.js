@@ -103,7 +103,10 @@ export class IdrisSDK {
 	  port = ':6543';
 	}
       }
-      this.backendURL = url.protocol + '//' + url.hostname + port + '/api/v1';
+      this.url = url;
+      this.hostName = url.hostname + port ;
+      this.hostUrl = url.protocol + '//' + this.hostName;
+      this.backendURL = this.hostUrl + '/api/v1';
 
       this.login = this.login.bind(this);
       this.recordList = this.recordList.bind(this);
@@ -205,23 +208,16 @@ export class IdrisSDK {
 		 },
 		onProgress);
   }
-
-  blobDownload = function(blobId, name){
-    // note that the downloads api only works on firefox/chrome
-    browser.downloads.download(
-      {url: `${this.backendURL}/blob/records/${blobId}`,
-       filename: name,
-       headers: [{name: 'Authorization', value: `Bearer ${this.token}`}]
-      });
-
+  courseMaterialURL = function(courseId, materialId){
+    return `${this.hostUrl}/course/${courseId}/material/${materialId}`;
   }
 
-    clientConfig = function(){
-        return fetch(this.backendURL + '/client',
-                     {method: 'GET',
-                      mode: 'cors'})
+  clientConfig = function(){
+    return fetch(this.backendURL + '/client',
+                 {method: 'GET',
+                  mode: 'cors'})
 
-    }
+  }
 
 
   courseLoad = function(courseId, showRoyalties=true){

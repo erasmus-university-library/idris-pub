@@ -6,7 +6,7 @@ import sqlalchemy as sql
 from pyramid.security import Allow, Deny, Everyone, ALL_PERMISSIONS
 
 from idris.interfaces import IAppRoot
-from idris.resources import BaseResource
+from idris.resources import BaseResource, ResourceFactory
 from idris.models import Work
 
 @implementer(IAppRoot)
@@ -15,6 +15,8 @@ class CourseAppRoot(object):
         self.request = request
 
     def __getitem__(self, key):
+        if key == 'course':
+            return ResourceFactory(CourseResource, request=self.request)
         raise KeyError('no such page: %s' % key)
 
 class CourseResource(BaseResource):
@@ -255,6 +257,14 @@ class CourseResource(BaseResource):
                 data['link'] = 'https://doi.org/%s' % data['doi']
             work.setdefault('identifiers', []).append({
                 'type': 'doi', 'value': data['doi']})
+        if data.get('blob_id'):
+            # blobs have precedence over (doi) links
+            work.setdefault('expressions', []).append({
+                'name': 'fulltext',
+                'type': 'publication',
+                'format': 'published',
+                'access': 'public',
+                'blob_id': data['blob_id']})
         if data.get('link'):
             work.setdefault('expressions', []).append({
                 'name': 'fulltext',
@@ -262,13 +272,6 @@ class CourseResource(BaseResource):
                 'format': 'published',
                 'access': 'public',
                 'uri': data['link']})
-        if data.get('blob_id'):
-            work.setdefault('expressions', []).append({
-                'name': 'fulltext',
-                'type': 'publication',
-                'format': 'published',
-                'access': 'public',
-                'blob_id': data['blob_id']})
         return Work.from_dict(work)
 
     def from_course_data(self, data):

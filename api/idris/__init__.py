@@ -7,7 +7,10 @@ from idris.security import add_role_principals
 from idris.interfaces import IAppRoot
 
 def root_factory(request):
-    app_name = request.repository.app_name
+    if request.repository is None:
+        app_name = 'base'
+    else:
+        app_name = request.repository.app_name
     AppRoot = request.registry.queryUtility(IAppRoot, app_name)
     return AppRoot(request)
 
@@ -41,13 +44,16 @@ def configure(global_config, **settings):
     config.scan("idris.views")
 
     config.add_route('debug', '/debug')
-    config.add_route('liveness_check', '/check/live')
-    config.add_route('readiness_check', '/check/ready')
+    config.add_route('liveness_check', '/_live')
+    config.add_route('readiness_check', '/_ready')
 
     config.add_route('api_without_slash', '/api')
     config.add_view(
         lambda _, __: HTTPFound('/api/'), route_name='api_without_slash')
     config.add_static_view('api', path='idris:static/dist/swagger')
+
+    config.add_static_view('static', path='idris:static/dist/web')
+
 
     config.add_route('edit_without_slash', '/edit')
     config.add_view(

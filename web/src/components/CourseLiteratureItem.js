@@ -2,12 +2,10 @@ import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 
 import { SortableHandle } from 'react-sortable-hoc';
-import { Link } from 'react-router-dom';
 
 import Avatar from '@material-ui/core/Avatar';
 import BookIcon from '@material-ui/icons/Book';
 import BookmarkBorderIcon from '@material-ui/icons/BookmarkBorder';
-import Chip from '@material-ui/core/Chip';
 import EditIcon from '@material-ui/icons/Edit';
 import IconButton from '@material-ui/core/IconButton';
 import ListItem from '@material-ui/core/ListItem';
@@ -24,6 +22,10 @@ import Typography from '@material-ui/core/Typography';
 import UnfoldMoreIcon from '@material-ui/icons/UnfoldMore';
 
 import Citation from './widgets/Citation';
+import ExternalLink from './widgets/ExternalLink';
+
+import IdrisSDK from '../sdk.js';
+const sdk = new IdrisSDK();
 
 const styles = theme => ({
   optionsButton: {
@@ -32,6 +34,9 @@ const styles = theme => ({
   moduleItem: {
     marginTop: '16px',
   },
+  RoyaltyAmmountAvatarBig: {
+    fontSize: '0.9rem'
+  },
   RoyaltyAmmountAvatar: {
     fontSize: '0.75rem'
   },
@@ -39,7 +44,7 @@ const styles = theme => ({
     fontSize: '0.65rem'
   },
   RoyaltyAmmountAvatarWarning: {
-    fontSize: '0.75rem',
+    fontSize: '0.9rem',
     backgroundColor: '#B00020'
   },
 });
@@ -54,9 +59,14 @@ const DragHandle = SortableHandle(() => (
 export class CourseLiteratureRoyaltyAvatar extends Component {
   render(){
     const { warning_message, tariff, tariff_message, excempt_message, cost, classes } = this.props;
-    const ammount = `€ ${(cost/100).toFixed(2)}`;
-    const ammountStyle =  ammount.length > 6 ?
+    let ammount = `€ ${(cost/100).toFixed(2)}`;
+    let ammountStyle =  ammount.length > 6 ?
 	  classes.RoyaltyAmmountAvatarSmall : classes.RoyaltyAmmountAvatar;
+    if (cost === 0){
+      ammount = '€ 0';
+      ammountStyle = classes.RoyaltyAmmountAvatarBig;
+    }
+
 
     if ((warning_message || null) === null){
       return (
@@ -116,13 +126,16 @@ class CourseLiteratureItem extends Component {
 
 
   render() {
-    const { classes, id, comment, module, tocItem, draggable } = this.props;
+    const { classes, id, comment, module, tocItem, draggable, courseId } = this.props;
     const royalties = tocItem.royalties || null;
     const { optionsAnchorEl } = this.state;
     const resultEl = [];
     if (id) {
       resultEl.push(
-	<ListItem key={id} button to={`/work/${id}`} component={Link}>
+	<ListItem key={id}
+		  button
+		  to={sdk.courseMaterialURL(courseId, id)}
+		  component={ExternalLink}>
 	  <ListItemIcon>
 	    { royalties !== null ?
 	      <CourseLiteratureRoyaltyAvatar {...royalties} />

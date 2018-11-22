@@ -384,6 +384,9 @@ def includeme(config):
         return session
 
     def new_repository(request):
+        if request.path.startswith('/_'):
+            return
+
         session = request.dbsession
         namespace = request.environ['idris.repository.namespace']
         rev = request.environ['idris.repository.config_revision']

@@ -327,7 +327,7 @@ class CourseLiteratureAddForm extends Component {
 		      label="Year"
 		      value={material.year}
 		      className={classes.gutteredLeftField}
-		      onChange={this.handleChange('starting')}
+		      onChange={this.handleChange('year')}
 		      margin="dense"
 			/>
 		    : null }

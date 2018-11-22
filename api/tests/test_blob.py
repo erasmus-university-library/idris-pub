@@ -15,8 +15,6 @@ class BlobStorageTest(BaseTest):
                                  headers=headers,
                                  status=201)
         blob_id = out.json['id']
-        # note that the id returned is pseudo randomized
-        assert blob_id > 1
         upload_url = out.json['upload_url']
         # upload the raw data using PUT to the upload url
         upload_headers = headers.copy()

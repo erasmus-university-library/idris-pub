@@ -20,8 +20,13 @@ from idris.exceptions import StorageError
 
 
 class ResourceFactory(object):
-    def __init__(self, resource_class):
+    def __init__(self, resource_class, request=None):
         self._class = resource_class
+        self.request = request # used when routed through traversal
+
+    def __getitem__(self, key):
+        # used when routed through traversal
+        return self(self.request, key)
 
     def __call__(self, request, key=None):
         key = key or request.matchdict.get('id')

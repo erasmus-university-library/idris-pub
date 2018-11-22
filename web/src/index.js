@@ -37,10 +37,7 @@ class AppChooser extends Component {
     if (history === '/') {
       history = null;
     }
-    let path = url.pathname.split('/')[1];
-    if (!path){
-      path = 'root';
-    }
+    const path = CONFIG.app;
     const App = this.props[path];
     return <App token={token} path={history} embed={embed}/>
   }

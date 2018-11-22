@@ -11,7 +11,7 @@ import { courseNavigation } from '../actions';
 class CourseRecord extends Component {
 
   componentDidMount(){
-    if (this.props.navigation.length == 0){
+    if (this.props.navigation.length == 0 && !this.props.embed){
       this.props.loadCourseNavigation();
     }
   }

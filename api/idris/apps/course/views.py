@@ -1,26 +1,196 @@
 import json
+from urllib.parse import parse_qsl
 
 from cornice import Service
 from cornice.resource import resource, view
 from cornice.validators import colander_validator
 import colander
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPForbidden
+from pylti.common import verify_request_common
 
 from idris.apps.course.services import course_royalty_calculator_factory
-from idris.resources import ResourceFactory
-from idris.apps.course.resources import CourseResource
+from idris.resources import ResourceFactory, BlobResource
 from idris.exceptions import StorageError
-from idris.models import Work
+from idris.models import Work, Identifier, Group
 from idris.services.lookup import lookup_factory, LookupError
 from idris.utils import (ErrorResponseSchema,
                          JsonMappingSchemaSerializerMixin,
+                         load_web_index_template,
                          colander_bound_repository_body_validator)
-from idris.apps.course.resources import CourseAppRoot
+from idris.apps.course.resources import (
+    CourseAppRoot, CourseResource)
 
 @view_config(context=CourseAppRoot)
 def home_view(request):
-    raise HTTPFound('/course/')
+    config = {'app': 'course'}
+    html = load_web_index_template('index.html', config)
+    request.response.content_type = 'text/html'
+    request.response.write(html.encode('utf8'))
+    return request.response
+
+@view_config(context=CourseAppRoot, name='edit')
+def edit_view(request):
+    config = {'app': 'edit'}
+    html = load_web_index_template('index.html', config)
+    request.response.content_type = 'text/html'
+    request.response.write(html.encode('utf8'))
+    return request.response
+
+@view_config(context=CourseResource)
+def course_view(request):
+    course = request.context.model
+    group_id = course.contributors[0].id
+    edit_url = '/#/group/%s/course/%s' % (
+        group_id, course.id)
+    raise HTTPFound(edit_url)
+
+@view_config(context=CourseResource, name='material')
+def course_material_view(request):
+    course = request.context.model
+    material_id = int(request.subpath[0])
+    for material_toc in course.relations:
+        if material_toc.target_id == material_id:
+            break
+    else:
+        raise HTTPNotFound(
+            'Course %s has no material %s' % (
+                course.id, material_id))
+    material = request.context.get(material_id)
+    if len(material.expressions) == 0:
+        raise HTTPNotFound(
+            'CourseMaterial %s has no expressions' % (
+                material_id,))
+
+    expression = material.expressions[0]
+    if expression.blob_id is None and expression.uri:
+        raise HTTPFound(expression.uri)
+    elif expression.blob_id:
+        blob = ResourceFactory(BlobResource)(request, expression.blob_id)
+        return request.repository.blob.serve_blob(
+            request,
+            request.response,
+            blob)
+    else:
+        raise HTTPNotFound(
+            'CourseMaterial %s first expression has no content' % (
+                material_id,))
+
+@view_config(context=CourseAppRoot, name='lti.xml')
+def lti_config_view(request):
+    request.response.content_type = 'application/xml'
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    <cartridge_basiclti_link xmlns="http://www.imsglobal.org/xsd/imslticc_v1p0"
+    xmlns:blti = "http://www.imsglobal.org/xsd/imsbasiclti_v1p0"
+    xmlns:lticm ="http://www.imsglobal.org/xsd/imslticm_v1p0"
+    xmlns:lticp ="http://www.imsglobal.org/xsd/imslticp_v1p0"
+    xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation = "http://www.imsglobal.org/xsd/imslticc_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticc_v1p0.xsd
+        http://www.imsglobal.org/xsd/imsbasiclti_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imsbasiclti_v1p0.xsd
+            http://www.imsglobal.org/xsd/imslticm_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticm_v1p0.xsd">
+    <blti:title>Literature List Test</blti:title>
+    <blti:description>Literature List Test</blti:description>
+    <blti:extensions platform="canvas.instructure.com">
+    <lticm:property name="privacy_level">public</lticm:property>
+    <lticm:property name="domain">idris.pub</lticm:property>
+
+    <lticm:options name="course_navigation">
+    <lticm:property name="enabled">true</lticm:property>
+    <lticm:property name="text">Literature</lticm:property>
+    <lticm:property name="url">https://idris.pub/lti</lticm:property>
+    </lticm:options>
+
+      <lticm:options name="editor_button">
+      <lticm:property name="canvas_icon_class">icon-lti</lticm:property>
+      <lticm:property name="icon_url">http://lti-tool-provider-example.herokuapp.com/selector.png?editor_button</lticm:property>
+      <lticm:property name="message_type">ContentItemSelectionRequest</lticm:property>
+      <lticm:property name="text">Course Literature</lticm:property>
+      <lticm:property name="url">https://idris.pub/lti</lticm:property>
+      </lticm:options>
+
+    </blti:extensions>
+    </cartridge_basiclti_link>
+
+
+
+
+    """
+    request.response.write(xml.encode('utf8'))
+    return request.response
+
+@view_config(context=CourseAppRoot, name='lti')
+def lti_login_view(request):
+    settings = request.repository.settings
+    params = dict(request.GET)
+    params.update(dict(parse_qsl(request.body.decode('utf8'),
+                                 keep_blank_values=True)))
+    import logging
+    logging.info('url: %s' % request.url)
+    logging.info('scheme: %s' % request.scheme)
+    logging.info(request.environ)
+
+    url = request.url.replace('http://', 'https://')
+
+
+    consumer_key = params['oauth_consumer_key']
+    consumers = {consumer_key: {
+        'secret': settings['course_lti_secret']}}
+    try:
+        is_valid = verify_request_common(consumers,
+                                         url,
+                                         request.method,
+                                         dict(request.headers),
+                                         params)
+    except Exception:
+        is_valid = False
+    if not is_valid:
+        logging.info(params)
+        logging.info(request.headers)
+        logging.info(url)
+        raise HTTPForbidden('Unauthorized')
+    user_id = params['user_id']
+    principals = []
+
+    group = request.dbsession.query(Group).filter(
+        Group.id==consumer_key.split('-')[-1]).first()
+
+    if group:
+        principals.append('member:group:%s' % group.id)
+
+    course = request.dbsession.query(Identifier).filter(
+        Identifier.type=='lti',
+        Identifier.value==params['resource_link_id']).first()
+    if course:
+        course = course.work_id
+
+    if (params['roles'] == 'Instructor' or params['roles'] == 'Administrator'):
+        principals.append('group:course:staff')
+        # XXX for testing
+        principals.append('group:admin')
+        if course:
+            principals.append('owner:course:%s' % course)
+    elif (params['roles'] == 'Student' or params['roles'] == 'Learner'):
+        principals.append('group:course:student')
+        if course:
+            principals.append('viewer:course:%s' % course)
+    token = request.create_jwt_token(user_id, principals=principals)
+    redirect_url = 'https://%s/?token=%s&embed=true' % (request.host, token)
+    redirect_url = redirect_url.replace('http://', 'https://')
+    if group:
+        redirect_url = '%s#/group/%s' % (redirect_url, group.id)
+    if course:
+        redirect_url = '%s/course/%s' % (redirect_url, course)
+    request.response.content_type = 'application/json'
+    request.response.write(
+        json.dumps({'status': 'ok', 'token': token}).encode('utf8'))
+    request.response.status_code = 303
+    request.response.headers['Location'] = redirect_url
+    request.response.set_cookie('token',
+                                value=token,
+                                max_age=3600,
+                                secure=True,
+                                samesite='Strict')
+    return request.response
 
 
 class CourseSchema(colander.MappingSchema,

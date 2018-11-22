@@ -30,7 +30,6 @@ export const updateDetailState = createAction('RECORD_DETAIL_UPDATE',
 
 export const setUser = createAction('USER_UPDATE', (user) => {
   sdk.token = user.token;
-  console.log('setting user token', user.token);
   return user});
 
 
@@ -176,7 +175,6 @@ export const doLogin = (user, password) => {
 
 export const initializeApp = (token) => {
   return dispatch => {
-    console.log('init', token);
         return sdk.clientConfig()
                   .then(response => response.json(),
                         error => dispatch(errorMessage(error)))
