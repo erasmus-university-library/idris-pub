@@ -24,6 +24,37 @@ class CourseResource(BaseResource):
     key_col_name = 'id'
 
 
+    def __acl__(self):
+
+        teacher_permissions = ['course_view',
+                               'course_update',
+                               'course_material_view',
+                               'course_material_add',
+                               'add_blob',
+                               'finalize_blob']
+
+        if self.model and self.model.type != 'course':
+            # only course works can be accessed through this api
+            yield (Deny, Everyone, ALL_PERMISSIONS)
+        yield (Allow, 'group:admin', ALL_PERMISSIONS)
+        if self.model:
+            yield (Allow,
+                   'teacher:course:%s' % self.model.id,
+                   teacher_permissions)
+            if self.model.last_user_id:
+                # when a course is newly created, there is no
+                # 'teacher:course:id' principal yet,
+                # however we can still grant access to the
+                # last_user_id principal
+                yield (Allow,
+                       'user:%s' % self.model.last_user_id,
+                       teacher_permissions)
+            yield (Allow,
+                   'student:course:%s' % self.model.id,
+                   ['course_view', 'course_material_view'])
+        yield (Allow, 'group:teacher', 'course_add')
+        yield (Allow, 'system.Authenticated', 'view')
+
     def toc_items_royalty(self):
         query = sql.text("""
         SELECT
@@ -203,15 +234,6 @@ class CourseResource(BaseResource):
         nav = list(counts.values())
         nav.sort(key=itemgetter('name'))
         return nav
-
-    def __acl__(self):
-        if self.model:
-            if self.model.type != 'course':
-                # only course works can be accessed through this api
-                yield (Deny, Everyone, ALL_PERMISSIONS)
-
-        yield (Allow, 'system.Authenticated', 'view')
-        yield (Allow, 'group:admin', ALL_PERMISSIONS)
 
     def from_course_material_data(self, data):
         """ Import material data into work record

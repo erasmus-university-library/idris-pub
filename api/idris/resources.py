@@ -30,9 +30,13 @@ class ResourceFactory(object):
 
     def __call__(self, request, key=None):
         key = key or request.matchdict.get('id')
+        user_id = request.authenticated_userid
+        if user_id and user_id.startswith('user:'):
+            user_id = user_id[5:]
         resource = self._class(request.registry,
                                request.dbsession,
-                               key)
+                               key,
+                               user_id=user_id)
         if key and resource.model is None:
             request.errors.status = 404
             request.errors.add('path', 'id', 'The resource id does not exist')
@@ -44,9 +48,11 @@ class BaseResource(object):
     orm_class = None
     key_col_name = None
 
-    def __init__(self, registry, session, key=None, model=None):
+    def __init__(self, registry, session, key=None, model=None, user_id=None):
         self.session = session
         self.registry = registry
+        self.user_id = user_id
+
         if model:
             self.model = model
         elif key:
@@ -122,6 +128,11 @@ class BaseResource(object):
             else:
                 permission = 'edit'
             model = self.__class__.pre_put_hook(model)
+            if hasattr(model, 'last_user_id'):
+                model.last_user_id = self.user_id
+            if hasattr(model, 'last_revision'):
+                model.last_revision = (model.last_revision or 0) + 1
+
             self.session.add(model)
             if principals and not self.is_permitted(
                     model, principals, permission):

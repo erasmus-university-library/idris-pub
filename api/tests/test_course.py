@@ -2,9 +2,9 @@ from urllib.parse import quote
 from core import BaseTest
 
 
-class CourseWebTest(BaseTest):
+class BaseCourseTest(BaseTest):
     def setUp(self):
-        super(CourseWebTest, self).setUp()
+        super(BaseCourseTest, self).setUp(app_name='course')
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.post_json('/api/v1/person/records',
                                  {'family_name': 'Doe',
@@ -52,6 +52,8 @@ class CourseWebTest(BaseTest):
             headers=headers,
             status=201)
         self.course_id = out.json['id']
+
+class CourseWebTest(BaseCourseTest):
 
     def test_course_navigation(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())

@@ -84,10 +84,12 @@ class BaseTest(unittest.TestCase):
                                       'admin')
         transaction.commit()
 
-    def admin_token(self):
+    def admin_token(self, on_behalf_of=None):
         return self.api.post_json(
             '/api/v1/auth/login',
-            {'user': 'admin', 'password': 'admin'}).json['token']
+            {'user': 'admin',
+             'password': 'admin',
+             'on_behalf_of': on_behalf_of or []}).json['token']
 
     def generate_test_token(self, user_group_password, owners=None):
         """Returns a token for owner / editor / admin / viewer

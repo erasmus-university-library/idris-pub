@@ -8,10 +8,12 @@ from sqlalchemy import (
     UnicodeText,
     Text,
     Date,
+    DateTime,
     Sequence,
     ForeignKey,
     CheckConstraint,
     text)
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, configure_mappers
 from sqlalchemy.schema import Index
 from sqlalchemy.orm.attributes import instance_dict
@@ -407,6 +409,11 @@ class Work(Base):
                              order_by='Relation.position',
                              collection_class=ordering_list('position'),
                              cascade='all, delete-orphan')
+
+    last_user_id = Column(Unicode(256), nullable=True)
+    last_modified = Column(DateTime, onupdate=func.timezone('utc', func.now()))
+    last_revision = Column(Integer, default=1)
+
     search_terms = Column(TSVECTOR)
 
     def to_dict(self):

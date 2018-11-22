@@ -110,10 +110,6 @@ def lti_config_view(request):
 
     </blti:extensions>
     </cartridge_basiclti_link>
-
-
-
-
     """
     request.response.write(xml.encode('utf8'))
     return request.response
@@ -149,7 +145,7 @@ def lti_login_view(request):
         logging.info(url)
         raise HTTPForbidden('Unauthorized')
     user_id = params['user_id']
-    principals = []
+    principals = ['user:%s' % user_id]
 
     group = request.dbsession.query(Group).filter(
         Group.id==consumer_key.split('-')[-1]).first()
@@ -164,15 +160,14 @@ def lti_login_view(request):
         course = course.work_id
 
     if (params['roles'] == 'Instructor' or params['roles'] == 'Administrator'):
-        principals.append('group:course:staff')
+        principals.append('group:teacher')
         # XXX for testing
-        principals.append('group:admin')
+        # principals.append('group:admin')
         if course:
-            principals.append('owner:course:%s' % course)
+            principals.append('teacher:course:%s' % course)
     elif (params['roles'] == 'Student' or params['roles'] == 'Learner'):
-        principals.append('group:course:student')
         if course:
-            principals.append('viewer:course:%s' % course)
+            principals.append('student:course:%s' % course)
     token = request.create_jwt_token(user_id, principals=principals)
     redirect_url = 'https://%s/?token=%s&embed=true' % (request.host, token)
     redirect_url = redirect_url.replace('http://', 'https://')

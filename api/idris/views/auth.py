@@ -15,6 +15,9 @@ from idris.utils import ErrorResponseSchema, OKStatus
 class AuthLoginSchema(colander.MappingSchema):
     user = colander.SchemaNode(colander.String())
     password = colander.SchemaNode(colander.String())
+    @colander.instantiate(missing=colander.drop)
+    class on_behalf_of(colander.SequenceSchema):
+        principal = colander.SchemaNode(colander.String())
 
 class AuthRenewSchema(colander.MappingSchema):
     token = colander.SchemaNode(colander.String())
@@ -42,6 +45,11 @@ def login_view(request):
     if not request.context.valid_user(user_id, credentials):
         raise HTTPForbidden('Unauthorized')
     principals = request.context.principals(user_id)
+    if request.validated.get('on_behalf_of') and 'group:admin' in principals:
+        # admins can change to any principals thery desire
+        principals = request.validated['on_behalf_of']
+        user_id = [p for p in principals if p.startswith('user:')][0]
+
     result = {'status': 'ok',
               'token': request.create_jwt_token(user_id, principals=principals)}
 
