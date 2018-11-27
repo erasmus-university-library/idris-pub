@@ -9,6 +9,7 @@
     "autosuggest-highlight": "^3.1.1",
     "custom-react-scripts": "0.2.1",
     "fetch": "^1.1.0",
+    "jwt-decode": "^2.2.0",
     "lodash": "^4.17.4",
     "pretty-bytes": "^5.1.0",
     "raw-loader": "^0.5.1",

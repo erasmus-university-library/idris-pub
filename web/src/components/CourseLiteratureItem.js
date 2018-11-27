@@ -126,7 +126,7 @@ class CourseLiteratureItem extends Component {
 
 
   render() {
-    const { classes, id, comment, module, tocItem, draggable, courseId } = this.props;
+    const { classes, id, comment, module, tocItem, draggable, courseId, isStudent } = this.props;
     const royalties = tocItem.royalties || null;
     const { optionsAnchorEl } = this.state;
     const resultEl = [];
@@ -137,14 +137,15 @@ class CourseLiteratureItem extends Component {
 		  to={sdk.courseMaterialURL(courseId, id)}
 		  component={ExternalLink}>
 	  <ListItemIcon>
-	    { royalties !== null ?
+	    { isStudent ?
+	      <BookmarkBorderIcon /> :
 	      <CourseLiteratureRoyaltyAvatar {...royalties} />
-		: <BookmarkBorderIcon />
 	      }
 	  </ListItemIcon>
   	  <ListItemText  inset
 			 primary={<Citation citation={tocItem} />}
 			 secondary={comment}/>
+	  { isStudent ? null :
  	  <ListItemSecondaryAction>
 	  { draggable ?
 	    <DragHandle/>
@@ -172,7 +173,8 @@ class CourseLiteratureItem extends Component {
 	      </Menu>
 	      </div>
 	    }
-	  </ListItemSecondaryAction>
+	    </ListItemSecondaryAction>
+	  }
 	</ListItem>
       );
       //resultEl.push(<Divider inset key={`${id}-divider`} component="li" />);
@@ -183,6 +185,7 @@ class CourseLiteratureItem extends Component {
 	  <ListItemIcon><BookIcon /></ListItemIcon>
   	  <ListItemText primary={<Typography variant="headline">{module}</Typography>}
 	                secondary={comment} />
+	  { isStudent ? null :
 	  <ListItemSecondaryAction>
 	  { draggable ?
 	    <DragHandle/>
@@ -214,7 +217,8 @@ class CourseLiteratureItem extends Component {
 	      </MenuItem>
 	      </Menu>
 	    </div>}
-	  </ListItemSecondaryAction>
+	    </ListItemSecondaryAction>
+	  }
  	</ListItem>
       )
     }

@@ -384,7 +384,8 @@ def includeme(config):
         return session
 
     def new_repository(request):
-        if request.path.startswith('/_'):
+        if (request.path.startswith('/_') and
+            not request.path.startswith('/__api__')):
             return
 
         session = request.dbsession

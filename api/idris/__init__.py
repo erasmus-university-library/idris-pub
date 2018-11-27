@@ -14,6 +14,17 @@ def root_factory(request):
     AppRoot = request.registry.queryUtility(IAppRoot, app_name)
     return AppRoot(request)
 
+def token_tween_factory(handler, registry):
+    def token_tween(request):
+        # if there is no authorization header, but there is a token cookie
+        # use that instead
+        if (request.headers.get('authorization') is None and
+            request.cookies.get('token') is not None):
+                request.headers['authorization'] = (
+                    'Bearer %s' % request.cookies['token'])
+        return handler(request)
+    return token_tween
+
 def configure(global_config, **settings):
 
     gcp_project = settings.get('idris.google_cloud_project')
@@ -24,6 +35,7 @@ def configure(global_config, **settings):
             'GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(gcp_auth)
 
     config = Configurator(settings=settings, root_factory=root_factory)
+    config.add_tween('idris.token_tween_factory')
     config.include('cornice')
     config.include('cornice_swagger')
     config.include('pyramid_chameleon')

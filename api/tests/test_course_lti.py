@@ -64,9 +64,9 @@ class CourseLTIAuthTest(BaseTest):
         out = self.api.get('/lti?%s' % params)
         assert out.json['status'] == 'ok'
         info = jwt.decode(out.json['token'], verify=False)
-        assert 'group:course:staff' in info['principals']
+        assert 'group:teacher' in info['principals']
         assert info['sub'] == '008437924c9852377e8994829aaac7a1'
-        assert 'owner:course:1' not in info['principals']
+        assert 'teacher:course:1' not in info['principals']
         # now let's add a course with resource_link_id
         # and validate again
         out = self.api.post_json('/api/v1/group/records',
@@ -90,7 +90,7 @@ class CourseLTIAuthTest(BaseTest):
         out = self.api.get('/lti?%s' % params)
         assert out.json['status'] == 'ok'
         info = jwt.decode(out.json['token'], verify=False)
-        assert 'owner:course:%s' % course_id in info['principals']
+        assert 'teacher:course:%s' % course_id in info['principals']
         assert out.status_code == 303
         assert out.headers['Location'] == (
             'https://unittest.localhost/?token=%s&embed=true'

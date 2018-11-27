@@ -85,6 +85,7 @@ class CourseListing extends Component {
   tocItems = {};
 
   componentDidMount = (props) => {
+    this.isStudent = sdk.decodeToken().principals.indexOf('group:student') === -1 ? false: true;
     this.loadCourse()
   }
 
@@ -137,7 +138,7 @@ class CourseListing extends Component {
 
   loadCourse = () => {
     this.setState({loading: true});
-    sdk.courseLoad(this.props.id).then(
+    sdk.courseLoad(this.props.id, !this.isStudent).then(
       response => response.json(),
       error => {console.log('LoadCourse Error: ' + error)})
       .then(data => {
@@ -265,6 +266,7 @@ class CourseListing extends Component {
 	  <SortableItem key={item.id}
 			index={index}
 			id={item.target_id}
+			isStudent={this.isStudent}
 			courseId={this.props.id}
 			comment={item.comment}
 			module={item.module}

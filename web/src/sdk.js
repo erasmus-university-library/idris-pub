@@ -3,6 +3,8 @@ import CSL from 'citeproc';
 import {Parser as HtmlToReactParser} from 'html-to-react';
 const htmlToReactParser = new HtmlToReactParser();
 
+import jwtDecode from 'jwt-decode';
+
 let sdk_client = null;
 let citeproc_client = null;
 
@@ -118,13 +120,17 @@ export class IdrisSDK {
 
 
 
-    login = function(user, password) {
-        return fetch(this.backendURL + '/auth/login',
-                     {method: 'POST',
-                      mode: 'cors',
-                      headers: {'Content-Type': 'application/json'},
-                      body: JSON.stringify({user:user, password:password})});
+  login = function(user, password) {
+    return fetch(this.backendURL + '/auth/login',
+                 {method: 'POST',
+                  mode: 'cors',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({user:user, password:password})});
     }
+
+  decodeToken = function(){
+    return jwtDecode(this.token)
+  }
 
     recordList = function(type, query='', filters=null, offset=0, limit=10) {
         if (type === 'subgroup'){

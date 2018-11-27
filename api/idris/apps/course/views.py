@@ -45,7 +45,9 @@ def course_view(request):
         group_id, course.id)
     raise HTTPFound(edit_url)
 
-@view_config(context=CourseResource, name='material')
+@view_config(context=CourseResource,
+             name='material',
+             permission='course_material_view')
 def course_material_view(request):
     course = request.context.model
     material_id = int(request.subpath[0])
@@ -166,6 +168,7 @@ def lti_login_view(request):
         if course:
             principals.append('teacher:course:%s' % course)
     elif (params['roles'] == 'Student' or params['roles'] == 'Learner'):
+        principals.append('group:student')
         if course:
             principals.append('student:course:%s' % course)
     token = request.create_jwt_token(user_id, principals=principals)
@@ -180,11 +183,7 @@ def lti_login_view(request):
         json.dumps({'status': 'ok', 'token': token}).encode('utf8'))
     request.response.status_code = 303
     request.response.headers['Location'] = redirect_url
-    request.response.set_cookie('token',
-                                value=token,
-                                max_age=3600,
-                                secure=True,
-                                samesite='Strict')
+    request.response.set_cookie('token', value=token)
     return request.response
 
 
