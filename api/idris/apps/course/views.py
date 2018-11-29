@@ -126,6 +126,8 @@ def lti_login_view(request):
     logging.info('url: %s' % request.url)
     logging.info('scheme: %s' % request.scheme)
     logging.info(request.environ)
+    logging.info(params)
+    logging.info('LTI post for course: %s' % params['resource_link_id'])
 
     url = request.url.replace('http://', 'https://')
 

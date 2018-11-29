@@ -11,6 +11,7 @@ from pyramid.httpexceptions import HTTPFound
 
 from zope.interface import implementer
 from google.cloud import storage
+from google.auth import app_engine
 
 from idris.interfaces import IBlobStoreBackend, IBlobTransform
 
@@ -129,7 +130,9 @@ class GCSBlobStore(object):
         self.bucket_name = '%s-%s' % (
             repo_config.registry.settings['idris.blob_root_prefix'],
             self.repository.namespace)
-        self.client = storage.Client()
+        self.client = storage.Client().from_service_account_json(
+            repo_config.registry.settings[
+                'idris.google_application_credentials'])
         self.bucket = self.client.get_bucket(self.bucket_name)
         self.blob_path = 'blobs'
 
@@ -167,7 +170,8 @@ class GCSBlobStore(object):
     def serve_blob(self, request, response, blob):
         blob = self.bucket.get_blob(self._blob_path(blob.model.id))
         signed_url = blob.generate_signed_url(
-            datetime.timedelta(minutes=15), 'GET')
+            datetime.timedelta(minutes=15),
+            method='GET')
         raise HTTPFound(location=signed_url)
 
 
