@@ -68,7 +68,7 @@ class CourseLiteratureAddForm extends Component {
   }
 
   handleChange = (name) => (event) => {
-    const material = this.state.material
+    const material = this.state.material;
     if (event.target.type === 'checkbox'){
       material[name] = event.target.checked;
     } else if (name === 'exception' && event.target.value === 'other'){
@@ -80,6 +80,25 @@ class CourseLiteratureAddForm extends Component {
     } else {
       material[name] = event.target.value;
     }
+    this.setState({material});
+  }
+
+  selectBookTitle = (event) => {
+    const bookTitle = event.target.value;
+    const material = this.state.material;
+    material.book_title = bookTitle;
+    let selectedToc = null;
+    Object.values(this.props.tocItems).forEach(toc => {
+      if (toc.type === 'book-chapter' && toc['container-title'] === bookTitle){
+	selectedToc = toc;
+      }})
+    if (selectedToc !== null){
+      material.year = selectedToc.issued['date-parts'][0][0];
+      material.authors = selectedToc.author.map(author => (author.literal)).join(', ');
+      material.book_pages = selectedToc.total;
+
+    }
+    console.log(material);
     this.setState({material});
   }
 
@@ -300,13 +319,15 @@ class CourseLiteratureAddForm extends Component {
 		      />
 		    </div>
 		  : null}
-		    {material.type === 'bookChapter' && bookTitles.length > 0 && Boolean(material.customBookTitle) === false ?
+		    {material.type === 'bookChapter' &&
+		     bookTitles.length > 0 &&
+		     Boolean(material.customBookTitle) === false ?
 		   <div className={classes.formFieldRow}>
 		       <FormControl style={{width: '100%'}}>
 			  <InputLabel htmlFor="book-title">Book Title</InputLabel>
 			    <Select
 				value={material.book_title}
-				onChange={this.handleChange('book_title')}
+				onChange={this.selectBookTitle}
 				inputProps={{
 				  name: 'book_title',
 				  id: 'book-title',
@@ -422,7 +443,9 @@ class CourseLiteratureAddForm extends Component {
 		  </Typography>
 		   <Typography component="p">
 		       To use this material in a course, an ammount of
-			 <strong>{` € ${(royalties.cost / 100).toFixed(2)} `}</strong>
+		       <Tooltip title={royalties.cost_message}>
+		       <strong>{` € ${(royalties.cost / 100).toFixed(2)} `}</strong>
+		       </Tooltip>
 			   has to be paid
 			   <strong> per student </strong>
 			     enrolled in the course.
@@ -503,7 +526,7 @@ class CourseLiteratureAddForm extends Component {
 			  variant="contained"
 			  disabled={!(Boolean(material.title) &&
 				      Boolean(material.authors) &&
-				      material.type === 'bookChapter' ? Boolean(material.book_title): true)}>
+				      (material.type === 'bookChapter' ? Boolean(material.book_title): true))}>
 		    Next
 		  </Button>
 	      : null}

@@ -7,6 +7,7 @@ import Avatar from '@material-ui/core/Avatar';
 import BookIcon from '@material-ui/icons/Book';
 import BookmarkBorderIcon from '@material-ui/icons/BookmarkBorder';
 import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
 import IconButton from '@material-ui/core/IconButton';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -124,6 +125,12 @@ class CourseLiteratureItem extends Component {
     this.props.onStartDrag(this.props.id);
   }
 
+  handleRemove = () => {
+    this.closeOptionsMenu();
+    this.props.onRemove(this.props.tocId);
+
+  }
+
 
   render() {
     const { classes, id, comment, module, tocItem, draggable, courseId, isStudent } = this.props;
@@ -160,6 +167,11 @@ class CourseLiteratureItem extends Component {
 		  anchorEl={optionsAnchorEl}
 		  onClose={this.closeOptionsMenu}
 		  open={Boolean(optionsAnchorEl)} >
+ 	      <MenuItem onClick={this.handleRemove}>
+		<ListItemIcon>
+		  <DeleteIcon />
+		</ListItemIcon> Remove
+	      </MenuItem>
  	      <MenuItem onClick={this.handleEditComment(null, id, comment || null)}>
 		<ListItemIcon>
 		  <MessageIcon />
@@ -200,6 +212,11 @@ class CourseLiteratureItem extends Component {
 		  anchorEl={optionsAnchorEl}
 		  onClose={this.closeOptionsMenu}
 		  open={Boolean(optionsAnchorEl)} >
+ 	      <MenuItem onClick={this.handleRemove}>
+		<ListItemIcon>
+		  <DeleteIcon />
+		</ListItemIcon> Remove
+	      </MenuItem>
 	      <MenuItem onClick={this.handleEditModuleName(module)}>
 		<ListItemIcon>
 		  <EditIcon />

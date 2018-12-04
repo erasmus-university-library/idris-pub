@@ -21,7 +21,15 @@ class CourseAddForm extends Component {
     course_id: '',
     canvas_id: '',
   }
-
+  componentDidMount = (props) => {
+    console.log(this.props)
+    if (Boolean(this.props.course)){
+      const course = this.props.course;
+      this.setState({title: course.title,
+		     start_date: course.start_date,
+		     end_date: course.end_date})
+    }
+  }
   handleChange = (name) => (event) => {
     this.setState({[name]: event.target.value});
   }
@@ -35,11 +43,14 @@ class CourseAddForm extends Component {
   }
 
   render() {
-    const { classes } = this.props;
-
+    const { classes, course } = this.props;
+    const isEditForm = Boolean(course);
     return (
-      <Dialog open={this.props.open !== false} onClose={this.handleClose}>
-        <DialogTitle>Add Course</DialogTitle>
+      <Dialog open={this.props.open !== false}
+	      onClose={this.handleClose}>
+        <DialogTitle>
+	  {isEditForm ? 'Edit Course' : 'Add Course'}
+	</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Please enter course details.
@@ -58,7 +69,7 @@ class CourseAddForm extends Component {
 	    <div className={classes.formFieldRow}>
 	      <TextField
 		id="start_date"
-		label="Course Start Date"
+		label="Start Date"
 		className={classes.gutteredLeftField}
 		type="date"
 		value={this.state.start_date}
@@ -68,7 +79,7 @@ class CourseAddForm extends Component {
 		/>
               <TextField
 		id="end_date"
-		label="Course End Date"
+		label="End Date"
 		className={classes.gutteredRightField}
 		type="date"
                 InputLabelProps={{shrink: true}}
@@ -76,7 +87,8 @@ class CourseAddForm extends Component {
 		onChange={this.handleChange('end_date')}
 		margin="dense"
 		/>
-	      </div>
+	    </div>
+	    {isEditForm ? null :
 	    <div className={classes.formFieldRow}>
 	      <TextField
 		id="course_id"
@@ -97,6 +109,7 @@ class CourseAddForm extends Component {
 		margin="dense"
 		/>
 	      </div>
+	    }
           </form>
         </DialogContent>
           <DialogActions>
@@ -107,7 +120,7 @@ class CourseAddForm extends Component {
                     disabled={!(Boolean(this.state.title) &&
 				Boolean(this.state.start_date) &&
 				Boolean(this.state.end_date))}>
-              Add
+	      {isEditForm ? 'Update' : 'Add'}
             </Button>
           </DialogActions>
        </Dialog>

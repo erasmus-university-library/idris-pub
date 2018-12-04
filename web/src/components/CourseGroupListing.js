@@ -150,12 +150,12 @@ class CourseGroupListing extends Component {
 
   render(){
     const { query, courseYear, loading } = this.state;
-    const { classes, id, openAddDialog } = this.props;
+    const { classes, id, openAddDialog, onSelect, widget } = this.props;
     const groupName = this.groupName;
     const courseYears = this.courseYears;
     return (
       <Paper>
-	<CourseAddForm open={openAddDialog}
+	<CourseAddForm open={Boolean(openAddDialog)}
 		       onClose={this.handleAddCourseClose}
 		       onSubmit={this.handleAddCourseSubmit} />
         <AppBar position="sticky" color="default">
@@ -206,14 +206,20 @@ class CourseGroupListing extends Component {
 	  const message = `${course.literature===0?'no':course.literature} literature item${course.literature === 1?'':'s'}, ${days} day${days===1?'':'s'} from ${startDate.toLocaleDateString('en-us', datefmt)} until ${endDate.toLocaleDateString('en-us', datefmt)}`;
 
 	return (
-	  [<ListItem key={course.id} button to={`/group/${id}/course/${course.id}`} component={Link}>
+	  [<ListItem
+	   key={course.id}
+	   onClick={Boolean(widget) ? () => (onSelect(course.id)) : () => (false)}
+	   button
+	   to={Boolean(widget) ? null : `/group/${id}/course/${course.id}`}
+	   component={Boolean(widget) ? null : Link}>
 	    <Avatar><AssignmentIcon /></Avatar>
   	    <ListItemText primary={course.title}
 			  secondary={message}/>
 	   </ListItem>,
 	   <Divider inset key={`${course.id}-divider`} />]
 	   )})}
-	 </List>
+	</List>
+	{Boolean(widget) ? null :
 	<Zoom in={true} className={classes.AddButton}>
 	  <Button variant="fab"
 		  to={`/group/${id}/add`}
@@ -222,7 +228,7 @@ class CourseGroupListing extends Component {
 		  color="primary">
             <AddIcon />
 	  </Button>
-	</Zoom>
+	</Zoom>}
       </Paper>);
     }
 }

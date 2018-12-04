@@ -22,12 +22,18 @@ class CourseRecord extends Component {
 	<CourseGroupListing id={match.params.group_id}
 			    openAddDialog={match.path === '/group/:group_id/add'}
 			    history={this.props.history}
-			    navigation={this.props.navigation} />)
+		       	    navigation={this.props.navigation} />)
     } else if (match.path === '/group/:group_id/course/:course_id' ||
-	       match.path === '/group/:group_id/course/:course_id/add') {
+	       match.path === '/group/:group_id/course/:course_id/add' ||
+	       match.path === '/group/:group_id/course/:course_id/filters' ||
+	       match.path === '/group/:group_id/course/:course_id/filter/:module_id') {
       return (
 	<CourseListing id={match.params.course_id}
+		       filter={match.params.module_id || null}
+		       showFilterSelect={match.path === '/group/:group_id/course/:course_id/filters'}
 		       openAddDialog={match.path === '/group/:group_id/course/:course_id/add'}
+		       loadNavigation={this.props.loadCourseNavigation}
+		       navigation={this.props.navigation}
 		       history={this.props.history}
 		       groupId={match.params.group_id}/>)
     } else {

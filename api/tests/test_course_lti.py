@@ -81,7 +81,7 @@ class CourseLTIAuthTest(BaseTest):
              'type': 'course',
              'issued': '2018-02-27',
              'identifiers': [{'type': 'lti',
-                              'value': 'lti-94173d3e79d145fd8ec2e83f15836ac8'}],
+                              'value': 'MITx/ODL_ENG/2014_T1'}],
              'contributors': [{'role': 'publisher',
                                'group_id': corp_id}]},
             headers=headers,

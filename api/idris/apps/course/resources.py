@@ -52,8 +52,13 @@ class CourseResource(BaseResource):
             yield (Allow,
                    'student:course:%s' % self.model.id,
                    ['course_view', 'course_material_view'])
+        # teachers are allowed to view other courses.
+        # this is needed to import from another course
+        yield (Allow, 'group:teacher', 'course_view')
         yield (Allow, 'group:teacher', 'course_add')
+        yield (Allow, 'group:teacher', 'course_list')
         yield (Allow, 'system.Authenticated', 'view')
+
 
     def toc_items_royalty(self):
         query = sql.text("""
@@ -110,6 +115,7 @@ class CourseResource(BaseResource):
             csl['container-title'] = material['journal']
         if material.get('book_title'):
             csl['container-title'] = material['book_title']
+            csl['total'] = material['book_pages']
         if material.get('issue'):
             csl['issue'] = material['issue']
         if material.get('volume'):
@@ -155,9 +161,7 @@ class CourseResource(BaseResource):
           MAX(CASE WHEN i.type='doi' THEN i.value ELSE NULL END) AS doi,
           MAX(r.starting) AS starting,
           MAX(r.ending) AS ending,
-          MAX(CASE WHEN r.type='book' THEN
-                       r.description ELSE
-                       NULL END) AS book_title,
+          MAX((CASE WHEN r.type='book' THEN r.total ELSE NULL END)) AS book_pages,
           array_agg(CASE WHEN c.role = 'author' THEN
                        c.description ELSE
                        NULL END ORDER BY c.position) AS authors

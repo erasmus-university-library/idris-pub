@@ -116,6 +116,37 @@ def lti_config_view(request):
     request.response.write(xml.encode('utf8'))
     return request.response
 
+"""
+@view_config(context=CourseAppRoot, name='lti_return'):
+def lti_return_view(request):
+    config = {
+        "@context": "http://purl.imsglobal.org/ctx/lti/v1/ContentItem",
+        "@graph": [
+            {
+                "@type": "LtiLinkItem",
+                "@id": "http://example.com/messages/launch",
+                "url": "http://example.com/messages/launch",
+                "title": "test",
+                "text": "text",
+                "mediaType": "application/vnd.ims.lti.v1.ltilink",
+                "placementAdvice": {
+                    "presentationDocumentTarget": "frame"
+                }
+            }
+        ]
+    }
+
+    body = (
+        'lti_message_type: ContentItemSelection&'
+        'lti_version: LTI-1p0&'
+        'content_items: %s' % json.dumps(config))
+    return_url = 'https://canvas.eur.nl/courses/10553/external_content/success/external_tool_dialog'
+
+    response = requests.post(return_url, body.encode('utf8'))
+    logging.info(response)
+    logging.info(response.content)
+"""
+
 @view_config(context=CourseAppRoot, name='lti')
 def lti_login_view(request):
     settings = request.repository.settings
@@ -127,7 +158,7 @@ def lti_login_view(request):
     logging.info('scheme: %s' % request.scheme)
     logging.info(request.environ)
     logging.info(params)
-    logging.info('LTI post for course: %s' % params['resource_link_id'])
+    logging.info('LTI post for course: %s' % params['context_id'])
 
     url = request.url.replace('http://', 'https://')
 
@@ -159,7 +190,7 @@ def lti_login_view(request):
 
     course = request.dbsession.query(Identifier).filter(
         Identifier.type=='lti',
-        Identifier.value==params['resource_link_id']).first()
+        Identifier.value==params['context_id']).first()
     if course:
         course = course.work_id
 
@@ -173,13 +204,26 @@ def lti_login_view(request):
         principals.append('group:student')
         if course:
             principals.append('student:course:%s' % course)
-    token = request.create_jwt_token(user_id, principals=principals)
+    token_params = {}
+    if params['lti_message_type'] == 'ContentItemSelectionRequest':
+        token_params['return_url'] = params['content_item_return_url']
+        token_params['lti_url'] = 'https://%s/lti?course_filter=' % request.host
+
+    token = request.create_jwt_token(user_id,
+                                     principals=principals,
+                                     **token_params)
     redirect_url = 'https://%s/?token=%s&embed=true' % (request.host, token)
     redirect_url = redirect_url.replace('http://', 'https://')
     if group:
         redirect_url = '%s#/group/%s' % (redirect_url, group.id)
     if course:
         redirect_url = '%s/course/%s' % (redirect_url, course)
+        if params['lti_message_type'] == 'ContentItemSelectionRequest':
+            redirect_url = '%s/filters' % redirect_url
+        elif request.GET.get('course_filter'):
+            redirect_url = '%s/filter/%s' % (redirect_url,
+                                             request.GET['course_filter'])
+
     request.response.content_type = 'application/json'
     request.response.write(
         json.dumps({'status': 'ok', 'token': token}).encode('utf8'))

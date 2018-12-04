@@ -147,3 +147,18 @@ class CourseAuthorizationWebTest(BaseCourseTest):
                 self.course_id, material_id),
             headers=headers,
             status=200)
+
+    def test_course_listing_permitted(self):
+        self.api.get(
+            '/api/v1/course/records?group_id=%s' % self.corp_id,
+            status=401)
+        teacher_token = self.admin_token(
+            on_behalf_of=['group:teacher',
+                          'user:x',
+                          'teacher:course:%s' % self.course_id])
+        headers = dict(Authorization='Bearer %s' % teacher_token)
+        out = self.api.get(
+            '/api/v1/course/records?group_id=%s&course_year=2017-2018' % self.corp_id,
+            headers=headers)
+        assert len(out.json) == 1
+        assert out.json[0]['title'] == 'Course X'

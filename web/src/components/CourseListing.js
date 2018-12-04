@@ -8,6 +8,7 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import AppBar from '@material-ui/core/AppBar';
+import EditIcon from '@material-ui/icons/Edit';
 import Toolbar from '@material-ui/core/Toolbar';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -18,7 +19,9 @@ import IconButton from '@material-ui/core/IconButton';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
 import AddIcon from '@material-ui/icons/Add';
 import Zoom from '@material-ui/core/Zoom';
 import Divider from '@material-ui/core/Divider';
@@ -29,10 +32,14 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-
+import MoreVertIcon from '@material-ui/icons/MoreVert';
+import ImportExportIcon from '@material-ui/icons/ImportExport';
+import Menu from '@material-ui/core/Menu';
 
 import CourseLiteratureItem from './CourseLiteratureItem';
 import CourseLiteratureAddForm from './forms/CourseLiteratureAddForm';
+import CourseGroupListing from './CourseGroupListing';
+import CourseAddForm from './forms/CourseAddForm';
 
 import IdrisSDK from '../sdk.js';
 const sdk = new IdrisSDK();
@@ -70,8 +77,13 @@ const styles = theme => ({
 class CourseListing extends Component {
 
   state = {query: '',
+	   courseOptionsAnchorEl: null,
+	   importCourseDialogOpen: false,
+	   editCourseDialogOpen: false,
+	   filterSelection: null,
 	   loading: false,
 	   needsUpdate: false,
+	   needsUpdateAndReload: false,
 	   module: 'all',
 	   course: null,
 	   newModuleDialogOpen: false,
@@ -85,14 +97,28 @@ class CourseListing extends Component {
   tocItems = {};
 
   componentDidMount = (props) => {
-    this.isStudent = sdk.decodeToken().principals.indexOf('group:student') === -1 ? false: true;
+    const token = sdk.decodeToken();
+    this.isStudent = token.principals.indexOf('group:student') === -1 ? false: true;
+    this.lti_return_url = token.return_url;
+    this.lti_course_url = token.lti_url;
     this.loadCourse()
   }
 
   componentDidUpdate = (prevProps, prevState) => {
-    if (this.state.needsUpdate){
-      this.saveCourse();
-      this.setState({needsUpdate: false});
+
+    // let parent iframe know precise height
+    let clientHeight = window.document.body.clientHeight;
+    if (this.props.openAddDialog && clientHeight < 800){
+      clientHeight = 800;
+    }
+    window.parent.postMessage(
+      JSON.stringify({'subject': 'lti.frameResize',
+		      'height': clientHeight}), '*');
+
+    if (this.state.needsUpdate || this.state.needsUpdateAndReload){
+      this.saveCourse(this.state.needsUpdateAndReload);
+      this.setState({needsUpdate: false,
+		     needsUpdateAndReload: false});
     }
     if (this.state.query !== prevState.query ||
 	this.state.module !== prevState.module){
@@ -142,22 +168,60 @@ class CourseListing extends Component {
       response => response.json(),
       error => {console.log('LoadCourse Error: ' + error)})
       .then(data => {
+	let module = 'all'
+	if(this.props.filter){
+	  // filter by module id from url
+	  console.log('filter', this.props.filter);
+	  const toc = data.course.toc;
+	  const module_id = parseInt(this.props.filter, 10);
+	  for (var i=0;i<toc.length;i++){
+	    if (module_id === toc[i].id){
+	      module = toc[i].module;
+
+	    }
+	  }
+	}
 	this.tocItems = data.toc_items;
-	this.setState({course: data.course, loading: false});
+	this.setState({course: data.course,
+		       module: module,
+		       loading: false});
+      });
+  }
+
+  importCourse = (courseId) => {
+    this.setState({loading: true});
+    sdk.courseLoad(courseId, !this.isStudent).then(
+      response => response.json(),
+      error => {console.log('importCourse Error: ' + error)})
+      .then(data => {
+	const course = this.state.course;
+	const newToc = [];
+	data.course.toc.forEach((toc) => {
+	  delete toc.id;
+	  newToc.push(toc)
+	});
+	course.toc = course.toc.concat(newToc);
+	this.setState({course,
+		       needsUpdateAndReload: true,
+		       loading: false});
       });
   }
 
 
-  saveCourse = () => {
+  saveCourse = (reload=false) => {
     this.setState({loading: true});
     sdk.courseUpdate(this.props.id, {course: this.state.course}).then(
       response => response.json(),
       error => {console.log('SaveCourse Error: ' + error)})
       .then(data => {
 	this.tocItems = data.toc_items;
-	this.setState({course: data.course,
-		       draggableTocItem: null,
-		       loading: false});
+	if(reload === true){
+	  this.loadCourse()
+	}else{
+	  this.setState({course: data.course,
+			 draggableTocItem: null,
+			 loading: false});
+	}
       });
   }
 
@@ -168,7 +232,7 @@ class CourseListing extends Component {
 		     newModuleName: '',
 		     selectedModuleName: null});
     } else {
-      this.setState({module: e.target.value});
+      this.setState({module: value});
     }
   }
 
@@ -254,6 +318,63 @@ class CourseListing extends Component {
     this.setState({draggableTocItem: id});
   }
 
+  handleLTIFormSubmit = (value) => (e) => {
+    this.setState({filterSelection: value});
+    // submit the form, redirecting back to the LMS
+    const contentItems = JSON.stringify({
+        "@context": "http://purl.imsglobal.org/ctx/lti/v1/ContentItem",
+        "@graph": [
+          {
+            "@type": "LtiLinkItem",
+            "@id": `${this.lti_course_url}${value||''}`,
+            "url": `${this.lti_course_url}${value||''}`,
+            "title": "Course Literature",
+            "text": "Course Literature",
+            "mediaType": "application/vnd.ims.lti.v1.ltilink",
+            "placementAdvice": {
+	      "displayWidth": "100%",
+	      "displayHeight": "300px",
+              "presentationDocumentTarget": "iframe"
+            }
+          }
+        ]
+      })
+    this.filterFormInputRef.value = contentItems;
+    this.filterFormRef.submit();
+  }
+
+  handleCourseEdit = (e) => {
+    this.setState({editCourseDialogOpen: true,
+		   courseOptionsAnchorEl:null})
+  }
+
+  handleRemove = (id) => {
+    const newToc = [];
+    this.state.course.toc.forEach((item) => {
+      if(item.id !== id){
+	newToc.push(item);
+      }
+    });
+    this.setState({
+      needsUpdate: true,
+      course: {...this.state.course,
+	       toc: newToc}
+   });
+  }
+
+  handleCourseImport = (e) => {
+    this.setState({importCourseDialogOpen: true,
+		   courseOptionsAnchorEl:null})
+  }
+
+  openCourseOptionsMenu = (e) => {
+    this.setState({courseOptionsAnchorEl: e.currentTarget})
+  }
+
+  closeCourseOptionsMenu = () => {
+    this.setState({courseOptionsAnchorEl:null});
+  }
+
   renderSortableItem = SortableElement((value) => {
     return (<CourseLiteratureItem {...value} />);
   });
@@ -265,6 +386,7 @@ class CourseListing extends Component {
 	{items.map((item, index) => (
 	  <SortableItem key={item.id}
 			index={index}
+			tocId={item.id}
 			id={item.target_id}
 			isStudent={this.isStudent}
 			courseId={this.props.id}
@@ -274,22 +396,158 @@ class CourseListing extends Component {
 			onStartDrag={this.handleLiteratureDrag}
 			onEditModuleName={this.handleEditModuleName}
 			onEditComment={this.handleEditComment}
+			onRemove={this.handleRemove}
 			tocItem={this.tocItems[item.target_id]||{}} />
 	))}
       </List>
     );
   });
 
+  renderEditCourseDialog = () => {
+    return (
+      <CourseAddForm open={true}
+		     course={this.state.course}
+		     onClose={this.handleCancelCourseEdit}
+		     onSubmit={this.handleEditCourseSubmit} />)
+  }
+  renderImportCourseDialog = () => {
+    if (this.props.navigation.length === 0){
+      this.props.loadNavigation()
+    }
+    return (
+      <Dialog open={true} onClose={this.handleCancelCourseImport}>
+	  <CourseGroupListing
+	    id={this.props.groupId}
+	    navigation={this.props.navigation}
+	    widget={true}
+	    onSelect={this.handleSubmitCourseImport} />
+        <DialogActions>
+	  <Button onClick={this.handleCancelCourseImport} color="primary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+    )
+  }
+
+  handleEditCourseSubmit = (courseData) => {
+    const course = this.state.course;
+    course.title = courseData.title;
+    course.start_date =  courseData.start_date;
+    course.end_date = courseData.end_date;
+
+    this.setState({course,
+		   editCourseDialogOpen: false,
+		   needsUpdateAndReload: true});
+  }
+  handleCancelCourseEdit = () => {
+    this.setState({editCourseDialogOpen: false});
+  }
+
+  handleCancelCourseImport = () => {
+    this.setState({importCourseDialogOpen: false});
+  }
+  handleSubmitCourseImport = (targetCourseId) => {
+    this.setState({importCourseDialogOpen: false});
+    this.importCourse(targetCourseId);
+  }
+
+  renderNewModuleDialog = () => {
+    return (
+      <Dialog open={true} onClose={() => {this.setState({newModuleDialogOpen: false})}}>
+        <DialogTitle>
+	  {this.state.selectedModuleName === null ? 'New' : 'Edit'} Module
+	</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+	    Divide your course literature into modules. This makes it easier for students to find the
+	    correct literature.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Module Name"
+	    onChange={(e) => {this.setState({newModuleName: e.target.value})}}
+	    value={this.state.newModuleName}
+            fullWidth
+            />
+        </DialogContent>
+        <DialogActions>
+	  <Button onClick={() => {this.setState({newModuleDialogOpen: false})}} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={this.handleSubmitModuleName} color="primary">
+            {this.state.selectedModuleName === null ? 'New' : 'Edit'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    )
+  }
+
+
 
   render(){
     const { query, loading, course, module,
-	    newModuleDialogOpen, newModuleName,
-	    commentDialogOpen, commentText} = this.state;
-    const { classes, openAddDialog, id, groupId } = this.props;
+	    newModuleDialogOpen,
+	    commentDialogOpen, commentText,
+	    importCourseDialogOpen,
+	    editCourseDialogOpen,
+	    filterSelection, courseOptionsAnchorEl} = this.state;
+    const { classes, openAddDialog, id, groupId,
+	    showFilterSelect } = this.props;
     const SortableList = this.renderSortableList;
     if (course === null) {
       return <LinearProgress />;
     }
+    if (showFilterSelect){
+      return (
+	<Paper>
+	  <form action={this.lti_return_url} method="POST" ref={form => this.filterFormRef=form}>
+	    <input type="hidden" name="lti_message_type" value="ContentItemSelection" />
+	    <input type="hidden" name="lti_version" value="LTI-1p0" />
+	    <input type="hidden" name="content_items" ref={form => this.filterFormInputRef=form}/>
+          <AppBar position="sticky" color="default">
+          <Toolbar>
+            <Typography variant="title" color="inherit" noWrap>
+	      Select course literature
+	    </Typography>
+	  </Toolbar>
+       </AppBar>
+	<List>
+	  <ListItem button
+		    selected={true}
+		    value="all"
+		    onClick={this.handleLTIFormSubmit('')}>
+	    <ListItemIcon><AddIcon /></ListItemIcon>
+	    <ListItemText inset primary="All course literature"/>
+	  </ListItem>
+	  <Divider/>
+	  {course.toc.map(toc => (
+	    toc.module ?
+	      (<ListItem
+		   button key={toc.module}
+		   value={toc.id}
+		   onClick={this.handleLTIFormSubmit(toc.id)}
+		   selected={toc.id === filterSelection}>
+	       <ListItemIcon><AddIcon /></ListItemIcon>
+		 <ListItemText inset primary={toc.module} />
+	       </ListItem>)
+	    : null
+	  ))}
+	</List>
+	  </form>
+	  <Zoom in={true} className={classes.AddButton}>
+	  <Button
+	variant="fab"
+	value="new"
+	onClick={this.handleModuleChange}
+	color="primary">
+          <AddIcon />
+	  </Button>
+	  </Zoom>
+	{newModuleDialogOpen ? this.renderNewModuleDialog() : null}
+	  </Paper>)
+	}
     return (
       <Paper>
 	<CourseLiteratureAddForm open={openAddDialog}
@@ -297,35 +555,9 @@ class CourseListing extends Component {
 				 tocItems={this.tocItems}
 				 onClose={this.handleAddLiteratureClose}
 				 onSubmit={this.handleAddLiteratureSubmit} />
-	{newModuleDialogOpen ? (
-          <Dialog open={newModuleDialogOpen} onClose={() => {this.setState({newModuleDialogOpen: false})}}>
-            <DialogTitle>
-	      {this.state.selectedModuleName === null ? 'New' : 'Edit'} Module
-	    </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-	      Divide your course literature into modules. This makes it easier for students to find the
-	      correct literature.
-            </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Module Name"
-	      onChange={(e) => {this.setState({newModuleName: e.target.value})}}
-	      value={newModuleName}
-              fullWidth
-            />
-          </DialogContent>
-          <DialogActions>
-	    <Button onClick={() => {this.setState({newModuleDialogOpen: false})}} color="primary">
-              Cancel
-            </Button>
-            <Button onClick={this.handleSubmitModuleName} color="primary">
-              {this.state.selectedModuleName === null ? 'New' : 'Edit'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-	): null}
+	{importCourseDialogOpen ? this.renderImportCourseDialog() : null}
+	{editCourseDialogOpen ? this.renderEditCourseDialog() : null}
+	{newModuleDialogOpen ? this.renderNewModuleDialog() : null}
 	{commentDialogOpen ? (
           <Dialog open={commentDialogOpen} onClose={() => {this.setState({commentDialogOpen: false})}}>
             <DialogTitle>Comment </DialogTitle>
@@ -352,8 +584,9 @@ class CourseListing extends Component {
           </DialogActions>
         </Dialog>
 	): null}
+      {this.props.filter ? null :
         <AppBar position="sticky" color="default">
-          <Toolbar>
+       <Toolbar style={this.isStudent ? {} : {paddingRight:0,paddingLeft:16}}>
             <FormControl fullWidth className={classes.formControl}>
               <InputLabel htmlFor="search" classes={{root: classes.searchText}}>
                 <Typography variant="body1" color="inherit" noWrap>
@@ -368,7 +601,7 @@ class CourseListing extends Component {
                 endAdornment={<InputAdornment position="end"><IconButton><SearchIcon /></IconButton></InputAdornment>}
 		/>
             </FormControl>
-	    {<FormControl className={classes.formControlSelect}>
+	    <FormControl className={classes.formControlSelect}>
               <InputLabel shrink={true} htmlFor="modules">Modules</InputLabel>
               <Select
 		value={module||''}
@@ -389,25 +622,59 @@ class CourseListing extends Component {
 	          <Divider/>
 		  <MenuItem value="new"><ListItemIcon><AddIcon /></ListItemIcon> New Module</MenuItem>
 	     </Select>
-        </FormControl>
-	     }
-	</Toolbar>
-	</AppBar>
+       </FormControl>
+       {this.isStudent ? null : (
+       <IconButton aria-label="Options"
+                   aria-owns={Boolean(courseOptionsAnchorEl) ? 'courseOptionsMenu' : null}
+                   onClick={this.openCourseOptionsMenu}
+                   aria-haspopup="true"><MoreVertIcon /></IconButton>
+       )}
+       <Menu id="courseOptionsMenu"
+             anchorEl={courseOptionsAnchorEl}
+             onClose={this.closeCourseOptionsMenu}
+             open={Boolean(courseOptionsAnchorEl)} >
+            <MenuItem onClick={this.handleCourseEdit}>
+                <ListItemIcon><EditIcon /></ListItemIcon> Edit Course Info
+       </MenuItem>
+       <MenuItem onClick={this.handleCourseImport}>
+         <ListItemIcon><ImportExportIcon /></ListItemIcon> Import Course Materials
+       </MenuItem>
+       <MenuItem onClick={() => {this.handleModuleChange({target:{value: 'new'}})}}><ListItemIcon><AddIcon /></ListItemIcon> New Module</MenuItem>
+       </Menu>
+       </Toolbar>
+       </AppBar>
+      }
 	{loading ? <LinearProgress /> : null }
 	<SortableList lockAxis="y"
       helperClass={classes.DragHelper}
       useDragHandle={true}
       onSortEnd={this.handleSortEnd}
       items={this.filteredToc === null ? (course||{}).toc||[] : this.filteredToc} />
+	<Dialog open={Boolean(((course||{}).toc||[]).length === 0)}>
+	<DialogTitle>Your course is empty..</DialogTitle>
+	<DialogContent>Start adding learning materials.</DialogContent>
+	 <DialogActions>
+	<Button variant="contained"
+                color="primary"
+                to={`/group/${groupId}/course/${id}/add`}
+                component={Link}>Add Material</Button>
+	<Button variant="contained"
+                color="primary"
+                onClick={this.handleCourseImport}
+	>Import from Course</Button>
+	</DialogActions>
+	</Dialog>
+
+      {this.isStudent ? null :
 	<Zoom in={true} className={classes.AddButton}>
-	  <Button variant="fab"
+	 <Button variant="fab"
 		  to={`/group/${groupId}/course/${id}/add`}
 		  component={Link}
 		  type="submit"
 		  color="primary">
         <AddIcon />
-	</Button>
-	</Zoom>
+	 </Button>
+	 </Zoom>}
       </Paper>);
     }
 }

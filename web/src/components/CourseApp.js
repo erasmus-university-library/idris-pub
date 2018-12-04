@@ -238,13 +238,17 @@ class App extends Component {
               </div>
             </Drawer>
 	    {loggedInUser !== null ?
-            <Switch>
-		<Route exact path="/group/:group_id" component={CourseRecord} />
-              <Route exact path="/group/:group_id/add" component={CourseRecord} />
-              <Route exact path="/group/:group_id/course/:course_id/add" component={CourseRecord} />
-		<Route exact path="/group/:group_id/course/:course_id"
+	      (
+		<Switch>
+		  <Route exact path="/group/:group_id" component={CourseRecord} />
+		  <Route exact path="/group/:group_id/add" component={CourseRecord} />
+		  <Route exact path="/group/:group_id/course/:course_id/add" component={CourseRecord} />
+		  <Route exact path="/group/:group_id/course/:course_id/filters" component={CourseRecord} />
+		  <Route exact path="/group/:group_id/course/:course_id"
 			 render={(props) => <CourseRecord embed={true} {...props}/>} />
-            </Switch> : null}
+		  <Route exact path="/group/:group_id/course/:course_id/filter/:module_id"
+			 render={(props) => <CourseRecord embed={true} {...props}/>} />
+		</Switch> ): null}
           </div>
           </MuiThemeProvider>
         )
