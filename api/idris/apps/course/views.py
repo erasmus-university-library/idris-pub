@@ -1,3 +1,4 @@
+import os
 import json
 from urllib.parse import parse_qsl
 
@@ -81,71 +82,10 @@ def course_material_view(request):
 @view_config(context=CourseAppRoot, name='lti.xml')
 def lti_config_view(request):
     request.response.content_type = 'application/xml'
-    xml = """<?xml version="1.0" encoding="UTF-8"?>
-    <cartridge_basiclti_link xmlns="http://www.imsglobal.org/xsd/imslticc_v1p0"
-    xmlns:blti = "http://www.imsglobal.org/xsd/imsbasiclti_v1p0"
-    xmlns:lticm ="http://www.imsglobal.org/xsd/imslticm_v1p0"
-    xmlns:lticp ="http://www.imsglobal.org/xsd/imslticp_v1p0"
-    xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation = "http://www.imsglobal.org/xsd/imslticc_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticc_v1p0.xsd
-        http://www.imsglobal.org/xsd/imsbasiclti_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imsbasiclti_v1p0.xsd
-            http://www.imsglobal.org/xsd/imslticm_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticm_v1p0.xsd">
-    <blti:title>Literature List Test</blti:title>
-    <blti:description>Literature List Test</blti:description>
-    <blti:extensions platform="canvas.instructure.com">
-    <lticm:property name="privacy_level">public</lticm:property>
-    <lticm:property name="domain">idris.pub</lticm:property>
-
-    <lticm:options name="course_navigation">
-    <lticm:property name="enabled">true</lticm:property>
-    <lticm:property name="text">Literature</lticm:property>
-    <lticm:property name="url">https://idris.pub/lti</lticm:property>
-    </lticm:options>
-
-      <lticm:options name="editor_button">
-      <lticm:property name="canvas_icon_class">icon-lti</lticm:property>
-      <lticm:property name="icon_url">http://lti-tool-provider-example.herokuapp.com/selector.png?editor_button</lticm:property>
-      <lticm:property name="message_type">ContentItemSelectionRequest</lticm:property>
-      <lticm:property name="text">Course Literature</lticm:property>
-      <lticm:property name="url">https://idris.pub/lti</lticm:property>
-      </lticm:options>
-
-    </blti:extensions>
-    </cartridge_basiclti_link>
-    """
-    request.response.write(xml.encode('utf8'))
+    with open(os.path.join(os.path.dirname(__file__),
+                           'lti_config.xml'), 'rb') as fp:
+        request.response.write(fp.read())
     return request.response
-
-"""
-@view_config(context=CourseAppRoot, name='lti_return'):
-def lti_return_view(request):
-    config = {
-        "@context": "http://purl.imsglobal.org/ctx/lti/v1/ContentItem",
-        "@graph": [
-            {
-                "@type": "LtiLinkItem",
-                "@id": "http://example.com/messages/launch",
-                "url": "http://example.com/messages/launch",
-                "title": "test",
-                "text": "text",
-                "mediaType": "application/vnd.ims.lti.v1.ltilink",
-                "placementAdvice": {
-                    "presentationDocumentTarget": "frame"
-                }
-            }
-        ]
-    }
-
-    body = (
-        'lti_message_type: ContentItemSelection&'
-        'lti_version: LTI-1p0&'
-        'content_items: %s' % json.dumps(config))
-    return_url = 'https://canvas.eur.nl/courses/10553/external_content/success/external_tool_dialog'
-
-    response = requests.post(return_url, body.encode('utf8'))
-    logging.info(response)
-    logging.info(response.content)
-"""
 
 @view_config(context=CourseAppRoot, name='lti')
 def lti_login_view(request):
