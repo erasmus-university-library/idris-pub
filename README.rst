@@ -22,8 +22,9 @@ This is a work-in-progress, research project from Erasmus University Library Rot
 Setting up Idris API
 --------------------
 
-* Install Python3.4 or newer
+* Install Python 3.4 or newer
 * Install PostgreSQL 9.5 or newer
+* Install Redis 4.0 or newer
 * Clone the repository, create a virtualenv, install dependencies::
 
     git clone https://github.com/jascoul/idris.git
