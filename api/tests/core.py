@@ -37,6 +37,7 @@ class BaseTest(unittest.TestCase):
             'idris.blob_backend': 'local',
             'idris.blob_root_prefix': 'var/files',
             'idris.google_cloud_project': 'caleido-eur',
+            'idris.app_prefix': 'caleido-eur',
             'idris.lookup.crossref.email': 'jasper@artudis.com',
             'cache.url': 'redis://localhost:6379',
             'sqlalchemy.url': (

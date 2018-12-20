@@ -42,7 +42,7 @@ def cache_factory(registry, repository_namespace):
     config_url = registry.settings['cache.url']
     proto = config_url.split('://')[0]
     CacheImpl = registry.queryUtility(ICacheService, proto)
-    prefix = '%s-%s' % (registry.settings['idris.google_cloud_project'],
+    prefix = '%s-%s' % (registry.settings['idris.app_prefix'],
                         repository_namespace)
     return CacheImpl(config_url, prefix)
 
