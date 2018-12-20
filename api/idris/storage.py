@@ -10,6 +10,7 @@ from sqlalchemy.engine import reflection
 import zope.sqlalchemy
 import transaction
 
+from idris.services.cache import cache_factory
 from idris.interfaces import IBlobStoreBackend
 from idris.blob import BlobStore
 from idris.models import (Base,
@@ -296,6 +297,10 @@ class RepositoryConfig(object):
             IBlobStoreBackend,
             self.registry.settings['idris.blob_backend'])
         return BlobStore(backend(self))
+
+    @reify
+    def cache(self):
+        return cache_factory(self.registry, self.namespace)
 
     def update_settings(self, settings):
         self.settings = settings

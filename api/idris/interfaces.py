@@ -111,6 +111,7 @@ class ICourseRoyaltyCalculator(Interface):
         """
         pass
 
+
 class IAppRoot(Interface):
     """Start of ResourceTree of a specific app.
     These are defined in the idris.apps module
@@ -121,7 +122,28 @@ class IAppRoot(Interface):
 
     An example app would be an institutional repository, journal website or lms
     """
+
     def __getitem__(self, key):
         """The lookup function for specific url paths
         """
         pass
+
+
+class ICacheService(Interface):
+
+    def __init__(self, connection_uri, namespace):
+        pass
+
+    def get(key):
+        "return a key value"
+        pass
+
+    def set(key, value, exprire=None):
+        "set a key to value with optional expiration"
+        pass
+
+    def delete(key):
+        "remove a key"
+
+    def flush():
+        "remove all keys (for this namespace), returns number of keys removed"

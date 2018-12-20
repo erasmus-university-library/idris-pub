@@ -38,6 +38,7 @@ class BaseTest(unittest.TestCase):
             'idris.blob_root_prefix': 'var/files',
             'idris.google_cloud_project': 'caleido-eur',
             'idris.lookup.crossref.email': 'jasper@artudis.com',
+            'cache.url': 'redis://localhost:6379',
             'sqlalchemy.url': (
                 'postgresql://idris:c4l31d0@localhost/idris')
         }

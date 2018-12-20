@@ -43,6 +43,7 @@ def configure(global_config, **settings):
     config.include('idris.storage')
     config.include('idris.blob')
     config.include('idris.services.lookup')
+    config.include('idris.services.cache')
     config.include('idris.apps.base')
     config.include('idris.apps.course')
 
