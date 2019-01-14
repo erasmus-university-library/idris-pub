@@ -40,6 +40,7 @@ class BaseTest(unittest.TestCase):
             'idris.app_prefix': 'caleido-eur',
             'idris.lookup.crossref.email': 'jasper@artudis.com',
             'cache.url': 'redis://localhost:6379',
+            'auditlog.url': 'bigquery://',
             'sqlalchemy.url': (
                 'postgresql://idris:c4l31d0@localhost/idris')
         }

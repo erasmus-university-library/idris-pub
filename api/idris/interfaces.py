@@ -147,3 +147,48 @@ class ICacheService(Interface):
 
     def flush():
         "remove all keys (for this namespace), returns number of keys removed"
+
+class IAuditLogService(Interface):
+    """
+    Write to a log in format:
+
+    <action:string*>,
+    <work_id:int*>,
+    <user_id:int*>,
+    <context_id:int>,
+    <message:string>,
+    <created:datetime>,
+    <value:json>
+
+    """
+    def __init__(self, connection_uri, namespace):
+        pass
+
+    def has_log(self, name):
+        "returns boolean"
+
+    def create_log(self, name):
+        "create a new audit log, returns True if succesful"
+        pass
+
+    def append(self,
+               action,
+               work_id,
+               user_id,
+               context_id=None,
+               message=None,
+               created=None,
+               value=None):
+        "write entry to the log, returns true if successful"
+        pass
+
+    def work_history(work_id):
+        "retrieve all log entries for a work, (list of dicts)"
+        pass
+
+    def count_entries(self, group_by_columns, count_column, distinct=True):
+        """
+        Run an aggregation query, grouped by a list of column name
+        returns a list of group_by_columns, count_column, earliest, latest
+        """
+        pass
