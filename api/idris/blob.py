@@ -57,7 +57,7 @@ class BlobStore(object):
             return output
         output['transformer'] = transformer.name
         local_blob_path = self.backend.local_path(blob.model.id)
-        transformer(blob).execute(local_blob_path)
+        transformer(blob, self.backend).execute(local_blob_path)
         if self.backend.remote_storage is True:
             os.remove(local_blob_path)
 
@@ -87,8 +87,11 @@ class LocalBlobStore(object):
                                 namespace)
         return root
 
-    def _blob_path(self, blob_id, makedirs=False):
-        directory = os.path.join(self._path, str(blob_id)[-3:])
+    def _blob_path(self, blob_id, makedirs=False, kind='primary'):
+        directory = os.path.join(
+            self._path,
+            kind,
+            '%0.3d' % int(str(blob_id)[-3:]))
         if makedirs and not os.path.isdir(directory):
             os.makedirs(directory)
         return os.path.join(directory, str(blob_id))
@@ -120,6 +123,26 @@ class LocalBlobStore(object):
         blob.model.checksum = hashlib.md5(request.body).hexdigest()
         blob.put()
 
+    def has_transform_data(self, blob_key, transform_id):
+        path = self._blob_path(str(blob_key),
+                               makedirs=True,
+                               kind=transform_id)
+        return os.path.isfile(path)
+
+    def write_transform_data(self, blob_key, transform_id, data, content_type):
+        path = self._blob_path(str(blob_key),
+                               makedirs=True,
+                               kind=transform_id)
+        with open(path, 'wb') as fp:
+            fp.write(data)
+
+    def read_transform_data(self, blob_key, transform_id):
+        path = self._blob_path(str(blob_key),
+                               makedirs=True,
+                               kind=transform_id)
+        with open(path, 'rb') as fp:
+            return fp.read()
+
 
 @implementer(IBlobStoreBackend)
 class GCSBlobStore(object):
@@ -136,9 +159,10 @@ class GCSBlobStore(object):
         self.bucket = self.client.get_bucket(self.bucket_name)
         self.blob_path = 'blobs'
 
-    def _blob_path(self, blob_id):
+    def _blob_path(self, blob_id, kind='primary'):
         return os.path.join(self.blob_path,
-                            str(blob_id)[-3:],
+                            kind,
+                            '%0.3d' % int(str(blob_id)[-3:]),
                             str(blob_id))
 
     def blob_exists(self, blob_id):
@@ -174,13 +198,31 @@ class GCSBlobStore(object):
             method='GET')
         raise HTTPFound(location=signed_url)
 
+    def has_transform_data(self, blob_key, transform_id):
+        path = self._blob_path(str(blob_key),
+                               kind=transform_id)
+        gcs_blob = storage.Blob(name=path, bucket=self.bucket)
+        return gcs_blob.exists()
+
+    def write_transform_data(self, blob_key, transform_id, data, content_type):
+        path = self._blob_path(str(blob_key),
+                               kind=transform_id)
+        gcs_blob = storage.Blob(name=path, bucket=self.bucket)
+        gcs_blob.upload_from_string(data, content_type=content_type)
+
+    def read_transform_data(self, blob_key, transform_id):
+        path = self._blob_path(str(blob_key),
+                               kind=transform_id)
+        gcs_blob = storage.Blob(name=path, bucket=self.bucket)
+        return gcs_blob.download_as_string()
 
 @implementer(IBlobTransform)
 class PDFTransform(object):
     name = 'PDFTransform 1.0'
 
-    def __init__(self, blob):
+    def __init__(self, blob, backend):
         self.blob = blob
+        self.backend = backend
 
     def execute(self, path):
         info = self.pdf_info(path)
@@ -207,6 +249,14 @@ class PDFTransform(object):
 
         jpg_file = tempfile.mktemp(prefix='pdfjson-', suffix='.jpg')
         self._call_with_timeout('convert', [path+'[0]', jpg_file])
+        # write cover image to the blob backend
+        with open(jpg_file, 'rb') as fp:
+            self.backend.write_transform_data(
+                self.blob.model.id,
+                'pdfcover',
+                fp.read(),
+                'image/jpeg')
+
         thumb_file = tempfile.mktemp(prefix='pdfjson-thumb-', suffix='.jpg')
         self._call_with_timeout('convert',
                                 ['-thumbnail', 'x%s' % thumbnail_height,
@@ -220,6 +270,12 @@ class PDFTransform(object):
     def pdf_text(self, path):
         output = self._call_with_timeout(
             'pdftotext', [path, '-']).decode('utf8')
+        # write cover image to the blob backend
+        self.backend.write_transform_data(
+            self.blob.model.id,
+            'pdftext',
+            output.encode('utf8'),
+            'text/plain')
         return output.strip()
 
     def pdf_info(self, path):

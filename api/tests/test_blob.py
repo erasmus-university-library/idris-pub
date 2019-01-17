@@ -14,6 +14,7 @@ class BlobStorageTest(BaseTest):
                                   'format': 'text/plain'},
                                  headers=headers,
                                  status=201)
+
         blob_id = out.json['id']
         upload_url = out.json['upload_url']
         # upload the raw data using PUT to the upload url
@@ -55,10 +56,12 @@ class BlobStorageTest(BaseTest):
         out = self.api.put('/api/v1/blob/records/%s' % blob_id,
                            headers=headers,
                            status=200)
+
         assert out.json['checksum'] == '3d0c5a07a69b6a9b3615a44881be654c'
         assert out.json.get('info').get('pages') == 1
         assert out.json.get('info').get('words') == 4
         assert out.json.get('text') == 'This is a test!'
+
 
     def test_work_expression(self):
         content = 'This is a test!'.encode('utf8')
