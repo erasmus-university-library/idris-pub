@@ -100,7 +100,6 @@ class Blob(Base):
     transform_name = Column(Unicode(32))
     info = Column(JSON)
     text = Column(UnicodeText)
-    cover_image = Column(Text)
     thumbnail = Column(Text)
     search_terms = Column(TSVECTOR)
     finalized = Column(Boolean)
@@ -114,6 +113,7 @@ class Blob(Base):
                   'info': self.info,
                   'thumbnail': self.thumbnail,
                   'text': self.text,
+                  'finalized': self.finalized,
                   'transform_name': self.transform_name}
         return result
 

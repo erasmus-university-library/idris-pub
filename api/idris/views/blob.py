@@ -13,10 +13,12 @@ from idris.resources import ResourceFactory, BlobResource
 
 from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
-                           StatusResponseSchema,
-                           OKStatus,
-                           JsonMappingSchemaSerializerMixin,
-                           colander_bound_repository_body_validator)
+                         OKStatusResponseSchema,
+                         OKStatus,
+                         JsonString,
+                         Base64String,
+                         JsonMappingSchemaSerializerMixin,
+                         colander_bound_repository_body_validator)
 
 
 class BlobSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
@@ -28,6 +30,22 @@ class BlobSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
     format = colander.SchemaNode(colander.String(), missing=colander.drop)
     checksum = colander.SchemaNode(colander.String(), missing=colander.drop)
     upload_url = colander.SchemaNode(colander.String(), missing=colander.drop)
+
+class BlobFinalizedSchema(BlobSchema):
+    transform_name = colander.SchemaNode(colander.String(),
+                                         missing=colander.drop)
+    info = colander.SchemaNode(JsonString(), missing=colander.drop)
+    text = colander.SchemaNode(colander.String(),
+                               missing=colander.drop)
+    thumbnail = colander.SchemaNode(Base64String(),
+                                    missing=colander.drop)
+    finalized = colander.SchemaNode(colander.Boolean(),  missing=colander.drop)
+
+class BlobBulkRequestSchema(colander.MappingSchema,
+                            JsonMappingSchemaSerializerMixin):
+    @colander.instantiate()
+    class records(colander.SequenceSchema):
+        blob = BlobFinalizedSchema()
 
 
 class BlobPostSchema(BlobSchema):
@@ -108,6 +126,12 @@ class BlobRecordAPI(object):
         permission='download')
     def get(self):
         "Download a Blob"
+        # XXX maybe this call shoud always return the blob metadata
+        if self.request.headers.get('Accept') == 'application/json':
+            result = BlobFinalizedSchema().to_json(
+                self.context.model.to_dict())
+            return result
+
         blobstore = self.request.repository.blob
         if not self.context.model.finalized:
             self.request.errors.status = 412
@@ -202,3 +226,37 @@ def blob_download_local_view(request):
                                        response,
                                        request.context)
     return response
+
+
+blob_bulk = Service(
+    name='BlobBulk',
+    path='/api/v1/blob/bulk',
+    factory=ResourceFactory(BlobResource),
+    api_security=[{'jwt': []}],
+    tags=['blob'],
+    cors_origins=('*', ),
+    schema=BlobBulkRequestSchema(),
+    validators=(colander_bound_repository_body_validator,),
+    response_schemas={
+        '200': OKStatusResponseSchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
+
+
+@blob_bulk.post(permission='import')
+def blob_bulk_import_view(request):
+    # get existing resources from submitted bulk
+    keys = [r['id'] for r in request.validated['records'] if r.get('id')]
+    existing_records = {
+        r.id: r for r in request.context.get_many(keys) if r}
+    models = []
+    for record in request.validated['records']:
+        if record['id'] in existing_records:
+            model = existing_records[record['id']]
+            model.update_dict(record)
+        else:
+            model = request.context.orm_class.from_dict(record)
+        models.append(model)
+    models = request.context.put_many(models)
+    request.response.status = 201
+    return {'status': 'ok'}

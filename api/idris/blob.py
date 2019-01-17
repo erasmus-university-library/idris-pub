@@ -232,7 +232,6 @@ class PDFTransform(object):
         info['dois'] = re.compile('[\/|:|\s](10\.[\S]+)').findall(text)
         self.blob.model.text = text
         cover, thumb = self.pdf_cover(path)
-        self.blob.model.cover_image = base64.b64encode(cover)
         self.blob.model.thumbnail = base64.b64encode(thumb)
         self.blob.put()
 
