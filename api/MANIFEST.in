@@ -1,2 +1,3 @@
 include requirements.txt
 include ImageMagick-6-policy.xml
+include idris/functions.sql
