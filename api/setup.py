@@ -37,7 +37,6 @@ setup(name='idris',
       [paste.app_factory]
       main=idris:main
       [console_scripts]
-      idris_admin = idris.scripts:idris_admin
       initialize_db = idris.tools:initialize_db
       drop_db = idris.tools:drop_db
       bigquery_schema = idris.tools:bigquery_schema
