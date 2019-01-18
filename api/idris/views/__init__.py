@@ -7,7 +7,11 @@ from cornice.service import get_services
 from pyramid.view import view_config
 from cornice_swagger import CorniceSwagger
 from cornice_swagger.converters import TypeConversionDispatcher
-from idris.utils import colander_bound_repository_body_validator
+from cornice_swagger.converters.schema import BaseStringTypeConverter
+from idris.utils import (
+    colander_bound_repository_body_validator,
+    JsonString,
+    Base64String)
 
 # Create a service to serve our OpenAPI spec
 swagger = Service(name='OpenAPI',
@@ -24,6 +28,12 @@ def body_schema_transformer(schema, args):
     return schema
 
 
+class JSONStringTypeConverter(BaseStringTypeConverter):
+    format = 'json'
+
+class Base64StringTypeConverter(BaseStringTypeConverter):
+    format = 'base64'
+
 class TypeConverterWithDeferredSupport(TypeConversionDispatcher):
     """
     This class subclasses TypeConversionDispatcher to add support
@@ -35,14 +45,23 @@ class TypeConverterWithDeferredSupport(TypeConversionDispatcher):
     `idris.utils.colander_bound_repository_body_validator`
     """
 
+    def __init__(self, custom_converters={}, default_converter=None):
+        custom_converters.update({
+            JsonString: JSONStringTypeConverter,
+            Base64String: Base64StringTypeConverter})
+        super(TypeConverterWithDeferredSupport, self).__init__(
+            custom_converters=custom_converters,
+            default_converter=default_converter)
+
     deferred_args = {}
     def __call__(self, schema_node):
+
         if isinstance(schema_node.validator, colander.deferred):
             schema_node.validator = schema_node.validator(schema_node,
                                                           self.deferred_args)
+
         return super(
             TypeConverterWithDeferredSupport, self).__call__(schema_node)
-
 
 @swagger.get()
 def openAPI_v1_spec(request):
