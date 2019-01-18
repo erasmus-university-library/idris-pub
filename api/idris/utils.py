@@ -1,9 +1,31 @@
 import os
 import json
+import codecs
+import binascii
 from infinity import is_infinite
 
 import colander
 from cornice.validators import colander_validator, colander_body_validator
+
+
+class JsonString(colander.String):
+    def deserialize(self, node, cstruct):
+        if isinstance(cstruct, str):
+            try:
+                json.loads(cstruct)
+            except json.decoder.JSONDecodeError:
+                raise colander.Invalid(node, '%r is not valid json' % cstruct)
+        return cstruct
+
+
+class Base64String(colander.String):
+    def deserialize(self, node, cstruct):
+        if isinstance(cstruct, str):
+            try:
+                codecs.decode(cstruct.encode('utf8'), 'base64')
+            except binascii.Error:
+                raise colander.Invalid(node, '%r is not valid base64' % cstruct)
+        return cstruct
 
 
 def parse_duration(duration, format=None):
