@@ -23,6 +23,9 @@ from idris.utils import (ErrorResponseSchema,
 
 class BlobSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
 
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
+
     id = colander.SchemaNode(colander.Int())
     name = colander.SchemaNode(colander.String())
     bytes = colander.SchemaNode(colander.Int())

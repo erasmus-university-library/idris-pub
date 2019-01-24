@@ -19,6 +19,10 @@ def owner_validator(node, kw):
             node, "Required: supply one of 'person_id' or 'group_id'")
 
 class UserSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
+
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
+
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
     user_group = colander.SchemaNode(colander.Int())
     userid = colander.SchemaNode(colander.String())

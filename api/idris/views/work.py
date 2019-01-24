@@ -119,6 +119,9 @@ class RelationSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
 
 
 class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
+
     id = colander.SchemaNode(colander.Int())
     type = colander.SchemaNode(colander.String(),
                                validator=deferred_work_type_validator)

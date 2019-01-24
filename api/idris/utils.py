@@ -84,6 +84,7 @@ def load_web_index_template(filename='index.html', config=None):
 
 
 class JsonMappingSchemaSerializerMixin(object):
+
     def to_json(self, appstruct):
         def json_serialize(key, value, context):
             if key is None:

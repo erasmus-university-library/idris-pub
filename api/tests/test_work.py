@@ -299,7 +299,6 @@ class WorkPermissionWebTest(BaseTest):
         pub = out.json
         assert len(pub['contributors']) == 1
         assert len(pub['contributors'][0]['affiliations']) == 0
-
         pub['contributors'][0]['affiliations'] = [
             {'description': 'Some Faculty',
              'group_info': json.dumps({

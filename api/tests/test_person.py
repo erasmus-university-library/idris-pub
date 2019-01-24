@@ -10,7 +10,7 @@ class PersonWebTest(BaseTest):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.post_json('/api/v1/person/records',
                                  {'family_name': 'Doe',
-                                  'given_name': 'John', 'type': 'individual'},
+                                  'given_name': 'John'},
                                  headers=headers,
                                  status=201)
         john_id = out.json['id']
@@ -55,8 +55,7 @@ class PersonWebTest(BaseTest):
                            'family_name': 'Rossem',
                            'family_name_prefix': 'van',
                            'given_name': 'Guido',
-                           'initials': 'G.',
-                           'type': 'individual'},
+                           'initials': 'G.'},
                           headers=headers,
                           status=200)
         out = self.api.get('/api/v1/person/records/%s' % john_id,
@@ -76,7 +75,6 @@ class PersonWebTest(BaseTest):
             '/api/v1/person/records',
             {'family_name': 'Doe',
              'given_name': 'John',
-             'type': 'individual',
              'accounts': [{'type': 'local', 'value': '1234'}]},
             headers=headers,
             status=201)
@@ -90,7 +88,6 @@ class PersonWebTest(BaseTest):
             {'id': john_id,
              'family_name': 'Doe',
              'given_name': 'John',
-             'type': 'individual',
              'accounts': [{'type': 'local', 'value': 'XXXX'}]},
             headers=headers,
             status=200)
@@ -104,7 +101,6 @@ class PersonWebTest(BaseTest):
             '/api/v1/person/records',
             {'family_name': 'Doe',
              'given_name': 'John',
-             'type': 'individual',
              'accounts': [{'type': 'local', 'value': '1234'}]},
             headers=headers,
             status=201)
@@ -114,8 +110,7 @@ class PersonWebTest(BaseTest):
             '/api/v1/person/records/%s' % last_id,
             {'id': last_id,
              'family_name': 'Doe',
-             'initials': 'J.',
-             'type': 'individual'},
+             'initials': 'J.'},
             headers=headers,
             status=200)
         # the accounts should be intact
@@ -126,7 +121,6 @@ class PersonWebTest(BaseTest):
             {'id': last_id,
              'family_name': 'Doe',
              'initials': 'J.',
-             'type': 'individual',
              'accounts': []},
             headers=headers,
             status=200)
@@ -178,7 +172,6 @@ class PersonAuthorzationWebTest(BaseTest):
             '/api/v1/person/records',
             {'family_name': 'Doe',
              'given_name': 'John',
-             'type': 'individual',
              'accounts': [{'type': 'local', 'value': '1234'}]},
             headers=headers,
             status=201)
@@ -205,7 +198,6 @@ class PersonAuthorzationWebTest(BaseTest):
             {'id': person_id,
              'family_name': 'Doe',
              'initials': 'J.',
-             'type': 'individual',
              'accounts': []},
             headers=john_headers,
             status=200)
@@ -220,12 +212,10 @@ class PersonAuthorzationWebTest(BaseTest):
             {'id': 1,
              'family_name': 'Doe',
              'given_name': 'John',
-             'type': 'individual',
              'accounts': [{'type': 'local', 'value': '123'}]},
             {'id': 2,
              'family_name': 'Doe',
              'given_name': 'Jane',
-             'type': 'individual',
              'accounts': [{'type': 'local', 'value': '345'}]}
              ]}
         # bulk add records

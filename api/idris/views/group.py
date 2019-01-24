@@ -32,6 +32,9 @@ def deferred_account_type_validator(node, kw):
 
 
 class GroupSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
+
     id = colander.SchemaNode(colander.Int())
     type = colander.SchemaNode(colander.String(),
                                validator=deferred_group_type_validator)

@@ -39,9 +39,13 @@ def contributor_affiliation_validator(node, kw):
 
 
 class ContributorAffiliationSchema(colander.MappingSchema):
+
     def __init__(self, *args, **kwargs):
         kwargs['validator'] = contributor_affiliation_validator
         super(ContributorAffiliationSchema, self).__init__(*args, **kwargs)
+
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
 
     id = colander.SchemaNode(colander.Int())
     group_id = colander.SchemaNode(colander.Int(), missing=None)
@@ -60,6 +64,9 @@ class ContributorSchema(colander.MappingSchema,
     def __init__(self, *args, **kwargs):
         kwargs['validator'] = contributor_validator
         super(ContributorSchema, self).__init__(*args, **kwargs)
+
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
 
     id = colander.SchemaNode(colander.Int())
     role = colander.SchemaNode(colander.String(),

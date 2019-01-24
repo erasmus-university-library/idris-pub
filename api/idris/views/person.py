@@ -45,6 +45,10 @@ def person_validator(node, kw):
 
 
 class PersonSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
+
+
     def __init__(self, *args, **kwargs):
         kwargs['validator'] = person_validator
         super(PersonSchema, self).__init__(*args, **kwargs)

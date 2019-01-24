@@ -21,6 +21,10 @@ from idris.utils import (ErrorResponseSchema,
                            )
 
 class MembershipSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
+
+    def schema_type(self, **kw):
+        return colander.Mapping(unknown="raise")
+
     id = colander.SchemaNode(colander.Int())
     person_id = colander.SchemaNode(colander.Int())
     _person_name = colander.SchemaNode(colander.String(),
