@@ -1,3 +1,4 @@
+import json
 from core import BaseTest
 
 class WorkWebTest(BaseTest):
@@ -241,9 +242,12 @@ class WorkPermissionWebTest(BaseTest):
                            headers=headers)
         pub = out.json
         assert len(pub['contributors']) == 1
-        pub['contributors'].append({'position': 1,
-                                    'role': 'author',
-                                    'description': 'Somebody I used to know.'})
+        pub['contributors'].append(
+            {'position': 1,
+             'role': 'author',
+             'description': 'John Doe',
+             'person_info': json.dumps({'family_name': 'Doe',
+                                        'given_name': 'John'})})
         out = self.api.put_json('/api/v1/work/records/%s' % self.pub_id,
                                 pub,
                                 headers=headers)
@@ -253,22 +257,24 @@ class WorkPermissionWebTest(BaseTest):
         out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
                            headers=headers)
         somebody = out.json['contributors'][1]
-        assert somebody['description'] == 'Somebody I used to know.'
+        assert somebody['description'] == 'John Doe'
+        assert json.loads(somebody['person_info'])['family_name'] == 'Doe'
+
         # test listing output
         out = self.api.get('/api/v1/work/records',
                            headers=headers)
         somebody = out.json['records'][1]['contributors'][1]
-        assert somebody['description'] == 'Somebody I used to know.'
+        assert somebody['description'] == 'John Doe'
         # test listing output
         out = self.api.get('/api/v1/work/listing',
                            headers=headers)
         somebody = out.json['snippets'][0]['contributors'][1]
-        assert somebody['description'] == 'Somebody I used to know.'
+        assert somebody['description'] == 'John Doe'
         # test csl listing output
         out = self.api.get('/api/v1/work/listing?format=csl',
                            headers=headers)
         somebody = out.json['snippets'][0]['author'][1]
-        assert somebody['literal'] == 'Somebody I used to know.'
+        assert somebody['literal'] == 'John Doe'
 
 
     def test_add_contributor_inline_affiliations(self):
@@ -285,6 +291,28 @@ class WorkPermissionWebTest(BaseTest):
                                 pub,
                                 headers=headers)
         assert len(pub['contributors'][0]['affiliations']) == 1
+
+    def test_add_contributor_inline_affiliations_with_description(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get('/api/v1/work/records/%s' % self.pub_id,
+                           headers=headers)
+        pub = out.json
+        assert len(pub['contributors']) == 1
+        assert len(pub['contributors'][0]['affiliations']) == 0
+
+        pub['contributors'][0]['affiliations'] = [
+            {'description': 'Some Faculty',
+             'group_info': json.dumps({
+                 'international_name': 'Some Faculty',
+                 'location': 'some address'}),
+             'position': 0}]
+        out = self.api.put_json('/api/v1/work/records/%s' % self.pub_id,
+                                pub,
+                                headers=headers)
+        assert len(pub['contributors'][0]['affiliations']) == 1
+        aff = pub['contributors'][0]['affiliations'][0]
+        assert aff['description'] == 'Some Faculty'
+        assert json.loads(aff['group_info'])['location'] == 'some address'
 
     def test_work_with_identifiers_inline(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
@@ -392,15 +420,22 @@ class WorkPermissionWebTest(BaseTest):
         pub = out.json
 
         assert len(pub['relations']) == 0
-        pub['relations'].append({'type': 'isPartOf',
-                                 'description': 'Some Journal',
-                                 'starting': '1',
-                                 'ending': '2',
-                                 'volume': '3',
-                                 'issue': '4',
-                                 'location': 'here'})
+        pub['relations'].append(
+            {'type': 'isPartOf',
+             'description': 'Some Journal',
+             'target_info': json.dumps({'type': 'journal',
+                                        'identifiers': [{'type': 'isnn',
+                                                         'value': '1234-1233'}]}),
+             'starting': '1',
+             'ending': '2',
+             'volume': '3',
+             'issue': '4',
+             'location': 'here'})
+
         out = self.api.put_json('/api/v1/work/records/%s' % self.pub_id,
                                 pub,
                                 headers=headers)
         pub = out.json
         assert len(pub['relations']) == 1
+        assert pub['relations'][0]['description'] == 'Some Journal'
+        assert json.loads(pub['relations'][0]['target_info'])['type'] == 'journal'

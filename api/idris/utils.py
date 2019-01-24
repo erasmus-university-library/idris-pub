@@ -12,11 +12,15 @@ class JsonString(colander.String):
     def deserialize(self, node, cstruct):
         if isinstance(cstruct, str):
             try:
-                json.loads(cstruct)
+                cstruct = json.loads(cstruct)
             except json.decoder.JSONDecodeError:
                 raise colander.Invalid(node, '%r is not valid json' % cstruct)
         return cstruct
 
+    def serialize(self, node, appstruct):
+        if appstruct is colander.null:
+            return colander.null
+        return json.dumps(appstruct)
 
 class Base64String(colander.String):
     def deserialize(self, node, cstruct):

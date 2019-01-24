@@ -20,6 +20,7 @@ from idris.utils import (ErrorResponseSchema,
                          StatusResponseSchema,
                          OKStatusResponseSchema,
                          OKStatus,
+                         JsonString,
                          JsonMappingSchemaSerializerMixin,
                          colander_bound_repository_body_validator)
 
@@ -103,6 +104,8 @@ class RelationSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                                        missing=colander.drop)
     _target_type = colander.SchemaNode(colander.String(),
                                        missing=colander.drop)
+    target_info = colander.SchemaNode(JsonString(), missing=colander.drop)
+
     start_date = colander.SchemaNode(colander.Date(), missing=None)
     end_date = colander.SchemaNode(colander.Date(), missing=None)
     starting = colander.SchemaNode(colander.String(), missing=None)

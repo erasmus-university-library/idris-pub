@@ -226,6 +226,7 @@ class Relation(Base):
                        nullable=True)
     target = relationship('Work',
                           foreign_keys=[target_id])
+    target_info = Column(JSON)
     type = Column(Unicode(32),
                   ForeignKey('relation_type_schemes.key'),
                   index=True,
@@ -268,6 +269,7 @@ class Relation(Base):
                   'description': self.description,
                   'start_date': start_date,
                   'end_date': end_date,
+                  'target_info': self.target_info,
                   'position': self.position}
         return result
 
@@ -440,8 +442,10 @@ class Work(Base):
                 {'id': contributor['id'],
                  'person_id': contributor['person_id'],
                  '_person_name': contributor['_person_name'],
+                 'person_info': contributor['person_info'],
                  'group_id': contributor['group_id'],
                  '_group_name': contributor['_group_name'],
+                 'group_info': contributor['group_info'],
                  'role': contributor['role'],
                  'location': contributor['location'],
                  'start_date': contributor['start_date'],
@@ -451,6 +455,8 @@ class Work(Base):
                  'affiliations': [{'group_id': a['group_id'],
                                    '_group_name': a['_group_name'],
                                    'id': a['id'],
+                                   'description': a['description'],
+                                   'group_info': a['group_info'],
                                    'position': a['position']}for a in
                                   contributor['affiliations']]})
 
@@ -1199,7 +1205,10 @@ class Contributor(Base):
     description = Column(UnicodeText, nullable=True)
     during = Column(DateRangeType, nullable=True)
     location = Column(UnicodeText, nullable=True)
+    person_info = Column(JSON)
+    group_info = Column(JSON)
     position = Column(Integer)
+
     affiliations = relationship('Affiliation',
                                 back_populates='contributor',
                                 lazy='joined')
@@ -1230,6 +1239,8 @@ class Contributor(Base):
                   'end_date': end_date,
                   'description': self.description,
                   'location': self.location,
+                  'person_info': self.person_info,
+                  'group_info': self.group_info,
                   'position': self.position}
 
         result['affiliations'] = []
@@ -1275,14 +1286,22 @@ class Affiliation(Base):
                       index=True,
                       nullable=True)
     group = relationship('Group', back_populates='affiliations', lazy='joined')
+    description = Column(UnicodeText, nullable=True)
+    group_info = Column(JSON)
     position = Column(Integer)
 
     def to_dict(self):
+        group_name = None
+        if self.group is not None:
+            group_name = self.group.name
+
         result = {'id': self.id,
                   'work_id': self.work_id,
                   'contributor_id': self.contributor_id,
                   'group_id': self.group_id,
-                  '_group_name': self.group.name,
+                  '_group_name': group_name,
+                  'description': self.description,
+                  'group_info': self.group_info,
                   'position': self.position}
         return result
 

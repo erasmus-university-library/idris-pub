@@ -12,6 +12,7 @@ from idris.utils import (ErrorResponseSchema,
                          StatusResponseSchema,
                          OKStatusResponseSchema,
                          OKStatus,
+                         JsonString,
                          JsonMappingSchemaSerializerMixin,
                          colander_bound_repository_body_validator)
 
@@ -29,16 +30,29 @@ def contributor_validator(node, kw):
         raise colander.Invalid(
             node,
             "Required: supply either 'person_id', 'group_id' or 'description'")
+def contributor_affiliation_validator(node, kw):
+    if (not kw.get('group_id') and not kw.get('description')):
+        node.name = '%s.group_id' % node.name
+        raise colander.Invalid(
+            node,
+            "Required: supply either 'group_id' or 'description'")
 
 
 class ContributorAffiliationSchema(colander.MappingSchema):
+    def __init__(self, *args, **kwargs):
+        kwargs['validator'] = contributor_affiliation_validator
+        super(ContributorAffiliationSchema, self).__init__(*args, **kwargs)
+
     id = colander.SchemaNode(colander.Int())
-    group_id = colander.SchemaNode(colander.Int())
+    group_id = colander.SchemaNode(colander.Int(), missing=None)
     _group_name = colander.SchemaNode(colander.String(),
                                       missing=colander.drop)
     work_id = colander.SchemaNode(colander.Int())
     contributor_id = colander.SchemaNode(colander.Int())
+    description = colander.SchemaNode(colander.String(), missing=None)
+    group_info = colander.SchemaNode(JsonString(), missing=colander.drop)
     position = colander.SchemaNode(colander.Int())
+
 
 
 class ContributorSchema(colander.MappingSchema,
@@ -54,9 +68,11 @@ class ContributorSchema(colander.MappingSchema,
     person_id = colander.SchemaNode(colander.Int(), missing=None)
     _person_name = colander.SchemaNode(colander.String(),
                                        missing=colander.drop)
+    person_info = colander.SchemaNode(JsonString(), missing=colander.drop)
     group_id = colander.SchemaNode(colander.Int(), missing=None)
     _group_name = colander.SchemaNode(colander.String(),
                                       missing=colander.drop)
+    group_info = colander.SchemaNode(JsonString(), missing=colander.drop)
     work_id = colander.SchemaNode(colander.Int())
     _work_name = colander.SchemaNode(colander.String(),
                                      missing=colander.drop)
@@ -66,6 +82,7 @@ class ContributorSchema(colander.MappingSchema,
                                    missing=colander.drop)
     location = colander.SchemaNode(colander.String(), missing=None)
     description = colander.SchemaNode(colander.String(), missing=None)
+
     position = colander.SchemaNode(colander.Int())
 
     @colander.instantiate(missing=colander.drop)
