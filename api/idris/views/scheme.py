@@ -12,7 +12,8 @@ def type_factory(request):
     scheme_id = request.matchdict['id']
     if scheme_id not in TypeResource.schemes:
         raise HTTPNotFound()
-    return TypeResource(request.dbsession, request.matchdict['id'])
+    return TypeResource(request.dbsession,
+                        request.matchdict['id'])
 
 class TypeSchema(colander.MappingSchema):
     id = colander.SchemaNode(colander.String(), missing=colander.drop)
@@ -70,7 +71,9 @@ class TypeAPI(object):
         })
     def put(self):
         "Update a Type Scheme"
-        self.context.from_dict(self.request.validated)
+        self.request.repository.put_type_config(
+            self.context.orm,
+            self.request.validated['values'])
         return TypeSchema().serialize(self.context.to_dict())
 
 

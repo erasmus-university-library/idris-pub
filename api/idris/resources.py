@@ -14,7 +14,7 @@ from idris.models import (
     User, Person, Group, GroupType, GroupAccountType, PersonAccountType,
     Membership, Work, WorkType, Contributor, ContributorRole, Affiliation,
     IdentifierType, MeasureType, DescriptionType, DescriptionFormat, Blob,
-    RelationType, Relation, PositionType,
+    RelationType, Relation, PositionType, Repository,
     Expression, ExpressionType, ExpressionFormat, ExpressionAccessRight)
 from idris.exceptions import StorageError
 
@@ -904,20 +904,6 @@ class TypeResource(object):
         if scheme_id is not None:
             self.orm = self.schemes[scheme_id]
         self.model = None
-
-    def from_dict(self, data):
-        values = dict((v['key'], v['label']) for v in data['values'])
-        for item in self.session.query(self.orm).all():
-            if item.key not in values:
-                self.session.delete(item)
-            else:
-                if values[item.key] != item.label:
-                    item.label = values[item.key]
-                    self.session.add(item)
-                del values[item.key]
-        for key, label in values.items():
-            self.session.add(self.orm(key=key, label=label))
-        self.session.flush()
 
     def to_dict(self):
         values = []

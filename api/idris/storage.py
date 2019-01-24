@@ -326,8 +326,7 @@ class RepositoryConfig(object):
             self.cached_config[type] = values
         return values
 
-    def put_type_config(self, type, values):
-        orm_table = self.orm_table[type]
+    def put_type_config(self, orm_table, values):
         values = dict((v['key'], v['label']) for v in values)
         for item in self.session.query(orm_table).all():
             if item.key not in values:
@@ -338,9 +337,9 @@ class RepositoryConfig(object):
                     self.session.add(item)
                 del values[item.key]
         for key, label in values.items():
-            self.session.add(self.orm(key=key, label=label))
+            self.session.add(orm_table(key=key, label=label))
         # update the repository config revision to force cache invalidation
-        repo = self.session(Repository).query(
+        repo = self.session.query(Repository).filter(
             Repository.namespace==self.namespace).first()
         repo.config_revision = Repository.config_revision + 1
         self.session.add(repo)

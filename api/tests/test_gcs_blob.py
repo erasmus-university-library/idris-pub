@@ -13,7 +13,8 @@ class GCSBlobStorageTest(BaseTest):
     def app_settings(self):
         settings = super(GCSBlobStorageTest, self).app_settings()
         settings['idris.blob_backend'] = 'gcs'
-        settings['idris.blob_root_prefix'] = 'caleido-eur'
+        settings['idris.blob_root_prefix'] = settings[
+            'idris.google_cloud_project']
         return settings
 
     def test_blob_gcs_upload_as_admin(self):

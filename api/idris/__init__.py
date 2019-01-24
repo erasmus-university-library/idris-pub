@@ -1,7 +1,9 @@
 import os
+import logging
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPFound
+from google.cloud import logging as cloud_logging
 
 from idris.security import add_role_principals
 from idris.interfaces import IAppRoot
@@ -26,6 +28,11 @@ def token_tween_factory(handler, registry):
     return token_tween
 
 def configure(global_config, **settings):
+
+    if settings.get('idris.use_google_cloud_logging') == 'true':
+        client = cloud_logging.Client().from_service_account_json(
+            settings['idris.google_application_credentials'])
+        client.setup_logging(log_level=logging.INFO)
 
     gcp_project = settings.get('idris.google_cloud_project')
     gcp_auth = settings.get('idris.google_application_credentials')
@@ -57,7 +64,6 @@ def configure(global_config, **settings):
 
     config.scan("idris.views")
 
-    config.add_route('debug', '/debug')
     config.add_route('liveness_check', '/_live')
     config.add_route('readiness_check', '/_ready')
 

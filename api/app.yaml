@@ -2,7 +2,7 @@ runtime: custom
 env: flex
 
 beta_settings:
-    cloud_sql_instances: caleido-eur:europe-west1:caleidev
+    cloud_sql_instances: idris-eur:europe-west1:idris-eur-db
 
 liveness_check:
   path: "/_live"
