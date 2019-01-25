@@ -51,6 +51,7 @@ def configure(global_config, **settings):
     config.include('idris.blob')
     config.include('idris.services.lookup')
     config.include('idris.services.cache')
+    config.include('idris.services.download_counter')
     config.include('idris.services.auditlog')
     config.include('idris.apps.base')
     config.include('idris.apps.course')

@@ -8,7 +8,7 @@ class RedisCache(object):
     def __init__(self, uri, prefix):
         host, port = uri.replace('redis://', '').split(':')
         self._client = redis.Redis(host=host, port=port)
-        self._prefix = prefix
+        self._prefix = '%s:mc' % prefix
 
     def get(self, key):
         result = self._client.get('%s:%s' % (self._prefix, key))

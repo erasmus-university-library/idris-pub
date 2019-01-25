@@ -152,19 +152,43 @@ class ICacheService(Interface):
     def __init__(self, connection_uri, namespace):
         pass
 
-    def get(key):
+    def get(self, key):
         "return a key value"
         pass
 
-    def set(key, value, exprire=None):
+    def set(self, key, value, exprire=None):
         "set a key to value with optional expiration"
         pass
 
-    def delete(key):
+    def delete(self, key):
         "remove a key"
 
-    def flush():
+    def flush(self):
         "remove all keys (for this namespace), returns number of keys removed"
+
+class IDownloadCounter(Interface):
+    def __init__(self, connection_uri, namespace, timezone):
+        pass
+
+    def count(self, expression_id, identity, when=None):
+        """Increment counters for a specfific expression / identity pair
+        identity can be any string
+        optionally specify a time (@when) when the download occured
+        """
+        pass
+
+    def get_count(self, expression_id, when=None):
+        """Returns download status for a single expression"""
+        pass
+
+    def history(self, expression_id):
+        """Returns a dict with download history of the last 30 days"""
+
+    def read_repository_downloads(self):
+        """Returns download status for complete repository
+        """
+        pass
+
 
 class IAuditLogService(Interface):
     """
