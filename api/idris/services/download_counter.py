@@ -29,7 +29,25 @@ class RedisDownloadCounter(object):
 
     Then, clean up all keys that are older then 30 days,
 
+    Unique users are calculated by adding the identity to a HLL and observing if
+    it incremented. These HLL entries are global per repository, and use the following
+    key:
+
+    <prefix>:dc:hll-<YYYY-MM-DD>
+
+    Every day all HLLs from the last 30 days are merged into a single HLL stored at:
+
+    <prefix>:dc:hll
+
+    Last all downloads per repository are calculated using the above mechanism, but
+    instead of using an integer expression_id, the id 'repo' is used, so:
+
+    <prefix>dc:repo
+
+    Will hold the repository historic counts
+
     """
+
     def __init__(self, uri, prefix, timezone='utc'):
         host, port = uri.replace('redis://', '').split(':')
         self._client = redis.Redis(host=host, port=port)
@@ -38,12 +56,10 @@ class RedisDownloadCounter(object):
 
     def _update(self, key, when):
         history = self._client.hgetall(key)
-        if history is None:
-            self._client.hset(key, 'ts-%s' % when.strftime('%Y-%m-%d'), 0)
-            return 0
         min_date = (when - datetime.timedelta(days=30)).strftime('%Y-%m-%d')
         keys_to_delete = []
         total = 0
+        u_total = 0
         for raw_hkey in list(history.keys()):
             hkey = raw_hkey.decode('utf8')
             if hkey.startswith('ts-') or hkey.startswith('us-'):
@@ -53,11 +69,28 @@ class RedisDownloadCounter(object):
             if key_date <= min_date:
                 keys_to_delete.append(raw_hkey)
                 continue
-            total += int(history[raw_hkey])
+            if hkey.startswith('t-'):
+                total += int(history[raw_hkey])
+            elif hkey.startswith('u-'):
+                u_total += int(history[raw_hkey])
+        pipe = self._client.pipeline()
         if keys_to_delete:
-            self._client.hdel(key, *keys_to_delete)
-        self._client.hincrby(key, 'ts-%s' % when.strftime('%Y-%m-%d'), total)
-        return total
+            pipe.hdel(key, *keys_to_delete)
+        pipe.hset(key, 'ts-%s' % when.strftime('%Y-%m-%d'), total)
+        pipe.hset(key, 'us-%s' % when.strftime('%Y-%m-%d'), u_total)
+        pipe.execute()
+        return total, u_total
+
+    def _update_hll(self, key, when):
+        hll_keys = []
+        for day in range(30):
+            key_date = (when - datetime.timedelta(days=day)).strftime('%Y-%m-%d')
+            hll_keys.append('%s:hll-%s' % (self._prefix, key_date))
+        total_key = '%s:hll' % self._prefix
+        pipe = self._client.pipeline()
+        pipe.delete(total_key)
+        pipe.pfmerge(total_key, *hll_keys)
+        pipe.execute()
 
     def history(self, expression_id):
         base_key = '%s:%s' % (self._prefix, expression_id)
@@ -66,25 +99,51 @@ class RedisDownloadCounter(object):
             history[key.decode('utf8')] = int(value)
         return history
 
-    def get_count(self, expression_id, when=None):
+    def get_counts(self, expression_id, when=None):
         when = when or self.today
         key = '%s:%s' % (self._prefix, expression_id)
-        count = self._client.hget(key, 'ts-%s' % when.strftime('%Y-%m-%d'))
-        if count is None:
-            count = self._update(key, when)
-        return int(count)
+        pipe = self._client.pipeline()
+        pipe.hget(key, 'ts-%s' % when.strftime('%Y-%m-%d'))
+        pipe.hget(key, 'us-%s' % when.strftime('%Y-%m-%d'))
+        t_count, u_count = pipe.execute()
+        if t_count is None:
+            t_count, u_count = self._update(key, when)
+        return int(t_count), int(u_count)
 
-    def count(self, expression_id, identifier, when=None):
+    def count(self, expression_id, user_identifier, when=None):
         when = when or self.today
-        key = '%s:%s' % (self._prefix, expression_id)
         download_time = when.strftime('%Y-%m-%d')
-        count = self._client.hincrby(key, 't-%s' % download_time, 1)
-        if count == 1:
+        key = '%s:%s' % (self._prefix, expression_id)
+        hll_key = '%s:hll-%s' % (self._prefix, download_time)
+        hll_value = '%s:%s' % (expression_id, user_identifier)
+        t_count = self._client.hincrby(key, 't-%s' % download_time, 1)
+        u_count = 0
+
+        if t_count == 1:
             # first download today! update history
+            self._client.expire(key, 86400 * 31) # 31 days
             self._update(key, when)
+            self._update_hll(key, when)
         else:
             self._client.hincrby(key, 'ts-%s' % download_time, 1)
-        return count
+
+        if self._client.pfadd(
+                '%s:hll' % self._prefix, hll_value) == 1:
+            # this user has not downloaded the file in the last 30 days
+            u_count = self._client.hincrby(key, 'u-%s' % download_time, 1)
+            pipe = self._client.pipeline()
+            pipe.pfadd(hll_key, hll_value)
+            if u_count == 1:
+                # first unique download of today!
+                pipe.expire(hll_key, 86400 * 31) # 31 days
+
+            pipe.hincrby(key, 'us-%s' % download_time, 1)
+            pipe.execute()
+        if expression_id != 'repo':
+            # increment the global repository count
+            # by calling ourself with 'repo' as expression_id
+            self.count('repo', user_identifier, when=when)
+        return t_count, u_count
 
     def flush(self):
         key = '%s:*' % self._prefix
