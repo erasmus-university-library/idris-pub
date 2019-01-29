@@ -1,11 +1,16 @@
+import os
 import time
 import uuid
 
+import pytest
+
 from idris.services.auditlog import auditlog_factory
+from core import BaseTest, no_google_credentials
 
-from core import BaseTest
 
-
+@pytest.mark.skipif(os.environ.get('TESTENV') == 'travis',
+                    reason='No GCP support when running in Travis')
+@no_google_credentials
 class CacheServiceTest(BaseTest):
 
     def setUp(self):
