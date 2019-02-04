@@ -10,6 +10,7 @@ from idris.utils import (ErrorResponseSchema,
                            StatusResponseSchema,
                            OKStatus,
                            JsonMappingSchemaSerializerMixin)
+from idris.views.id_mint import BaseIdMinterAPI
 
 
 def owner_validator(node, kw):
@@ -218,3 +219,13 @@ class UserAPI(object):
                 'limit': limit,
                 'offset': offset,
                 'status': 'ok'}
+@resource(
+    name='UserIds',
+    collection_path='/api/v1/user/ids',
+    path='/api/v1/user/ids/{id}',
+    tags=['user'],
+    cors_origins=('*', ),
+    api_security=[{'jwt': []}],
+    factory=ResourceFactory(UserResource))
+class GroupIdMinter(BaseIdMinterAPI):
+    pass

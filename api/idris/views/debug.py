@@ -7,6 +7,7 @@ from idris.interfaces import IAppRoot
 
 @view_config(context=IAppRoot, name='debug_cache')
 def echo_view(request):
+    raise ValueError('gug')
     import gzip
     gzip_body = gzip.compress(b'Hello! ' * 10000)
     response = request.response

@@ -438,3 +438,31 @@ class WorkPermissionWebTest(BaseTest):
         assert len(pub['relations']) == 1
         assert pub['relations'][0]['description'] == 'Some Journal'
         assert json.loads(pub['relations'][0]['target_info'])['type'] == 'journal'
+
+    def test_work_id_minting(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get('/api/v1/work/ids', headers=headers)
+        id_count = out.json['current_id']
+        assert id_count > 0 # there are already works
+        assert id_count == out.json['highest_observed_id']
+        # let's increment the id
+        out = self.api.post('/api/v1/work/ids', headers=headers)
+        assert out.json['current_id'] == id_count + 1
+        # note that there is no work with this id yet
+        assert out.json['current_id'] == out.json['highest_observed_id'] + 1
+        # now let's set the id counter to ten
+        out = self.api.put('/api/v1/work/ids',
+                           {'next_id': 10},
+                           headers=headers)
+        assert out.json['current_id'] == 10
+        assert out.json['highest_observed_id'] == id_count
+        # let's fetch the current sequence, just to be sure
+        self.api.get('/api/v1/work/ids',
+                     headers=headers).json['current_id'] == 10
+        # if the id sequence is set to a number lower then the
+        # highest observed id, an error is raised
+        out = self.api.put('/api/v1/work/ids',
+                           {'next_id': 0},
+                           headers=headers,
+                           status=400)
+        assert out.json['errors'][0]['name'] == 'next_id'

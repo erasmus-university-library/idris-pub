@@ -23,7 +23,7 @@ from idris.utils import (ErrorResponseSchema,
                          JsonString,
                          JsonMappingSchemaSerializerMixin,
                          colander_bound_repository_body_validator)
-
+from idris.views.id_mint import BaseIdMinterAPI
 
 @colander.deferred
 def deferred_work_type_validator(node, kw):
@@ -649,3 +649,14 @@ def work_search_view(request):
             'limit': limit,
             'offset': offset,
             'status': 'ok'}
+
+@resource(
+    name='WorkIds',
+    collection_path='/api/v1/work/ids',
+    path='/api/v1/work/ids/{id}',
+    tags=['work'],
+    cors_origins=('*', ),
+    api_security=[{'jwt': []}],
+    factory=ResourceFactory(WorkResource))
+class WorkIdMinter(BaseIdMinterAPI):
+    pass

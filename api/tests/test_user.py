@@ -187,3 +187,31 @@ class UserAuthWebTest(BaseTest):
                            headers={'Authorization': 'Bearer %s' % token})
         assert len(out.json['records']) == 1
         assert out.json['records'][0]['userid'] == 'user_4'
+
+    def test_user_id_minting(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        out = self.api.get('/api/v1/user/ids', headers=headers)
+        id_count = out.json['current_id']
+        assert id_count > 0 # there are already users
+        assert id_count == out.json['highest_observed_id']
+        # let's increment the id
+        out = self.api.post('/api/v1/user/ids', headers=headers)
+        assert out.json['current_id'] == id_count + 1
+        # note that there is no user with this id yet
+        assert out.json['current_id'] == out.json['highest_observed_id'] + 1
+        # now let's set the id counter to ten
+        out = self.api.put('/api/v1/user/ids',
+                           {'next_id': 10},
+                           headers=headers)
+        assert out.json['current_id'] == 10
+        assert out.json['highest_observed_id'] == id_count
+        # let's fetch the current sequence, just to be sure
+        self.api.get('/api/v1/user/ids',
+                     headers=headers).json['current_id'] == 10
+        # if the id sequence is set to a number lower then the
+        # highest observed id, an error is raised
+        out = self.api.put('/api/v1/user/ids',
+                           {'next_id': 0},
+                           headers=headers,
+                           status=400)
+        assert out.json['errors'][0]['name'] == 'next_id'

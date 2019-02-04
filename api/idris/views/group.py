@@ -17,6 +17,7 @@ from idris.utils import (ErrorResponseSchema,
                            OKStatus,
                            JsonMappingSchemaSerializerMixin,
                            colander_bound_repository_body_validator)
+from idris.views.id_mint import BaseIdMinterAPI
 
 
 @colander.deferred
@@ -387,3 +388,13 @@ def group_search_view(request):
             'limit': limit,
             'offset': offset,
             'status': 'ok'}
+@resource(
+    name='GroupIds',
+    collection_path='/api/v1/group/ids',
+    path='/api/v1/group/ids/{id}',
+    tags=['group'],
+    cors_origins=('*', ),
+    api_security=[{'jwt': []}],
+    factory=ResourceFactory(GroupResource))
+class GroupIdMinter(BaseIdMinterAPI):
+    pass

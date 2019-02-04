@@ -3,7 +3,8 @@ import logging
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPFound
-from google.cloud import logging as cloud_logging
+import google.cloud.logging
+from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 
 from idris.security import add_role_principals
 from idris.interfaces import IAppRoot
@@ -29,17 +30,28 @@ def token_tween_factory(handler, registry):
 
 def configure(global_config, **settings):
 
-    if settings.get('idris.use_google_cloud_logging') == 'true':
-        client = cloud_logging.Client().from_service_account_json(
-            settings['idris.google_application_credentials'])
-        client.setup_logging(log_level=logging.INFO)
-
     gcp_project = settings.get('idris.google_cloud_project')
     gcp_auth = settings.get('idris.google_application_credentials')
     if gcp_project and gcp_auth:
         os.environ['GOOGLE_CLOUD_PROJECT'] = gcp_project
         os.environ[
             'GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(gcp_auth)
+
+    if settings.get('idris.use_google_cloud_logging') == 'true':
+        if 'GAE_INSTANCE' in os.environ:
+            client = google.cloud.logging.Client()
+        else:
+            client = google.cloud.logging.Client().from_service_account_json(
+                settings['idris.google_application_credentials'])
+        handler = CloudLoggingHandler(client)
+        logging.getLogger().setLevel(logging.INFO)
+        setup_logging(handler)
+        logging.info('some info')
+        logging.error('bad')
+        log = client.logger('app')
+        log.log_text('some text')
+        log.log_struct({'foo': 'bar'})
+        logging.info(os.environ)
 
     config = Configurator(settings=settings, root_factory=root_factory)
     config.add_tween('idris.token_tween_factory')

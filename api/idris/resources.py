@@ -107,6 +107,23 @@ class BaseResource(object):
         return self.session.execute(
             sql.func.next_value(pkey_col.default)).scalar()
 
+    def get_current_id(self):
+        pkey_col = getattr(self.orm_class, self.key_col_name)
+        return self.session.execute(
+            sql.text("SELECT currval(:seq)"),
+            {'seq': pkey_col.default.name}).scalar()
+
+    def set_current_id(self, value):
+        pkey_col = getattr(self.orm_class, self.key_col_name)
+        return self.session.execute(
+            sql.text("SELECT setval(:seq, :value)"),
+            {'seq': pkey_col.default.name,
+             'value': value}).scalar()
+
+    def get_highest_observed_id(self):
+        pkey_col = getattr(self.orm_class, self.key_col_name)
+        return self.session.execute(sql.func.max(pkey_col)).scalar()
+
     @classmethod
     def pre_put_hook(cls, model):
         return model

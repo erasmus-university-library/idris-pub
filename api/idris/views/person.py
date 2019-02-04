@@ -17,6 +17,7 @@ from idris.utils import (ErrorResponseSchema,
                            OKStatus,
                            JsonMappingSchemaSerializerMixin,
                            colander_bound_repository_body_validator)
+from idris.views.id_mint import BaseIdMinterAPI
 
 
 @colander.deferred
@@ -449,3 +450,13 @@ def person_search_view(request):
             'limit': limit,
             'offset': offset,
             'status': 'ok'}
+@resource(
+    name='PersonIds',
+    collection_path='/api/v1/person/ids',
+    path='/api/v1/person/ids/{id}',
+    tags=['person'],
+    cors_origins=('*', ),
+    api_security=[{'jwt': []}],
+    factory=ResourceFactory(PersonResource))
+class PersonIdMinter(BaseIdMinterAPI):
+    pass
