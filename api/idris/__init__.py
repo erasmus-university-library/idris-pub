@@ -85,7 +85,6 @@ def configure(global_config, **settings):
     config.add_route('edit_without_slash', '/edit')
     config.add_view(
         lambda _, __: HTTPFound('/edit/'), route_name='edit_without_slash')
-    config.add_static_view('edit', path='idris:static/dist/web')
 
     return config
 
