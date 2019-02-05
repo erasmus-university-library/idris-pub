@@ -46,12 +46,6 @@ def configure(global_config, **settings):
         handler = CloudLoggingHandler(client)
         logging.getLogger().setLevel(logging.INFO)
         setup_logging(handler)
-        logging.info('some info')
-        logging.error('bad')
-        log = client.logger('app')
-        log.log_text('some text')
-        log.log_struct({'foo': 'bar'})
-        logging.info(os.environ)
 
     config = Configurator(settings=settings, root_factory=root_factory)
     config.add_tween('idris.token_tween_factory')
