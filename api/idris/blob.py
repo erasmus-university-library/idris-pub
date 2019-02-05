@@ -231,8 +231,8 @@ class PDFTransform(object):
         info['words'] = len(text.split())
         info['dois'] = re.compile('[\/|:|\s](10\.[\S]+)').findall(text)
         self.blob.model.text = text
-        cover, thumb = self.pdf_cover(path)
-        self.blob.model.thumbnail = base64.b64encode(thumb)
+        self.pdf_cover(path)
+        #self.blob.model.thumbnail = base64.b64encode(thumb)
         self.blob.put()
 
     def pdf_cover(self, path, thumbnail_height=200):
@@ -260,11 +260,16 @@ class PDFTransform(object):
         self._call_with_timeout('convert',
                                 ['-thumbnail', 'x%s' % thumbnail_height,
                                  jpg_file, thumb_file])
-        output = open(jpg_file, 'rb').read()
+
+        with open(thumb_file, 'rb') as fp:
+            self.backend.write_transform_data(
+                self.blob.model.id,
+                'thumb',
+                fp.read(),
+                'image/jpeg')
+
         os.remove(jpg_file)
-        thumb = open(thumb_file, 'rb').read()
         os.remove(thumb_file)
-        return output, thumb
 
     def pdf_text(self, path):
         output = self._call_with_timeout(

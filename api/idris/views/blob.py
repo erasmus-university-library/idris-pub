@@ -19,6 +19,7 @@ from idris.utils import (ErrorResponseSchema,
                          Base64String,
                          JsonMappingSchemaSerializerMixin,
                          colander_bound_repository_body_validator)
+from idris.views.id_mint import BaseIdMinterAPI
 
 
 class BlobSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
@@ -263,3 +264,14 @@ def blob_bulk_import_view(request):
     models = request.context.put_many(models)
     request.response.status = 201
     return {'status': 'ok'}
+
+@resource(
+    name='BlobIds',
+    collection_path='/api/v1/blob/ids',
+    path='/api/v1/blob/ids/{id}',
+    tags=['blob'],
+    cors_origins=('*', ),
+    api_security=[{'jwt': []}],
+    factory=ResourceFactory(BlobResource))
+class BlobIdMinter(BaseIdMinterAPI):
+    pass

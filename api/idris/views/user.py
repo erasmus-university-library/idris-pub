@@ -227,5 +227,5 @@ class UserAPI(object):
     cors_origins=('*', ),
     api_security=[{'jwt': []}],
     factory=ResourceFactory(UserResource))
-class GroupIdMinter(BaseIdMinterAPI):
+class UserIdMinter(BaseIdMinterAPI):
     pass
