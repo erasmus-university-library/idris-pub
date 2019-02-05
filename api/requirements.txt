@@ -21,3 +21,4 @@ requests
 pylti
 oauthlib
 redis
+lxml

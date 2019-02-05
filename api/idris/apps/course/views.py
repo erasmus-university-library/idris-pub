@@ -9,6 +9,7 @@ import colander
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPForbidden
 from pylti.common import verify_request_common
+from lxml import etree
 
 from idris.apps.course.services import course_royalty_calculator_factory
 from idris.resources import ResourceFactory, BlobResource
@@ -19,6 +20,8 @@ from idris.utils import (ErrorResponseSchema,
                          JsonMappingSchemaSerializerMixin,
                          load_web_index_template,
                          colander_bound_repository_body_validator)
+
+
 from idris.apps.course.resources import (
     CourseAppRoot, CourseResource)
 
@@ -82,9 +85,14 @@ def course_material_view(request):
 @view_config(context=CourseAppRoot, name='lti.xml')
 def lti_config_view(request):
     request.response.content_type = 'application/xml'
-    with open(os.path.join(os.path.dirname(__file__),
-                           'lti_config.xml'), 'rb') as fp:
-        request.response.write(fp.read())
+    doc = etree.parse(
+        os.path.join(os.path.dirname(__file__),
+                     'lti_config.xml'))
+    for el in doc.xpath('//*[@name="url"]'):
+        el.text = request.url.replace('/lti.xml', '/lti')
+    for el in doc.xpath('//*[@name="domain"]'):
+        el.text = request.host
+    request.response.write(etree.tostring(doc))
     return request.response
 
 @view_config(context=CourseAppRoot, name='lti')
