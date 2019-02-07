@@ -141,6 +141,7 @@ class CourseGroupListing extends Component {
       .then(data => {
 	this.setState({refresh: true});
 	this.handleAddCourseClose();
+	this.props.history.push(`/group/${this.props.id}/course/${data.course.id}`);
       });
   }
 

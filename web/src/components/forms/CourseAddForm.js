@@ -11,16 +11,28 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 
 import styles from './formStyles.js';
 
+function currentCourseYear() {
+  let now = new Date();
+  let startYear = now.getFullYear();
+  if ((now.getMonth() + 1) < 9){
+    startYear = now.getFullYear() - 1;
+  }
+  return [`${startYear}-09-01`,
+	  `${startYear + 1}-08-31`];
+}
+
+
 @withStyles(styles)
 class CourseAddForm extends Component {
 
   state = {
-    title: '',
-    start_date: '',
-    end_date: '',
+    title: (CONFIG||{}).title || '',
+    start_date: currentCourseYear()[0],
+    end_date: currentCourseYear()[1],
     course_id: '',
-    canvas_id: '',
+    lti_id: (CONFIG||{}).lti_id || '',
   }
+
   componentDidMount = (props) => {
     console.log(this.props)
     if (Boolean(this.props.course)){
@@ -41,6 +53,7 @@ class CourseAddForm extends Component {
   handleClose = () => {
     this.props.onClose();
   }
+
 
   render() {
     const { classes, course } = this.props;
@@ -92,7 +105,7 @@ class CourseAddForm extends Component {
 	    <div className={classes.formFieldRow}>
 	      <TextField
 		id="course_id"
-		className={classes.gutteredLeftField}
+		className={classes.flex}
 		label="Course Code"
 		type="text"
 		value={this.state.course_id}
@@ -100,12 +113,10 @@ class CourseAddForm extends Component {
 		margin="dense"
 		/>
               <TextField
-		id="canvas_id"
-		className={classes.gutteredRightField}
-		label="Canvas id"
-		type="text"
-		value={this.state.canvas_id}
-		onChange={this.handleChange('canvas_id')}
+		id="lti_id"
+		type="hidden"
+		value={this.state.lti_id}
+		onChange={this.handleChange('lti_id')}
 		margin="dense"
 		/>
 	      </div>

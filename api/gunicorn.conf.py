@@ -1,6 +1,6 @@
 import multiprocessing
 
-workers = 1#multiprocessing.cpu_count() * 2 + 2
+workers = multiprocessing.cpu_count() * 2 + 2
 forwarded_allow_ips = '*'
 secure_scheme_headers = {'X-Forwarded-Proto': 'https'}
 max_requests = 1024

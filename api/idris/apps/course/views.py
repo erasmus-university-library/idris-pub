@@ -1,6 +1,7 @@
 import os
+import base64
 import json
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl, quote
 
 from cornice import Service
 from cornice.resource import resource, view
@@ -27,7 +28,9 @@ from idris.apps.course.resources import (
 
 @view_config(context=CourseAppRoot)
 def home_view(request):
-    config = {'app': 'course'}
+    config = {'app': 'course',
+              'title': request.GET.get('title'),
+              'lti_id': request.GET.get('lti_id')}
     html = load_web_index_template('index.html', config)
     request.response.content_type = 'text/html'
     request.response.write(html.encode('utf8'))
@@ -88,11 +91,31 @@ def lti_config_view(request):
     doc = etree.parse(
         os.path.join(os.path.dirname(__file__),
                      'lti_config.xml'))
+    lti_url = request.url
+    if request.headers.get('X-Forwarded-Proto') == 'https':
+        lti_url = lti_url.replace('http://', 'https://')
+
     for el in doc.xpath('//*[@name="url"]'):
-        el.text = request.url.replace('/lti.xml', '/lti')
+        el.text = lti_url.replace('/lti.xml', '/lti')
     for el in doc.xpath('//*[@name="domain"]'):
         el.text = request.host
+    for el in doc.xpath('//*[@name="icon_url"]'):
+        el.text = lti_url.replace('/lti.png', '/lti')
     request.response.write(etree.tostring(doc))
+    return request.response
+
+@view_config(context=CourseAppRoot, name='lti.png')
+def lti_icon_view(request):
+    data = base64.b64decode(
+        'iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARn'
+        'QU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADZSURBVEhL5dQxCsJAEIXh'
+        'BcELeAobSwsVD+FtxFYiehcPYWlp4w208gKCoO+HHZAw0wzb5cEHy+btJCSQMpiM5STP'
+        'ijV7zcLAb89BmoWnZuhClnXNXrPYDVYV64c0y1EY+q/pK+KDchOeGgxPfeS3vOQuZ9nJ'
+        'TKJwjQ5dznCWGWH6r8FcZS0W1ux5XYTxyuYj24q11zFhvHJGGK+cEcYrZ4TxyhlhvHJG'
+        'GK+cEcYrZ4Txyhlh+L9MZCob2ctNvCHgGh26nOFs6h81l4vYYNbsNc1Iuor1IFLKD8j5'
+        '3abZMoa6AAAAAElFTkSuQmCC')
+    request.response.content_type = 'image/png'
+    request.response.write(data)
     return request.response
 
 @view_config(context=CourseAppRoot, name='lti')
@@ -108,10 +131,11 @@ def lti_login_view(request):
     logging.info(params)
     logging.info('LTI post for course: %s' % params['context_id'])
 
-    url = request.url.replace('http://', 'https://')
+    url = request.url
+    if request.headers.get('X-Forwarded-Proto') == 'https':
+        url = url.replace('http://', 'https://')
 
-
-    consumer_key = params['oauth_consumer_key']
+    consumer_key = params.get('oauth_consumer_key', '')
     consumers = {consumer_key: {
         'secret': settings['course_lti_secret']}}
     try:
@@ -129,10 +153,19 @@ def lti_login_view(request):
         raise HTTPForbidden('Unauthorized')
     user_id = params['user_id']
     principals = ['user:%s' % user_id]
-
-    group = request.dbsession.query(Group).filter(
-        Group.id==consumer_key.split('-')[-1]).first()
-
+    group_id = consumer_key.split('-')[-1]
+    try:
+        group = request.dbsession.query(Group).filter(
+            Group.id==group_id).first()
+    except:
+        group = None
+    if not group:
+        request.errors.add(
+            'body',
+            'oauth_consumer_key',
+            'Bad consumer_key, no such group: "%s"' % group_id)
+        raise HTTPNotFound(
+            'Bad consumer_key, no such group: "%s"' % group_id)
     if group:
         principals.append('member:group:%s' % group.id)
 
@@ -160,17 +193,25 @@ def lti_login_view(request):
     token = request.create_jwt_token(user_id,
                                      principals=principals,
                                      **token_params)
-    redirect_url = 'https://%s/?token=%s&embed=true' % (request.host, token)
-    redirect_url = redirect_url.replace('http://', 'https://')
-    if group:
-        redirect_url = '%s#/group/%s' % (redirect_url, group.id)
+    redirect_url = 'http://%s/' % (request.host,)
+    url_params = '?token=%s&embed=true' % (token,)
+    if request.headers.get('X-Forwarded-Proto') == 'https':
+        redirect_url = redirect_url.replace('http://', 'https://')
+    url_fragment = '#/group/%s' % (group.id,)
     if course:
-        redirect_url = '%s/course/%s' % (redirect_url, course)
+        url_fragment = '%s/course/%s' % (url_fragment, course)
         if params['lti_message_type'] == 'ContentItemSelectionRequest':
-            redirect_url = '%s/filters' % redirect_url
+            url_fragment = '%s/filters' % url_fragment
         elif request.GET.get('course_filter'):
-            redirect_url = '%s/filter/%s' % (redirect_url,
-                                             request.GET['course_filter'])
+            url_fragment = '%s/filter/%s' % (url_fragment,
+                                         request.GET['course_filter'])
+    else:
+        url_fragment = '%s/add' % (url_fragment,)
+        url_params = '%s&title=%s&lti=%s' % (
+            url_params,
+            quote(params.get('context_title', '')),
+            quote(params['context_id']))
+    redirect_url = '%s%s%s' % (redirect_url, url_params, url_fragment)
 
     request.response.content_type = 'application/json'
     request.response.write(

@@ -1,3 +1,4 @@
+import os
 import logging
 
 from pyramid.view import view_config
@@ -7,6 +8,12 @@ from idris.interfaces import IAppRoot
 
 @view_config(context=IAppRoot, name='debug_cache')
 def echo_view(request):
+    logging.info(os.environ)
+    logging.info(request.environ)
+    request.response.content_type == 'text/plain'
+    logging.info(dict(request.headers))
+    return request.response
+
     raise ValueError('gug')
     import gzip
     gzip_body = gzip.compress(b'Hello! ' * 10000)

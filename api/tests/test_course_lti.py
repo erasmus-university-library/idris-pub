@@ -24,6 +24,7 @@ class CourseLTIAuthTest(BaseTest):
                                           u'94173d3e79d145fd8ec2e83f15836ac8'
                                           u':008437924c9852377e8994829aaac7a1',
                   'context_id': u'MITx/ODL_ENG/2014_T1',
+                  'context_title': u'A test course',
                   'lti_version': u'LTI-1p0',
                   'launch_presentation_return_url': u'',
                   'lis_outcome_service_url': u'https://edge.edx.org/courses/'
@@ -59,22 +60,31 @@ class CourseLTIAuthTest(BaseTest):
         self.api.put_json('/api/v1/schemes/settings',
                           settings,
                           headers=headers)
-        url = 'https://unittest.localhost/lti'
-        params = self.generate_lti_request(url, 'foobar-1', 'sekret')
-        out = self.api.get('/lti?%s' % params)
-        assert out.json['status'] == 'ok'
-        info = jwt.decode(out.json['token'], verify=False)
-        assert 'group:teacher' in info['principals']
-        assert info['sub'] == '008437924c9852377e8994829aaac7a1'
-        assert 'teacher:course:1' not in info['principals']
-        # now let's add a course with resource_link_id
-        # and validate again
+        # add a group that can be referenced from the consumer_key
         out = self.api.post_json('/api/v1/group/records',
                                  {'international_name': 'Faculty X',
                                   'type': 'faculty'},
                                  headers=headers,
                                  status=201)
         corp_id = out.json['id']
+        url = 'http://unittest.localhost/lti'
+        params = self.generate_lti_request(
+            url, 'foobar-%s' % corp_id, 'sekret')
+        out = self.api.get('/lti?%s' % params)
+        assert out.json['status'] == 'ok'
+        info = jwt.decode(out.json['token'], verify=False)
+        assert 'group:teacher' in info['principals']
+        assert info['sub'] == '008437924c9852377e8994829aaac7a1'
+        # there is not course with this lti context_id, so
+        # we get redirected to the course add form of the group
+        assert out.headers['Location'] == (
+            'http://unittest.localhost/?token=%s&embed=true'
+            '&title=A%%20test%%20course&lti=MITx/ODL_ENG/2014_T1'
+            '#/group/1/add') % out.json['token']
+
+        assert 'teacher:course:1' not in info['principals']
+        # now let's add a course with resource_link_id
+        # and validate again
         out = self.api.post_json(
             '/api/v1/work/records',
             {'title': 'Course X',
@@ -93,7 +103,22 @@ class CourseLTIAuthTest(BaseTest):
         assert 'teacher:course:%s' % course_id in info['principals']
         assert out.status_code == 303
         assert out.headers['Location'] == (
-            'https://unittest.localhost/?token=%s&embed=true'
+            'http://unittest.localhost/?token=%s&embed=true'
             '#/group/1/course/1') % out.json['token']
         # note that the token is also set as a cookie
         out.json['token'] in out.headers['Set-Cookie']
+
+    def test_lti_oauth_to_non_existing_group(self):
+        # first add some course settings to enable the lti authentication
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        settings = self.api.get('/api/v1/schemes/settings',
+                                headers=headers).json
+        settings['course_lti_secret'] = 'sekret'
+        self.api.put_json('/api/v1/schemes/settings',
+                          settings,
+                          headers=headers)
+        url = 'http://unittest.localhost/lti'
+        params = self.generate_lti_request(url, 'foo', 'sekret')
+        # since the consumer_key 'foo' is not valid, and does not
+        # point to an existing group in the db, a 404 is returned
+        self.api.get('/lti?%s' % params, status=404)
