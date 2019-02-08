@@ -30,7 +30,7 @@ from idris.apps.course.resources import (
 def home_view(request):
     config = {'app': 'course',
               'title': request.GET.get('title'),
-              'lti_id': request.GET.get('lti_id')}
+              'lti_id': request.GET.get('lti')}
     html = load_web_index_template('index.html', config)
     request.response.content_type = 'text/html'
     request.response.write(html.encode('utf8'))

@@ -109,5 +109,6 @@ class GCSBlobStorageTest(BaseTest):
                            status=302)
         download_url = out.location
         response = requests.get(download_url)
+        assert response.headers['Content-Disposition'] == 'attachment; filename=test.txt'
         assert response.headers['Content-Type'] == 'text/plain'
         assert response.content == b'This is a test!'

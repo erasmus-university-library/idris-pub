@@ -192,10 +192,11 @@ class GCSBlobStore(object):
         return target
 
     def serve_blob(self, request, response, blob):
-        blob = self.bucket.get_blob(self._blob_path(blob.model.id))
-        signed_url = blob.generate_signed_url(
-            datetime.timedelta(minutes=15),
-            method='GET')
+        gcs_blob = self.bucket.get_blob(self._blob_path(blob.model.id))
+        signed_url = gcs_blob.generate_signed_url(
+            expiration=datetime.timedelta(minutes=15),
+            method='GET',
+            response_disposition= 'attachment; filename=%s' % blob.model.name)
         raise HTTPFound(location=signed_url)
 
     def has_transform_data(self, blob_key, transform_id):
