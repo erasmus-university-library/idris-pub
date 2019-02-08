@@ -34,7 +34,7 @@ class UserAuthTest(BaseTest):
         # view by pyramid, so the principals do not need to be passed.
 
         session = self.storage.make_session(namespace='unittest')
-        context = UserResource(self.storage.registry, session)
+        context = UserResource(self.storage.registry, session, user_id='john')
         # let's try to retrieve the admin user as user john
         with pytest.raises(HTTPForbidden):
             context.get(1, principals=['user:john'])
@@ -166,8 +166,11 @@ class UserAuthWebTest(BaseTest):
         # add a dozen users
         session = self.storage.make_session(namespace='unittest')
         for i in range(12):
-            session.add(User(userid='user_%s' % i,
-                             credentials='user_%s' % i,
+            user_id = 'user_%s' % i
+            session.add(User(userid=user_id,
+                             user_created=user_id,
+                             user_modified=user_id,
+                             credentials=user_id,
                              user_group=10))
         session.flush()
         transaction.commit()

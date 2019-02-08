@@ -137,7 +137,11 @@ class PersonAuthorzationWebTest(BaseTest):
         session = self.storage.make_session(namespace='unittest')
         for user, user_group in test_users:
             session.add(
-                User(userid=user, credentials=user, user_group=user_group))
+                User(userid=user,
+                     user_created=user,
+                     user_modified=user,
+                     credentials=user,
+                     user_group=user_group))
         session.flush()
         transaction.commit()
         for user, user_group in test_users:
