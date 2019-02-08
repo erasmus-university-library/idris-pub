@@ -103,7 +103,9 @@ class BaseTest(unittest.TestCase):
             {'user': user_group_password, 'password': user_group_password},
             status=[200, 401])
         if response.status_code == 401:
-            context = UserResource(self.storage.registry, self.session)
+            context = UserResource(self.storage.registry,
+                                   self.session,
+                                   user_id=user_group_password)
             context.put(
                 User(userid=user_group_password,
                      credentials=user_group_password,

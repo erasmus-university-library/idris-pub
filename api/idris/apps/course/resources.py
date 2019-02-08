@@ -41,13 +41,13 @@ class CourseResource(BaseResource):
             yield (Allow,
                    'teacher:course:%s' % self.model.id,
                    teacher_permissions)
-            if self.model.last_user_id:
+            if self.model.user_modified:
                 # when a course is newly created, there is no
                 # 'teacher:course:id' principal yet,
                 # however we can still grant access to the
                 # last_user_id principal
                 yield (Allow,
-                       'user:%s' % self.model.last_user_id,
+                       'user:%s' % self.model.user_modified,
                        teacher_permissions)
             yield (Allow,
                    'student:course:%s' % self.model.id,

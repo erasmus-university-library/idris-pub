@@ -176,6 +176,8 @@ class Storage(object):
         session.flush()
         session.add(User(userid=admin_userid,
                          credentials=admin_credentials,
+                         user_created=admin_userid,
+                         user_modified=admin_userid,
                          user_group=100))
         session.flush()
 

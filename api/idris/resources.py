@@ -145,10 +145,12 @@ class BaseResource(object):
             else:
                 permission = 'edit'
             model = self.__class__.pre_put_hook(model)
-            if hasattr(model, 'last_user_id'):
-                model.last_user_id = self.user_id
-            if hasattr(model, 'last_revision'):
-                model.last_revision = (model.last_revision or 0) + 1
+            if hasattr(model, 'user_created'):
+                model.user_created = self.user_id
+            if hasattr(model, 'user_modified'):
+                model.user_modified = self.user_id
+            if hasattr(model, 'revision'):
+                model.revision = (model.revision or 0) + 1
 
             self.session.add(model)
             if principals and not self.is_permitted(

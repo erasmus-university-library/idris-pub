@@ -412,9 +412,12 @@ class Work(Base):
                              collection_class=ordering_list('position'),
                              cascade='all, delete-orphan')
 
-    last_user_id = Column(Unicode(256), nullable=True)
-    last_modified = Column(DateTime, onupdate=func.timezone('utc', func.now()))
-    last_revision = Column(Integer, default=1)
+    user_created = Column(Unicode(128), nullable=False)
+    user_modified = Column(Unicode(128), nullable=False)
+    created = Column(DateTime, server_default=func.timezone('utc', func.now()))
+    modified = Column(DateTime,
+                           onupdate=func.timezone('utc', func.now()))
+    revision = Column(Integer, default=1)
 
     search_terms = Column(TSVECTOR)
 
@@ -626,6 +629,14 @@ class Person(Base):
     family_name_prefix = Column(Unicode(64))
     honorary = Column(Unicode(64))
     alternative_name = Column(UnicodeText)
+
+    user_created = Column(Unicode(128), nullable=False)
+    user_modified = Column(Unicode(128), nullable=False)
+    created = Column(DateTime, server_default=func.timezone('utc', func.now()))
+    modified = Column(DateTime,
+                           onupdate=func.timezone('utc', func.now()))
+    revision = Column(Integer, default=1)
+
 
     search_terms = Column(TSVECTOR)
 
@@ -895,6 +906,14 @@ class Group(Base):
                        ForeignKey('groups.id'),
                        index=True,
                        nullable=True)
+
+    user_created = Column(Unicode(128), nullable=False)
+    user_modified = Column(Unicode(128), nullable=False)
+    created = Column(DateTime, server_default=func.timezone('utc', func.now()))
+    modified = Column(DateTime,
+                           onupdate=func.timezone('utc', func.now()))
+    revision = Column(Integer, default=1)
+
     search_terms = Column(TSVECTOR)
 
     parent = relationship('Group', remote_side=[id], lazy='joined')
@@ -976,9 +995,19 @@ class User(Base):
     user_group = Column(Integer(),
                         ForeignKey('user_groups.id'),
                         nullable=False)
-    userid = Column(Unicode(128), index=True, nullable=False)
+    userid = Column(Unicode(128),
+                    index=True,
+                    unique=True,
+                    nullable=False)
     credentials = Column(PasswordType(schemes=['pbkdf2_sha512']),
                          nullable=False)
+
+    user_created = Column(Unicode(128), nullable=False)
+    user_modified = Column(Unicode(128), nullable=False)
+    created = Column(DateTime, server_default=func.timezone('utc', func.now()))
+    modified = Column(DateTime,
+                           onupdate=func.timezone('utc', func.now()))
+    revision = Column(Integer, default=1)
 
     search_terms = Column(TSVECTOR)
 
