@@ -66,7 +66,7 @@ class CourseResource(BaseResource):
           w.id,
           w.type,
           w.issued,
-          MAX(e.uri) AS link,
+          MAX(e.url) AS link,
           MAX(e.blob_id) as blob_id,
           MAX(CASE WHEN d.type='rights' THEN d.value ELSE NULL END) AS exception,
           MAX(CASE WHEN m.type='wordCount' THEN m.value ELSE NULL END) AS words,
@@ -290,14 +290,15 @@ class CourseResource(BaseResource):
                 'type': 'publication',
                 'format': 'published',
                 'access': 'public',
-                'blob_id': data['blob_id']})
+                'blob_id': data['blob_id'],
+                'blob_preview': 'thumb'})
         if data.get('link'):
             work.setdefault('expressions', []).append({
                 'name': 'fulltext',
                 'type': 'publication',
                 'format': 'published',
                 'access': 'public',
-                'uri': data['link']})
+                'url': data['link']})
         return Work.from_dict(work)
 
     def from_course_data(self, data):

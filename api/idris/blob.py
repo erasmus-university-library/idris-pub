@@ -27,13 +27,12 @@ class BlobStore(object):
     def upload_url(self, blob, origin=None):
         return self.backend.upload_url(blob, origin)
 
-    def download_url(self, blob_id):
-        return self.backend.download_url(blob_id)
-
     def receive_blob(self, request, blob):
         return self.backend.receive_blob(request, blob)
 
     def serve_blob(self, request, response, blob):
+        if not blob.model.finalized:
+            self.finalize_blob(blob)
         return self.backend.serve_blob(request, response, blob)
 
     def finalize_blob(self, blob):
@@ -42,6 +41,7 @@ class BlobStore(object):
         if not blob.model.checksum:
             blob.model.checksum = self.backend.blob_checksum(
                 blob.model.id)
+        self.backend.finalize_blob_headers(blob)
         if not blob.model.finalized:
             blob.model.finalized = True
         blob.put()
@@ -62,7 +62,6 @@ class BlobStore(object):
             os.remove(local_blob_path)
 
         blob.model.transform_name = transformer.name
-        blob.put()
 
 
 @implementer(IBlobStoreBackend)
@@ -87,7 +86,7 @@ class LocalBlobStore(object):
                                 namespace)
         return root
 
-    def _blob_path(self, blob_id, makedirs=False, kind='primary'):
+    def _blob_path(self, blob_id, kind='primary', makedirs=False):
         directory = os.path.join(
             self._path,
             kind,
@@ -105,23 +104,41 @@ class LocalBlobStore(object):
         return '%s/api/v1/blob/upload/%s' % (self.repository.api_host_url,
                                              blob.id)
 
+    def finalize_blob_headers(self, blob):
+        pass
+
+    def public_preview_url(self, blob_id, kind):
+        return '%s/api/v1/blob/preview/%s' % (self.repository.api_host_url,
+                                              blob_id)
+
     def local_path(self, blob_id):
         return self._blob_path(blob_id)
+
+    def serve_preview_blob(self, request, response, blob):
+        "Modify the response to servce bytes from blob_key"
+        response.content_type = 'image/jpeg'
+        preview_kind =  blob.model.info.get('preview_blob')
+        path = self._blob_path(blob.model.id, preview_kind)
+        with open(path, 'rb') as fp:
+            response.body = fp.read()
+        return response
 
     def serve_blob(self, request, response, blob):
         "Modify the response to servce bytes from blob_key"
         response.content_type = blob.model.format
+        response.content_disposition = (
+            'attachment; filename=%s' % blob.model.name)
         path = self._blob_path(blob.model.id)
         with open(path, 'rb') as fp:
             response.body = fp.read()
         return response
 
     def receive_blob(self, request, blob):
-        path = self._blob_path(str(blob.model.id), makedirs=True)
+        path = self._blob_path(str(blob.model.id),
+                               makedirs=True)
         with open(path, 'wb') as fp:
             fp.write(request.body)
         blob.model.checksum = hashlib.md5(request.body).hexdigest()
-        blob.put()
 
     def has_transform_data(self, blob_key, transform_id):
         path = self._blob_path(str(blob_key),
@@ -184,6 +201,30 @@ class GCSBlobStore(object):
             size=blob.bytes,
             origin=origin)
 
+    def finalize_blob_headers(self, blob):
+        gcs_blob = self.bucket.get_blob(self._blob_path(blob.model.id))
+        if gcs_blob.size and gcs_blob.content_type != blob.model.format:
+            # make sure the blob in GCS has correct content_type header
+            # this will be missing if upload was in bulk through gsutil
+            gcs_blob.content_type = blob.model.format
+            gcs_blob.update()
+        for transform_blob in (blob.model.info or {}).get('transform_blobs', []):
+            content_type = {'pdftext': 'text/plain',
+                            'thumb': 'image/jpeg',
+                            'pdfcover': 'image/jpeg'}.get(transform_blob)
+            tf_blob = self.bucket.get_blob(
+                self._blob_path(blob.model.id, transform_blob))
+            if tf_blob.size and tf_blob.content_type != content_type:
+                tf_blob.content_type = blob.model.format
+                tf_blob.update()
+            if transform_blob == blob.model.info.get('preview_blob'):
+                # make sure the preview_blob is publically accessible
+                tf_blob.make_public()
+
+    def public_preview_url(self, blob_id, kind):
+        return self.bucket.get_blob(
+            self._blob_path(blob_id, kind)).media_link
+
     def local_path(self, blob_id):
         target = tempfile.mktemp(prefix='gcs-%s-%s-' % (
             self.repository.namespace, blob_id))
@@ -227,14 +268,20 @@ class PDFTransform(object):
 
     def execute(self, path):
         info = self.pdf_info(path)
-        self.blob.model.info = info
         text = self.pdf_text(path)
         info['words'] = len(text.split())
         info['dois'] = re.compile('[\/|:|\s](10\.[\S]+)').findall(text)
+        info['preview_blob'] = None
+        info['transform_blobs'] = ['pdftext']
         self.blob.model.text = text
-        self.pdf_cover(path)
-        #self.blob.model.thumbnail = base64.b64encode(thumb)
-        self.blob.put()
+        created_cover_and_thumb = self.pdf_cover(path)
+        if created_cover_and_thumb:
+            info['transform_blobs'].append('pdfcover')
+            info['transform_blobs'].append('thumb')
+            info['preview_blob'] = 'thumb'
+            info['preview_url'] = self.backend.public_preview_url(
+                self.blob.model.id, 'thumb')
+        self.blob.model.info = info
 
     def pdf_cover(self, path, thumbnail_height=200):
         """This command uses imageMagick.
@@ -271,6 +318,7 @@ class PDFTransform(object):
 
         os.remove(jpg_file)
         os.remove(thumb_file)
+        return True
 
     def pdf_text(self, path):
         output = self._call_with_timeout(

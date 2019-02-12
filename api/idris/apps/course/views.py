@@ -72,8 +72,8 @@ def course_material_view(request):
                 material_id,))
 
     expression = material.expressions[0]
-    if expression.blob_id is None and expression.uri:
-        raise HTTPFound(expression.uri)
+    if expression.blob_id is None and expression.url:
+        raise HTTPFound(expression.url)
     elif expression.blob_id:
         blob = ResourceFactory(BlobResource)(request, expression.blob_id)
         return request.repository.blob.serve_blob(

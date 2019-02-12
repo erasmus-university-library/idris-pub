@@ -67,10 +67,14 @@ class FileUploadField extends React.Component {
     uploadURL: null,
     file: null,
     progress: 0,
-    blob: {}
+    blob: {},
+    message: 'Drag and drop a file here or click'
   }
 
   onDrop = (acceptedFiles, rejectedFiles) => {
+    if (acceptedFiles.length === 0){
+      return
+    }
     const file = acceptedFiles[0];
     this.setState({file: file, is_accepted: true});
     sdk.recordSubmit(
@@ -110,7 +114,7 @@ class FileUploadField extends React.Component {
   }
 
   render(){
-    const {classes, value} = this.props;
+    const {classes, value, accept, message} = this.props;
     const {blob, progress,
 	   is_finalized, is_uploaded, is_initialized, is_accepted} = this.state;
     if (value && is_finalized === false) {
@@ -126,11 +130,11 @@ class FileUploadField extends React.Component {
       <div className={classes.root}>
 	<InputLabel className={classes.uploadLabel}>File Upload</InputLabel>
 	{is_accepted === false ?
-	<Dropzone onDrop={this.onDrop} style={{}} multiple={false}>
+	  <Dropzone onDrop={this.onDrop} style={{}} multiple={false} accept={accept||null}>
 	  <div className={classes.uploadCard}>
 	  <div className={classes.uploadButton}>
-		<Typography variant="button">
-		  Drag and drop a file here or click
+	      <Typography variant="button">
+		  {message||this.state.message}
 		</Typography>
 		<br/>
 		<CloudUploadIcon className={classes.uploadIcon} />
@@ -138,8 +142,8 @@ class FileUploadField extends React.Component {
 	    </div>
 	  </Dropzone>:
 	  <Card className={classes.fileCard}>
-	      {blob.thumbnail === undefined ? null :
-		<CardMedia image={`data:image/jpeg;base64,${blob.thumbnail}`} style={{width:'40%'}}/>
+	      {blob.info === undefined ? null :
+		<CardMedia image={blob.info.preview_url} style={{width:'40%'}}/>
 		}
 	      <CardContent className={classes.uploadButton}>
 		  {is_finalized === true ?

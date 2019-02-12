@@ -60,9 +60,22 @@ class BlobStorageTest(BaseTest):
                            status=200)
 
         assert out.json['checksum'] == '3d0c5a07a69b6a9b3615a44881be654c'
-        assert out.json.get('info').get('pages') == 1
-        assert out.json.get('info').get('words') == 4
+        info = out.json.get('info', {})
+        assert info.get('pages') == 1
+        assert info.get('words') == 4
         assert out.json.get('text') == 'This is a test!'
+        # there is a cover and thumbnail, the thumbnail
+        # is used as a preview_url
+        assert 'pdftext' in info.get('transform_blobs', [])
+        assert 'pdfcover' in info.get('transform_blobs', [])
+        assert 'thumb' in info.get('transform_blobs', [])
+        assert info['preview_blob'] == 'thumb'
+        # since there is a preview_blob, we can get a public preview url
+        preview_url = info['preview_url']
+        out = self.api.get(preview_url)
+        assert out.content_type == 'image/jpeg'
+        assert out.body[:10].endswith(b'JFIF')
+
 
     def test_bulk_blob_upload(self):
         # instead of uploading blob files, it is also possible
@@ -77,8 +90,6 @@ class BlobStorageTest(BaseTest):
                           'finalized': True,
                           'info': json.dumps({'foo': None}),
                           'text': 'hello',
-                          'thumbnail': codecs.encode(
-                              b'hello', 'base64').decode('utf8'),
                           'format': 'application/pdf'}]},
                                  headers=headers,
                                  status=201)
@@ -108,7 +119,6 @@ class BlobStorageTest(BaseTest):
         assert out.json['finalized'] == True
         assert out.json['info'] == '{"foo": null}'
         assert out.json['text'] == 'hello'
-        assert out.json['thumbnail'] == 'aGVsbG8=\n'
 
 
     def test_work_expression(self):

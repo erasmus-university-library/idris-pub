@@ -41,8 +41,6 @@ class BlobFinalizedSchema(BlobSchema):
     info = colander.SchemaNode(JsonString(), missing=colander.drop)
     text = colander.SchemaNode(colander.String(),
                                missing=colander.drop)
-    thumbnail = colander.SchemaNode(Base64String(),
-                                    missing=colander.drop)
     finalized = colander.SchemaNode(colander.Boolean(),  missing=colander.drop)
 
 class BlobBulkRequestSchema(colander.MappingSchema,
@@ -169,8 +167,8 @@ class BlobRecordAPI(object):
             self.request.errors.add(
                 'body', '', 'file is missing (not uploaded yet?)')
             return
-        blobstore.finalize_blob(self.context)
         blobstore.transform_blob(self.context)
+        blobstore.finalize_blob(self.context)
         return self.context.model.to_dict()
 
 
@@ -189,6 +187,7 @@ def blob_upload_local_view(request):
         raise HTTPPreconditionFailed()
 
     blobstore.receive_blob(request, request.context)
+    request.context.put()
     return BlobSchema().to_json(request.context.model.to_dict())
 
 
@@ -207,6 +206,7 @@ def blob_transform_view(request):
         raise HTTPPreconditionFailed('File is missing')
 
     blobstore.transform_blob(request.context)
+    blobstore.finalize_blob(request.context)
     return request.context.model.to_dict()
 
 
@@ -214,9 +214,8 @@ blob_download = Service(name='BlobDownload',
                         path='/api/v1/blob/download/{id}',
                         factory=ResourceFactory(BlobResource),
                         api_security=[{'jwt': []}],
-                        tags=['blob'],
+                        tags=['local_blob'],
                         cors_origins=('*', ))
-
 
 @blob_download.get(permission='download')
 def blob_download_local_view(request):
@@ -231,6 +230,22 @@ def blob_download_local_view(request):
                                        request.context)
     return response
 
+blob_preview = Service(name='BlobPreview',
+                       path='/api/v1/blob/preview/{id}',
+                       factory=ResourceFactory(BlobResource),
+                       tags=['local_blob'],
+                       cors_origins=('*', ))
+
+@blob_preview.get()
+def blob_preview_local_view(request):
+    # this is specific for the local implementation,
+    preview_kind =  request.context.model.info.get('preview_blob')
+    if not preview_kind:
+        raise HTTPPreconditionFailed('Preview is missing')
+    request.repository.blob.backend.serve_preview_blob(request,
+                                                       request.response,
+                                                       request.context)
+    return request.response
 
 blob_bulk = Service(
     name='BlobBulk',

@@ -32,8 +32,22 @@ class IBlobStoreBackend(Interface):
         """
         pass
 
+    def finalize_blob_headers(self, blob):
+        """Called by the blobstore in the finalize phase.
+        Useful for storing content-type headers and setting
+        permissions on the blob
+        """
+        pass
+
     def serve_blob(self, request, response, blob):
-        "Modify the response to servce bytes from blob_key"
+        """Modify the response to servce bytes from blob_key
+        Inspects the blob model, and runs finalize if the blob
+        has not been finalized yet
+        """
+        pass
+
+    def public_preview_url(self, blob_id, kind):
+        "Generate a preview url (thumbnail) that is publically accessible"
         pass
 
     def local_path(self, blob):

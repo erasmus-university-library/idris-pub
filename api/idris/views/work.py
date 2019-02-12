@@ -217,7 +217,9 @@ class WorkSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
             start_date = colander.SchemaNode(colander.Date(), missing=None)
             end_date = colander.SchemaNode(colander.Date(), missing=None)
             description = colander.SchemaNode(colander.String(), missing=None)
-            uri = colander.SchemaNode(colander.String(), missing=None)
+            url = colander.SchemaNode(colander.String(), missing=None)
+            blob_preview = colander.SchemaNode(colander.Boolean(),
+                                               missing=False)
             position = colander.SchemaNode(colander.Integer(),
                                            missing=colander.drop)
             id = colander.SchemaNode(colander.Integer(), missing=colander.drop)

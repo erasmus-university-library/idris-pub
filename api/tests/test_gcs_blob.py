@@ -61,10 +61,24 @@ class GCSBlobStorageTest(BaseTest):
                            headers=headers,
                            status=200)
         assert out.json['checksum'] == '3d0c5a07a69b6a9b3615a44881be654c'
+        info = out.json.get('info', {})
 
-        assert out.json.get('info').get('pages') == 1
-        assert out.json.get('info').get('words') == 4
+        assert info.get('pages') == 1
+        assert info.get('words') == 4
         assert out.json.get('text') == 'This is a test!'
+
+        # there is a cover and thumbnail, the thumbnail
+        # is used as a preview_url
+        assert 'pdftext' in info.get('transform_blobs', [])
+        assert 'pdfcover' in info.get('transform_blobs', [])
+        assert 'thumb' in info.get('transform_blobs', [])
+        assert info['preview_blob'] == 'thumb'
+        # since there is a preview_blob, we can get a public preview url
+        preview_url = info['preview_url']
+        out = requests.get(preview_url)
+        assert out.headers['content-type'] == 'image/jpeg'
+        assert out.content[:10].endswith(b'JFIF')
+
 
     def test_gcs_work_expression(self):
         content = 'This is a test!'.encode('utf8')
@@ -109,6 +123,7 @@ class GCSBlobStorageTest(BaseTest):
                            status=302)
         download_url = out.location
         response = requests.get(download_url)
-        assert response.headers['Content-Disposition'] == 'attachment; filename=test.txt'
+        assert response.headers['Content-Disposition'] == (
+            'attachment; filename=test.txt')
         assert response.headers['Content-Type'] == 'text/plain'
         assert response.content == b'This is a test!'

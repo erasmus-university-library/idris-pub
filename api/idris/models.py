@@ -100,7 +100,6 @@ class Blob(Base):
     transform_name = Column(Unicode(32))
     info = Column(JSON)
     text = Column(UnicodeText)
-    thumbnail = Column(Text)
     search_terms = Column(TSVECTOR)
     finalized = Column(Boolean)
 
@@ -111,7 +110,6 @@ class Blob(Base):
                   'checksum': self.checksum,
                   'name': self.name,
                   'info': self.info,
-                  'thumbnail': self.thumbnail,
                   'text': self.text,
                   'finalized': self.finalized,
                   'transform_name': self.transform_name}
@@ -148,13 +146,14 @@ class Expression(Base):
                     nullable=False)
     name = Column(Unicode(1024), nullable=False)
     during = Column(DateRangeType)
-    uri = Column(UnicodeText, nullable=True)
+    url = Column(UnicodeText, nullable=True)
     info = Column(JSON)
     description = Column(UnicodeText, nullable=True)
     blob_id = Column(BigInteger,
                      ForeignKey('blobs.id'),
                      index=True,
                      nullable=True)
+    blob_preview = Column(Unicode(32))
     blob = relationship('Blob',
                         back_populates='expression',
                         single_parent=True,
@@ -171,7 +170,8 @@ class Expression(Base):
                   'type': self.type,
                   'format': self.format,
                   'access': self.access,
-                  'uri': self.uri,
+                  'url': self.url,
+                  'blob_preview': self.blob_preview,
                   'start_date': start_date,
                   'end_date': end_date,
                   'description': self.description,
@@ -384,6 +384,10 @@ class Work(Base):
                                back_populates='work',
                                cascade='all, delete-orphan')
     measures = relationship('Measure',
+                            info={'inline_schema': True},
+                            back_populates='work',
+                            cascade='all, delete-orphan')
+    subjects = relationship('Subject',
                             info={'inline_schema': True},
                             back_populates='work',
                             cascade='all, delete-orphan')
@@ -802,6 +806,13 @@ class Concept(Base):
     label = Column(Unicode(1024), nullable=False)
     notation = Column(Unicode(128), nullable=False)
 
+    user_created = Column(Unicode(128), nullable=False)
+    user_modified = Column(Unicode(128), nullable=False)
+    created = Column(DateTime, server_default=func.timezone('utc', func.now()))
+    modified = Column(DateTime,
+                           onupdate=func.timezone('utc', func.now()))
+    revision = Column(Integer, default=1)
+
 
 class MeasureType(Base):
     __tablename__ = 'measure_type_schemes'
@@ -833,6 +844,31 @@ class Measure(Base):
     during = Column(DateRangeType)
     value = Column(Unicode(128), nullable=False)
 
+
+class SubjectType(Base):
+    __tablename__ = 'subject_type_schemes'
+    key = Column(Unicode(32), primary_key=True)
+    label = Column(Unicode(128))
+
+
+class Subject(Base):
+    __tablename__ = 'subjects'
+
+    id = Column(Integer, Sequence('subjects_id_seq'), primary_key=True)
+    work_id = Column(BigInteger,
+                     ForeignKey('works.id'),
+                     index=True,
+                     nullable=False)
+    work = relationship('Work', back_populates='subjects')
+    type = Column(Unicode(32),
+                  ForeignKey('subject_type_schemes.key'),
+                  nullable=False)
+    value = Column(UnicodeText, nullable=False)
+    concept_id = Column(BigInteger,
+                        ForeignKey('concepts.id'),
+                        index=True,
+                        nullable=True)
+    concept = relationship('Concept')
 
 
 class PersonAccountType(Base):

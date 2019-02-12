@@ -237,7 +237,11 @@ class CourseLiteratureAddForm extends Component {
 		      />
 		  </div>
 		  <div className={classes.formFieldRow}>
-		    <FileUploadField value={material.blob_id} onUpload={this.handlePDFUpload} name='PDF File Upload'/>
+		    <FileUploadField value={material.blob_id}
+				     onUpload={this.handlePDFUpload}
+				     name='PDF File Upload'
+				     message="Drag and drop a PDF file here or click"
+				     accept='application/pdf'/>
 		  </div>
 		</form>
 		</div>
