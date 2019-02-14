@@ -171,11 +171,9 @@ class CourseListing extends Component {
 	let module = 'all'
 	if(this.props.filter){
 	  // filter by module id from url
-	  console.log('filter', this.props.filter);
 	  const toc = data.course.toc;
-	  const module_id = parseInt(this.props.filter, 10);
 	  for (var i=0;i<toc.length;i++){
-	    if (module_id === toc[i].id){
+	    if (this.props.filter === toc[i].module_id){
 	      module = toc[i].module;
 
 	    }
@@ -527,7 +525,7 @@ class CourseListing extends Component {
 	      (<ListItem
 		   button key={toc.module}
 		   value={toc.id}
-		   onClick={this.handleLTIFormSubmit(toc.id)}
+		   onClick={this.handleLTIFormSubmit(toc.module_id)}
 		   selected={toc.id === filterSelection}>
 	       <ListItemIcon><AddIcon /></ListItemIcon>
 		 <ListItemText inset primary={toc.module} />
@@ -620,7 +618,9 @@ class CourseListing extends Component {
 		 : null
 	     ))}
 	          <Divider/>
+       {this.isStudent ? null : (
 		  <MenuItem value="new"><ListItemIcon><AddIcon /></ListItemIcon> New Module</MenuItem>
+		  )}
 	     </Select>
        </FormControl>
        {this.isStudent ? null : (

@@ -292,7 +292,7 @@ class RepositoryConfig(object):
         else:
             self.cached_config = {}
             REPOSITORY_CONFIG[self.namespace] = {
-                self.config_revision: self.cached_config}
+                self.config_revision: {}}
 
     @reify
     def blob(self):
@@ -326,6 +326,8 @@ class RepositoryConfig(object):
             for setting in self.session.query(orm_table).all():
                 values.append({'key': setting.key, 'label': setting.label})
             self.cached_config[type] = values
+            REPOSITORY_CONFIG[self.namespace][
+                self.config_revision] = self.cached_config
         return values
 
     def put_type_config(self, orm_table, values):
@@ -344,6 +346,7 @@ class RepositoryConfig(object):
         repo = self.session.query(Repository).filter(
             Repository.namespace==self.namespace).first()
         repo.config_revision = Repository.config_revision + 1
+        self.cached_config = {}
         self.session.add(repo)
         self.session.flush()
 

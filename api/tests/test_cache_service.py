@@ -11,14 +11,14 @@ class CacheServiceTest(BaseTest):
 
     def test_set_get(self):
         assert self.cache.set('hello', 'world')
-        assert self.cache.get('hello') == 'world'
+        assert self.cache.get('hello') == b'world'
         assert self.cache.set('hello', b'world')
-        assert self.cache.get('hello') == 'world'
+        assert self.cache.get('hello') == b'world'
         assert self.cache.set('hello', 1)
-        assert self.cache.get('hello') == '1'
+        assert self.cache.get('hello') == b'1'
 
         assert self.cache.set('foo', 'bar')
-        assert self.cache.get('foo') == 'bar'
+        assert self.cache.get('foo') == b'bar'
         assert self.cache.delete('foo')
         assert self.cache.get('foo') is None
 
@@ -30,8 +30,8 @@ class CacheServiceTest(BaseTest):
         cache_y =  cache_factory(self.app.registry, 'y')
         assert cache_x.set('hello', 'x world')
         assert cache_y.set('hello', 'y world')
-        assert cache_x.get('hello') == 'x world'
+        assert cache_x.get('hello') == b'x world'
         assert cache_x.flush() == 1
         assert cache_x.get('hello') is None
-        assert cache_y.get('hello') == 'y world'
+        assert cache_y.get('hello') == b'y world'
         assert cache_y.flush() == 1

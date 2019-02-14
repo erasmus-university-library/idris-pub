@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 
 from pyramid.view import view_config
@@ -69,4 +70,14 @@ def debug_view(request):
 
     request.response.content_type = 'text/plain'
     request.response.write(info)
+    return request.response
+
+@view_config(context=IAppRoot, name='debug_repo')
+def debug_repo(request):
+    from idris.storage import REPOSITORY_CONFIG
+    request.response.content_type = 'application/json'
+    request.response.write(
+        json.dumps(
+            REPOSITORY_CONFIG.get(request.repository.namespace,
+                                  {})).encode('utf8'))
     return request.response

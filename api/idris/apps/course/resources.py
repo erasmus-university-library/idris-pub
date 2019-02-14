@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from operator import itemgetter
 
 from zope.interface import implementer
@@ -320,9 +321,11 @@ class CourseResource(BaseResource):
                 toc['type'] = 'toc'
                 comment = toc.pop('comment', None)
                 module = toc.pop('module', None)
+                module_id= toc.pop('module_id', None)
                 if module:
                     toc['location'] = 'module'
                     toc['description'] = module
+                    toc['number'] = module_id or str(uuid.uuid4())
                 elif comment:
                     toc['description'] = comment
             data['relations'] = data.pop('toc')
@@ -346,12 +349,14 @@ class CourseResource(BaseResource):
                 id_key = '%s_id' % identifier.type
             result[id_key] = identifier.value
         for rel in course.relations:
-            if rel.type == 'toc':
-                toc = {'id': rel.id,
-                       'target_id': rel.target_id,
-                       'comment': rel.description}
+            if not rel.type == 'toc':
+                continue
+            toc = {'id': rel.id,
+                   'target_id': rel.target_id,
+                   'comment': rel.description}
             if rel.location == 'module':
                 toc['module'] = rel.description
+                toc['module_id'] = rel.number
                 del toc['comment']
             result['toc'].append(toc)
         return result

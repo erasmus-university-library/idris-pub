@@ -13,17 +13,19 @@ class RedisCache(object):
     def get(self, key):
         result = self._client.get('%s:%s' % (self._prefix, key))
         if result is not None:
-            result = result.decode('utf8')
+            result = result
         return result
 
     def set(self, key, value, expire=None):
+        key = '%s:%s' % (self._prefix, key)
         if expire is None:
-            return self._client.set('%s:%s' % (self._prefix, key), value)
+            return self._client.set(key, value)
         else:
-            raise NotImplementedError()
+            return self._client.setex(key, expire, value)
 
-    def delete(self, key):
-        return self._client.delete('%s:%s' % (self._prefix, key))
+    def delete(self, *keys):
+        keys = ['%s:%s' % (self._prefix, k) for k in keys]
+        return self._client.delete(*keys)
 
     def flush(self):
         key = '%s:*' % self._prefix

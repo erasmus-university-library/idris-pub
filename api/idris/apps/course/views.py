@@ -248,6 +248,8 @@ class CourseSchema(colander.MappingSchema,
                                                 missing=colander.drop)
                 module = colander.SchemaNode(colander.String(),
                                              missing=colander.drop)
+                module_id = colander.SchemaNode(colander.String(),
+                                                missing=colander.drop)
                 comment = colander.SchemaNode(colander.String(),
                                               missing=colander.drop)
 
@@ -353,21 +355,35 @@ class CourseRecordAPI(object):
     def get(self):
         "Retrieve a course"
         qs = self.request.validated['querystring']
-        toc_items =  self.context.toc_items_csl()
         if qs['show_royalties']:
-            course_year = str(self.context.model.issued.year)
-            royalties = course_royalty_calculator_factory(
-                self.request.registry,
-                course_year)()
-            royalty_materials = self.context.toc_items_royalty()
-            for royalty_calculation in royalties.calculate(royalty_materials):
-                toc_items.get(
-                    royalty_calculation['id'],
-                    {})['royalties'] = royalty_calculation
+            cache_key = 'course-full:%s@%s' % (
+                self.context.model.id, self.context.model.revision)
+        else:
+            cache_key = 'course-simple:%s' % (
+                self.context.model.id, self.contxt.model.revision)
 
-        return CourseSchema().to_json(
-            {'course': self.context.to_course_data(),
-             'toc_items': toc_items})
+        result = self.request.repository.cache.get(cache_key)
+        if not result:
+            toc_items =  self.context.toc_items_csl()
+            if qs['show_royalties']:
+                course_year = str(self.context.model.issued.year)
+                royalties = course_royalty_calculator_factory(
+                    self.request.registry,
+                    course_year)()
+                royalty_materials = self.context.toc_items_royalty()
+                for royalty_calculation in royalties.calculate(
+                        royalty_materials):
+                    toc_items.get(
+                        royalty_calculation['id'],
+                        {})['royalties'] = royalty_calculation
+            result = json.dumps(CourseSchema().to_json(
+                {'course': self.context.to_course_data(),
+                 'toc_items': toc_items})).encode('utf8')
+        # cache result for one hour
+        self.request.repository.cache.set(cache_key, result, 60*60)
+        self.response.content_type =  'application/json'
+        self.response.write(result)
+        return self.response
 
     @view(
         permission='course_update',
