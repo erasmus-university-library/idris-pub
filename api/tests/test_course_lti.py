@@ -79,7 +79,7 @@ class CourseLTIAuthTest(BaseTest):
         # we get redirected to the course add form of the group
         assert out.headers['Location'] == (
             'http://unittest.localhost/?token=%s&embed=true'
-            '&title=A%%20test%%20course&lti=MITx/ODL_ENG/2014_T1'
+            '&title=A%%20test%%20course&course_id=&lti=MITx/ODL_ENG/2014_T1'
             '#/group/1/add') % out.json['token']
 
         assert 'teacher:course:1' not in info['principals']

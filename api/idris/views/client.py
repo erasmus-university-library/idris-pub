@@ -102,7 +102,7 @@ def client_config(request):
         'status': 'ok',
         'repository': {
             'title': request.repository.settings['title'],
-            'theme': request.repository.settings['theme']},
+            'theme': request.repository.settings.get('theme')},
         'settings': {'person': {'account_types': person_account_types,
                                 'position_types': position_types},
                      'group': {'account_types': group_account_types,
