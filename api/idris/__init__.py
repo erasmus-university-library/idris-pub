@@ -25,8 +25,6 @@ def token_tween_factory(handler, registry):
             request.cookies.get('token') is not None):
             request.headers['authorization'] = (
                 'Bearer %s' % request.cookies['token'])
-            logging.info(
-                'got auth from cookie: %s' % request.cookies['token'])
         return handler(request)
     return token_tween
 

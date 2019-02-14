@@ -1,22 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cartridge_basiclti_link xmlns="http://www.imsglobal.org/xsd/imslticc_v1p0" xmlns:blti="http://www.imsglobal.org/xsd/imsbasiclti_v1p0" xmlns:lticm="http://www.imsglobal.org/xsd/imslticm_v1p0" xmlns:lticp="http://www.imsglobal.org/xsd/imslticp_v1p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imslticc_v1p0 http://www.imsglobal.org/xsd/lti/lt\ iv1p0/imslticc_v1p0.xsd                                                                                           http://www.imsglobal.org/xsd/imsbasiclti_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imsbasicl\ ti_v1p0.xsd                                                                                                           http://www.imsglobal.org/xsd/imslticm_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticm\ _v1p0.xsd">
-  <blti:title>Literature List Test</blti:title>
-  <blti:description>Literature List Test</blti:description>
+  <blti:title>Course Literature</blti:title>
+  <blti:description>Course Literature</blti:description>
   <blti:extensions platform="canvas.instructure.com">
     <lticm:property name="privacy_level">anonymous</lticm:property>
     <lticm:property name="domain">idris.pub</lticm:property>
     <lticm:options name="course_navigation">
       <lticm:property name="enabled">true</lticm:property>
+      <lticm:property name="default">disabled</lticm:property>
       <lticm:property name="text">Literature</lticm:property>
       <lticm:property name="url">https://idris.pub/lti</lticm:property>
     </lticm:options>
-    <lticm:options name="editor_button">
-      <lticm:property name="canvas_icon_class">icon-lti</lticm:property>
-      <lticm:property name="icon_url">http://lti-tool-provider-example.herokuapp.com/selector.png?editor\
-_button</lticm:property>
+    <lticm:options name="resource_selection">
+      <lticm:property name="icon_url">https://idris.pub/lti.png</lticm:property>
       <lticm:property name="message_type">ContentItemSelectionRequest</lticm:property>
       <lticm:property name="text">Course Literature</lticm:property>
       <lticm:property name="url">https://idris.pub/lti</lticm:property>
+      <lticm:property name="enabled">true</lticm:property>
+    </lticm:options>
+    <lticm:options name="editor_button">
+      <lticm:property name="icon_url">https://idris.pub/lti.png</lticm:property>
+      <lticm:property name="message_type">ContentItemSelectionRequest</lticm:property>
+      <lticm:property name="text">Course Literature</lticm:property>
+      <lticm:property name="url">https://idris.pub/lti</lticm:property>
+      <lticm:property name="enabled">true</lticm:property>
     </lticm:options>
   </blti:extensions>
 </cartridge_basiclti_link>

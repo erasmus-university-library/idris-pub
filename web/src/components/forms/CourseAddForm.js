@@ -29,7 +29,7 @@ class CourseAddForm extends Component {
     title: (CONFIG||{}).title || '',
     start_date: currentCourseYear()[0],
     end_date: currentCourseYear()[1],
-    course_id: '',
+    course_id: (CONFIG||{}).course_id || '',
     lti_id: (CONFIG||{}).lti_id || '',
   }
 

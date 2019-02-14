@@ -30,6 +30,7 @@ from idris.apps.course.resources import (
 def home_view(request):
     config = {'app': 'course',
               'title': request.GET.get('title'),
+              'course_id': request.GET.get('course_id'),
               'lti_id': request.GET.get('lti')}
     html = load_web_index_template('index.html', config)
     request.response.content_type = 'text/html'
@@ -100,7 +101,7 @@ def lti_config_view(request):
     for el in doc.xpath('//*[@name="domain"]'):
         el.text = request.host
     for el in doc.xpath('//*[@name="icon_url"]'):
-        el.text = lti_url.replace('/lti.png', '/lti')
+        el.text = lti_url.replace('/lti.xml', '/lti.png')
     request.response.write(etree.tostring(doc))
     return request.response
 
@@ -175,6 +176,7 @@ def lti_login_view(request):
     if course:
         course = course.work_id
 
+    params['roles'] = params['roles'].replace('urn:lti:instrole:ims/lis/', '')
     if (params['roles'] == 'Instructor' or params['roles'] == 'Administrator'):
         principals.append('group:teacher')
         # XXX for testing
@@ -207,9 +209,10 @@ def lti_login_view(request):
                                          request.GET['course_filter'])
     else:
         url_fragment = '%s/add' % (url_fragment,)
-        url_params = '%s&title=%s&lti=%s' % (
+        url_params = '%s&title=%s&course_id=%s&lti=%s' % (
             url_params,
             quote(params.get('context_title', '')),
+            quote(params.get('context_label', '')),
             quote(params['context_id']))
     redirect_url = '%s%s%s' % (redirect_url, url_params, url_fragment)
 
@@ -359,8 +362,8 @@ class CourseRecordAPI(object):
             cache_key = 'course-full:%s@%s' % (
                 self.context.model.id, self.context.model.revision)
         else:
-            cache_key = 'course-simple:%s' % (
-                self.context.model.id, self.contxt.model.revision)
+            cache_key = 'course-simple:%s@%s' % (
+                self.context.model.id, self.context.model.revision)
 
         result = self.request.repository.cache.get(cache_key)
         if not result:
