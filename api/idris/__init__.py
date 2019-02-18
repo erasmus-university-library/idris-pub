@@ -25,6 +25,13 @@ def token_tween_factory(handler, registry):
             request.cookies.get('token') is not None):
             request.headers['authorization'] = (
                 'Bearer %s' % request.cookies['token'])
+        # if there is no authorization header, no cookie
+        # but there is a token param use that instead
+        if (request.headers.get('authorization') is None and
+            request.cookies.get('token') is None and
+            request.GET.get('token')):
+            request.headers['authorization'] = (
+                'Bearer %s' % request.GET['token'])
         return handler(request)
     return token_tween
 

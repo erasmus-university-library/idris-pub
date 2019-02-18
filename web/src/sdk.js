@@ -215,7 +215,7 @@ export class IdrisSDK {
 		onProgress);
   }
   courseMaterialURL = function(courseId, materialId){
-    return `${this.hostUrl}/course/${courseId}/material/${materialId}`;
+    return `${this.hostUrl}/course/${courseId}/material/${materialId}?token=${this.token}`;
   }
 
   clientConfig = function(){
