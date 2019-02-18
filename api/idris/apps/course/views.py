@@ -128,6 +128,7 @@ def lti_login_view(request):
     import logging
     logging.info('url: %s' % request.url)
     logging.info('scheme: %s' % request.scheme)
+    logging.info('%s' % dict(request.headers))
     logging.info(request.environ)
     logging.info(params)
     logging.info('LTI post for course: %s' % params['context_id'])
@@ -187,6 +188,13 @@ def lti_login_view(request):
         principals.append('group:student')
         if course:
             principals.append('student:course:%s' % course)
+        else:
+            # student logged in without a linked course, just return
+            # a blank page with a 404
+            request.response.status = 404
+            request.response.content_type = 'text/html'
+            request.response.write('<html></html>')
+            return request.response
     token_params = {}
     if params['lti_message_type'] == 'ContentItemSelectionRequest':
         token_params['return_url'] = params['content_item_return_url']

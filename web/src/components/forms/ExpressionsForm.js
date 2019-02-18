@@ -42,7 +42,7 @@ class ExpressionsForm extends React.Component {
                      InputLabelProps={{shrink: true}}/>
         </div>
         <div className={classes.formFieldRow}>
-          <Field name={`${field}.uri`}
+          <Field name={`${field}.url`}
                  component={mappedTextField}
                  label="External URL"
                  className={classes.flex}

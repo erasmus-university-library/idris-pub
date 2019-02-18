@@ -156,8 +156,7 @@ class Expression(Base):
     blob_preview = Column(Unicode(32))
     blob = relationship('Blob',
                         back_populates='expression',
-                        single_parent=True,
-                        cascade='all, delete-orphan')
+                        single_parent=True) # do not cascade delete
     position = Column(Integer)
 
     def to_dict(self):

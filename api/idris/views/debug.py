@@ -58,8 +58,16 @@ def echo_view(request):
             response.headers[header[5:]] = request.headers[header]
     return response
 
+
+@view_config(context=IAppRoot, name='debug_log')
+def debug_log(request):
+    trace_id = request.headers['X-Cloud-Trace-Context']
+
+    logging.info('this is a log')
+    return request.response
+
 @view_config(context=IAppRoot, name='debug_db')
-def debug_view(request):
+def debug_db(request):
     pool = request.registry['engine'].pool
     info = ("Pool size: %d  Connections in pool: %d "\
             "Current Overflow: %d Current Checked out "\
