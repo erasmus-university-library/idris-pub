@@ -78,8 +78,8 @@ def load_web_index_template(filename='index.html', config=None):
     if start != -1:
         end = html.find('<', start)
         html = '%sCONFIG=%s;%s' % (html[:start],
-                                   json.dumps(config or {}),
-                                   html[end:])
+                                     json.dumps(config or {}),
+                                     html[end:])
     return html
 
 

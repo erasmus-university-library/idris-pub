@@ -21,17 +21,22 @@ from idris.utils import (ErrorResponseSchema,
                          JsonMappingSchemaSerializerMixin,
                          load_web_index_template,
                          colander_bound_repository_body_validator)
-
+from idris.views.client import generate_client_config
 
 from idris.apps.course.resources import (
     CourseAppRoot, CourseResource)
 
 @view_config(context=CourseAppRoot)
 def home_view(request):
-    config = {'app': 'course',
-              'title': request.GET.get('title'),
-              'course_id': request.GET.get('course_id'),
-              'lti_id': request.GET.get('lti')}
+    config = {
+        'app': 'course',
+        'title': request.GET.get('title'),
+        'course_id': '202618',#request.GET.get('course_id'),
+        'lti_id': request.GET.get('lti'),
+        'cache': {}
+    }
+    config['cache']['client'] = generate_client_config(request.repository)
+
     html = load_web_index_template('index.html', config)
     request.response.content_type = 'text/html'
     request.response.write(html.encode('utf8'))
@@ -178,13 +183,18 @@ def lti_login_view(request):
         course = course.work_id
 
     params['roles'] = params['roles'].replace('urn:lti:instrole:ims/lis/', '')
-    if (params['roles'] == 'Instructor' or params['roles'] == 'Administrator'):
+    instructor_roles = set(['Instructor',
+                            'Administrator',
+                            'Coordinator',
+                            'Editor',
+                            'TA',
+                            'Student assistent',
+                            'Course designer'])
+    if params['roles'] in instructor_roles:
         principals.append('group:teacher')
-        # XXX for testing
-        # principals.append('group:admin')
         if course:
             principals.append('teacher:course:%s' % course)
-    elif (params['roles'] == 'Student' or params['roles'] == 'Learner'):
+    else:
         principals.append('group:student')
         if course:
             principals.append('student:course:%s' % course)

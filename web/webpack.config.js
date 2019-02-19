@@ -3,7 +3,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const ManifestPlugin = require("webpack-manifest-plugin");
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-
+const BabelEnginePlugin = require('babel-engine-plugin');
+const webpack = require("webpack");
 const htmlWebpackPlugin = new HtmlWebpackPlugin({
     template: path.join(__dirname, "public/index.html"),
     filename: "./index.html"
@@ -83,7 +84,13 @@ module.exports = {
       },
     ]
   },
-  plugins: [htmlWebpackPlugin, new ManifestPlugin(), new CleanWebpackPlugin(['../api/idris/static/dist/web'])],
+  plugins: [htmlWebpackPlugin,
+	    new BabelEnginePlugin({presets: ['env']}),
+	    new ManifestPlugin(),
+	    new webpack.ProvidePlugin({
+	      "Promise": "es6-promise-promise",
+	    }),
+	    new CleanWebpackPlugin(['../api/idris/static/dist/web'])],
   resolve: {
     extensions: [".js", ".jsx"]
   },

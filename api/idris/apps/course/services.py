@@ -24,9 +24,11 @@ class ProCourseRoyaltyCalculator2017(object):
         for material in materials:
             for number_field in ['starting', 'ending', 'book_pages',
                                  'words', 'pages']:
-                if (material.get(number_field) and
-                    str(material[number_field]).isdigit()):
-                    material[number_field] = int(material[number_field])
+                if number_field in material:
+                    if str(material[number_field]).isdigit():
+                        material[number_field] = int(material[number_field])
+                    else:
+                        del material[number_field]
             if (material.get('starting') and
                 material.get('ending') and
                 material.get('pages')):

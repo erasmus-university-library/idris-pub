@@ -10,7 +10,7 @@ class CourseLTIAuthTest(BaseTest):
         return super(CourseLTIAuthTest, self).setUp(app_name='course')
 
 
-    def generate_lti_request(self, url, consumer_key, consumer_secret):
+    def generate_lti_request(self, url, consumer_key, consumer_secret, **kwargs):
         """
         This code generated valid LTI 1.0 basic-lti-launch-request request
 
@@ -34,6 +34,7 @@ class CourseLTIAuthTest(BaseTest):
                                              u'6ac8/handler_noauth'
                                              u'/grade_handler',
                   'lti_message_type': u'basic-lti-launch-request'}
+        params.update(kwargs)
         urlparams = urlencode(params)
         client = oauthlib.oauth1.Client(
             consumer_key,

@@ -11,6 +11,10 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 
 import styles from './formStyles.js';
 
+import IdrisSDK from '../../sdk.js';
+const sdk = new IdrisSDK();
+
+
 function currentCourseYear() {
   let now = new Date();
   let startYear = now.getFullYear();
@@ -26,11 +30,11 @@ function currentCourseYear() {
 class CourseAddForm extends Component {
 
   state = {
-    title: (CONFIG||{}).title || '',
+    title: sdk.config.title || '',
     start_date: currentCourseYear()[0],
     end_date: currentCourseYear()[1],
-    course_id: (CONFIG||{}).course_id || '',
-    lti_id: (CONFIG||{}).lti_id || '',
+    course_id: sdk.config.course_id || '',
+    lti_id: sdk.config.lti_id || '',
   }
 
   componentDidMount = (props) => {

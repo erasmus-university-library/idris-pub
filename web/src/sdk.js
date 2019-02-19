@@ -105,6 +105,7 @@ export class IdrisSDK {
 	  port = ':6543';
 	}
       }
+      this.config = CONFIG || {};
       this.url = url;
       this.hostName = url.hostname + port ;
       this.hostUrl = url.protocol + '//' + this.hostName;
@@ -112,9 +113,9 @@ export class IdrisSDK {
 
       this.login = this.login.bind(this);
       this.recordList = this.recordList.bind(this);
-
       sdk_client = this;
     }
+
     return sdk_client
   }
 
@@ -219,6 +220,14 @@ export class IdrisSDK {
   }
 
   clientConfig = function(){
+    if (this.config.cache !== undefined &&
+	this.config.cache.client !== undefined){
+      const clientConfig = this.config.cache.client;
+      return new Promise(
+	function(resolve, reject){
+	  resolve(new Response(JSON.stringify(clientConfig)));
+	});
+    }
     return fetch(this.backendURL + '/client',
                  {method: 'GET',
                   mode: 'cors'})
