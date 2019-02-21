@@ -184,6 +184,21 @@ class ProCourseRoyaltyCalculator2017(object):
                     result['tariff_message'] = 'Chapter is excempted'
                     result['excempt_message'] = total_exceptions[0]
                     result['cost'] = 0
+                elif (total_words <= self.tariff_short_max_chapter_words and
+                    total_pages > max_short_pages):
+                    result['tariff'] = 'unknown'
+                    result['warning'] = 'max_pages_reached'
+                    result['warning_message'] = (
+                        'A maximum of %s pages from this book'
+                        ' can be used' % max_short_pages)
+                    result['cost'] = 0
+                elif (total_pages > max_middle_pages):
+                    result['tariff'] = 'unknown'
+                    result['warning'] = 'max_pages_reached'
+                    result['warning_message'] = (
+                        'A maximum of %s pages from this book'
+                        ' can be used' % max_middle_pages)
+                    result['cost'] = 0
                 else:
                     result['tariff'] = 'long'
                     result['tariff_message'] = 'Chapter exceeds limits'

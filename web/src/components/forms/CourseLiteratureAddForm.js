@@ -85,6 +85,9 @@ class CourseLiteratureAddForm extends Component {
 
   selectBookTitle = (event) => {
     const bookTitle = event.target.value;
+    if (bookTitle === 'other'){
+      return this.handleChange('book_title')(event);
+    }
     const material = this.state.material;
     material.book_title = bookTitle;
     let selectedToc = null;
@@ -530,7 +533,7 @@ class CourseLiteratureAddForm extends Component {
 			  variant="contained"
 			  disabled={!(Boolean(material.title) &&
 				      Boolean(material.authors) &&
-				      (material.type === 'bookChapter' ? Boolean(material.book_title): true))}>
+				      (material.type === 'bookChapter' ? (Boolean(material.book_title) && Boolean(material.book_pages)): true))}>
 		    Next
 		  </Button>
 	      : null}
