@@ -96,16 +96,23 @@ export class CourseLiteratureRoyaltyAvatar extends Component {
 }
 
 @withStyles(styles)
+export class CourseLiteratureDownloadCounter extends Component {
+  render(){
+    const { unique_downloads, classes } = this.props;
+      return (
+	<Tooltip title="Downloads from unique students in last 30 days">
+	  <Avatar>{unique_downloads.toString()}</Avatar>
+	</Tooltip>
+      )
+  }
+}
+
+
+@withStyles(styles)
 export class CourseLiteratureInfoIcon extends Component {
   render(){
     const { warning_message, tariff, tariff_message, excempt_message, cost, cost_message, classes } = this.props;
     let ammount = `€ ${(cost/100).toFixed(2)}`;
-    let ammountStyle =  ammount.length > 6 ?
-	  classes.RoyaltyAmmountAvatarSmall : classes.RoyaltyAmmountAvatar;
-    if (cost === 0){
-      ammount = '€ 0';
-      ammountStyle = classes.RoyaltyAmmountAvatarBig;
-    }
 
     let colorStyle = cost > 0 ? {color:'#B00020'} : {};
     if ((warning_message || null) === null){
@@ -195,8 +202,7 @@ class CourseLiteratureItem extends Component {
 	  <ListItemIcon>
 	    { isStudent ?
 	      <BookmarkBorderIcon /> :
-	      <CourseLiteratureRoyaltyAvatar {...royalties} />
-	      }
+	      <CourseLiteratureDownloadCounter unique_downloads={tocItem.downloaded} /> }
 	  </ListItemIcon>
   	  <ListItemText  inset
 			 primary={[

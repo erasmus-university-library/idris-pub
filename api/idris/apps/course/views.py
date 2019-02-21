@@ -83,6 +83,7 @@ def course_material_download_view(request):
         blob = ResourceFactory(BlobResource)(request, expression.blob_id)
         size = blob.model.bytes
     user_id = request.unauthenticated_userid
+    # add entry to auditlog
     succeeded = request.repository.auditlog.append(
         'usage',
         'download',
@@ -93,7 +94,10 @@ def course_material_download_view(request):
         value=size)
     if not succeeded and not request.repository.auditlog.has_log('usage'):
         request.repository.auditlog.create_log('usage')
+    # add entry to download counter
+    request.repository.downloads.count(material_id, user_id)
 
+    # serve the blob / url
     if expression.blob_id is None and expression.url:
         raise HTTPFound(expression.url)
     elif expression.blob_id:
@@ -399,7 +403,9 @@ class CourseRecordAPI(object):
                 self.context.model.id, self.context.model.revision)
 
         result = self.request.repository.cache.get(cache_key)
-        if not result:
+        if result:
+            result = json.loads(result)
+        else:
             toc_items =  self.context.toc_items_csl()
             if qs['show_royalties']:
                 course_year = str(self.context.model.issued.year)
@@ -412,13 +418,23 @@ class CourseRecordAPI(object):
                     toc_items.get(
                         royalty_calculation['id'],
                         {})['royalties'] = royalty_calculation
-            result = json.dumps(CourseSchema().to_json(
+            result = CourseSchema().to_json(
                 {'course': self.context.to_course_data(),
-                 'toc_items': toc_items})).encode('utf8')
-        # cache result for one hour
-        self.request.repository.cache.set(cache_key, result, 60*60)
+                 'toc_items': toc_items})
+            # cache result for one hour
+            self.request.repository.cache.set(
+                cache_key,
+                json.dumps(result).encode('utf8'),
+                60*60)
+        material_ids = result['toc_items'].keys()
+        download_counts = self.request.repository.downloads.get_unique_counts(
+            material_ids)
+        for index, material_id in enumerate(material_ids):
+            count = download_counts[index]
+            result['toc_items'][material_id]['downloaded'] = count
+
         self.response.content_type =  'application/json'
-        self.response.write(result)
+        self.response.write(json.dumps(result).encode('utf8'))
         return self.response
 
     @view(

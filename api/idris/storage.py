@@ -12,6 +12,8 @@ import transaction
 
 from idris.services.cache import cache_factory
 from idris.services.auditlog import auditlog_factory
+from idris.services.download_counter import download_counter_factory
+
 from idris.interfaces import IBlobStoreBackend
 from idris.blob import BlobStore
 from idris.models import (Base,
@@ -304,6 +306,10 @@ class RepositoryConfig(object):
     @reify
     def cache(self):
         return cache_factory(self.registry, self.namespace)
+
+    @reify
+    def downloads(self):
+        return download_counter_factory(self.registry, self.namespace)
 
     @reify
     def auditlog(self):
