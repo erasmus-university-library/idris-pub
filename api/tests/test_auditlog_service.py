@@ -24,7 +24,6 @@ class CacheServiceTest(BaseTest):
                     self.log.ds_name).table('test_auditlog'))
         except:
                 pass
-    """
     def test_create_table(self):
         assert self.log.has_log('test') is False
         assert self.log.create_log('test')
@@ -39,14 +38,29 @@ class CacheServiceTest(BaseTest):
         # materialized in the db, when we query the
         # results, so we add a couple and wait a bit
         for i in range(4):
-            self.log.append('test',
-                            'download',
-                            work_id,
-                            i,
-                            message='this is test %s' % i,
-                            value=str(uuid.uuid4()))
+            succeeded = self.log.append('test',
+                                        'download',
+                                        work_id,
+                                        i,
+                                        message='this is test %s' % i,
+                                        value=str(uuid.uuid4()))
+            assert succeeded
+            time.sleep(0.25)
         time.sleep(1)
         entries = list(self.log.work_history('test', work_id))
+        if not entries:
+            time.sleep(2)
+            entries = list(self.log.work_history('test', work_id))
         assert len(entries)
         assert entries[0]['message'].startswith('this is test')
-            """
+
+    def test_append_non_existing_table(self):
+        work_id = 12345
+        succeeded = self.log.append('foobar',
+                                  'download',
+                                  work_id,
+                                  0,
+                                  message='this is a test',
+                                  value=str(uuid.uuid4()))
+        assert succeeded is False
+        assert self.log.has_log('foobar') is False

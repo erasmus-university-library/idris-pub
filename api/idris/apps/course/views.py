@@ -61,7 +61,7 @@ def course_view(request):
 @view_config(context=CourseResource,
              name='material',
              permission='course_material_view')
-def course_material_view(request):
+def course_material_download_view(request):
     course = request.context.model
     material_id = int(request.subpath[0])
     for material_toc in course.relations:
@@ -78,10 +78,25 @@ def course_material_view(request):
                 material_id,))
 
     expression = material.expressions[0]
+    size = 0
+    if expression.blob_id:
+        blob = ResourceFactory(BlobResource)(request, expression.blob_id)
+        size = blob.model.bytes
+    user_id = request.unauthenticated_userid
+    succeeded = request.repository.auditlog.append(
+        'usage',
+        'download',
+        material_id,
+        user_id,
+        context_id=request.context.model.id,
+        message=expression.id,
+        value=size)
+    if not succeeded and not request.repository.auditlog.has_log('usage'):
+        request.repository.auditlog.create_log('usage')
+
     if expression.blob_id is None and expression.url:
         raise HTTPFound(expression.url)
     elif expression.blob_id:
-        blob = ResourceFactory(BlobResource)(request, expression.blob_id)
         return request.repository.blob.serve_blob(
             request,
             request.response,

@@ -29,9 +29,9 @@ class ProCourseRoyaltyCalculator2017(object):
                         material[number_field] = int(material[number_field])
                     else:
                         del material[number_field]
-            if (material.get('starting') and
-                material.get('ending') and
-                material.get('pages')):
+            if (material.get('starting') is not None and
+                material.get('ending') is not None and
+                material.get('pages') is not None):
                 # instead of the number of pages in the pdf
                 # use the calculated number from the start/end page
                 # if it is larger. This is needed if a pdf contains
