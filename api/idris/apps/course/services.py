@@ -189,15 +189,13 @@ class ProCourseRoyaltyCalculator2017(object):
                     result['tariff'] = 'unknown'
                     result['warning'] = 'max_pages_reached'
                     result['warning_message'] = (
-                        'A maximum of %s pages from this book'
-                        ' can be used' % max_short_pages)
+                        'Exceeded maximum of %s pages from this book' % max_short_pages)
                     result['cost'] = 0
                 elif (total_pages > max_middle_pages):
                     result['tariff'] = 'unknown'
                     result['warning'] = 'max_pages_reached'
                     result['warning_message'] = (
-                        'A maximum of %s pages from this book'
-                        ' can be used' % max_middle_pages)
+                        'Exceeded maximum of %s pages from this book' % max_middle_pages)
                     result['cost'] = 0
                 else:
                     result['tariff'] = 'long'
