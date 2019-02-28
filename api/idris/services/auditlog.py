@@ -88,6 +88,9 @@ class BQAuditLog(object):
 def auditlog_factory(registry, repository_namespace):
     config_url = registry.settings['auditlog.url']
     proto = config_url.split('://')[0]
+    if not 'idris.google_application_credentials' in registry.settings:
+        return
+
     if config_url == 'bigquery://':
         config_url = 'bigquery://%s#%s' % (
             registry.settings['idris.google_cloud_project'],

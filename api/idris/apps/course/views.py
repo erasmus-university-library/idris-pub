@@ -84,18 +84,19 @@ def course_material_download_view(request):
         size = blob.model.bytes
     user_id = request.unauthenticated_userid
     # add entry to auditlog
-    succeeded = request.repository.auditlog.append(
-        'usage',
-        'download',
-        material_id,
-        user_id,
-        context_id=request.context.model.id,
-        message=expression.id,
-        value=size)
-    if not succeeded and not request.repository.auditlog.has_log('usage'):
-        request.repository.auditlog.create_log('usage')
-    # add entry to download counter
-    request.repository.downloads.count(material_id, user_id)
+    if request.repository.auditlog is not None:
+        succeeded = request.repository.auditlog.append(
+            'usage',
+            'download',
+            material_id,
+            user_id,
+            context_id=request.context.model.id,
+            message=expression.id,
+            value=size)
+        if not succeeded and not request.repository.auditlog.has_log('usage'):
+            request.repository.auditlog.create_log('usage')
+        # add entry to download counter
+        request.repository.downloads.count(material_id, user_id)
 
     # serve the blob / url
     if expression.blob_id is None and expression.url:
