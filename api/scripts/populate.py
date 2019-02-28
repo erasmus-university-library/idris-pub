@@ -21,7 +21,7 @@ def login(user, password):
 
 
 def update_settings(token, settings):
-    print 'Update Settings: %s' % settings['title']
+    print('Update Settings: %s' % settings['title'])
 
     response = requests.put(BASE_URL + '/schemes/settings',
                             json.dumps(settings),
@@ -39,7 +39,7 @@ def get_types(token, scheme):
     return result
 
 def set_types(token, scheme, values):
-    print 'Setting Types: %s' % scheme
+    print('Setting Types: %s' % scheme)
     response = requests.put(BASE_URL + '/schemes/types/%s' % scheme,
                             json.dumps({'id': scheme, 'values': values}),
                             headers={'Content-Type': 'application/json',
@@ -76,13 +76,13 @@ def upload(token, data, kind):
         sys.stdout.flush()
         if not response.status_code == 201:
             print
-            print 'Error HTTP %s -> %s' % (response.status_code,
-                                           response.content)
+            print('Error HTTP %s -> %s' % (response.status_code,
+                                           response.content))
             sys.exit(1)
     print
 
 def upload_persons(token, data):
-    print '-- Persons'
+    print('-- Persons')
     account_types = get_types(token, 'personAccount')
     used_account_types = set()
     for person in data:
@@ -91,7 +91,9 @@ def upload_persons(token, data):
             used_account_types.add(account['type'])
     missing_types = used_account_types - set(account_types)
     if missing_types:
-        print 'The following person account types are missing: %s' % ', '.join(sorted(missing_types))
+        print('The following person account types are missing: %s' % ', ' \
+                                                                     ''.join(
+            sorted(missing_types)))
         if raw_input('Use these types [y/N]? ') == 'y':
             set_types(token,
                       'personAccount',
@@ -99,7 +101,7 @@ def upload_persons(token, data):
     upload(token, data, 'person')
 
 def upload_groups(token, data):
-    print '-- Groups'
+    print('-- Groups')
     account_types = get_types(token, 'groupAccount')
     used_account_types = set()
     child_ids = {}
@@ -111,15 +113,15 @@ def upload_groups(token, data):
 
         if group.get('parent_id') is not None:
             if group['parent_id'] not in group_ids:
-                print 'Warn: Missing Group Parent %s on group %s' % (
-                    group['parent_id'], group['id'])
+                print('Warn: Missing Group Parent %s on group %s' % (
+                    group['parent_id'], group['id']))
                 del group['parent_id']
             else:
                 child_ids.setdefault(group['parent_id'], []).append(group['id'])
     missing_types = used_account_types - set(account_types)
     if missing_types:
-        print 'The following group account types are missing: %s' % ', '.join(
-            sorted(missing_types))
+        print('The following group account types are missing: %s' % ', '.join(
+            sorted(missing_types)))
         if raw_input('Use these types [y/N]? ') == 'y':
             set_types(token,
                       'groupAccount',
@@ -139,11 +141,11 @@ def upload_groups(token, data):
     upload(token, data, 'group')
 
 def upload_blobs(token, data):
-    print '-- Blobs'
+    print('-- Blobs')
     upload(token, data, 'blob')
 
 def upload_works(token, data):
-    print '-- Works'
+    print('-- Works')
     current_types={'identifier': get_types(token, 'identifier'),
                    'relation': get_types(token, 'relation'),
                    'expression': get_types(token, 'expression'),
@@ -168,8 +170,8 @@ def upload_works(token, data):
             used_types['relation'].add(relation['type'])
             if (relation.get('target_id') and
                 relation['target_id'] not in work_ids):
-                print 'Warn: Missing Relation %s on work %s' % (
-                    relation['target_id'], work['id'])
+                print('Warn: Missing Relation %s on work %s' % (
+                    relation['target_id'], work['id']))
                 continue
             relations.append(relation)
         work['relations'] = relations
@@ -179,13 +181,13 @@ def upload_works(token, data):
             used_types['contributorRole'].add(contributor['role'])
             if (contributor.get('group_id') and
                 contributor['group_id'] not in IDS['group']):
-                print 'Warn: Missing group Contributor %s on work %s' % (
-                    contributor['group_id'], work['id'])
+                print('Warn: Missing group Contributor %s on work %s' % (
+                    contributor['group_id'], work['id']))
                 continue
             if (contributor.get('person_id') and
                 contributor['person_id'] not in IDS['person']):
-                print 'Warn: Missing person Contributor %s on work %s' % (
-                    contributor['person_id'], work['id'])
+                print('Warn: Missing person Contributor %s on work %s' % (
+                    contributor['person_id'], work['id']))
                 continue
             contributors.append(contributor)
         work['contributors'] = contributors
@@ -195,8 +197,8 @@ def upload_works(token, data):
     for type in current_types:
         missing_types = used_types[type] - set(current_types[type])
         if missing_types:
-            print 'The following work %s types are missing: %s' % (
-                type, ', '.join(sorted(used_types[type])))
+            print('The following work %s types are missing: %s' % (
+                type, ', '.join(sorted(used_types[type]))))
             if raw_input('Use these types [y/N]? ') == 'y':
                 set_types(token,
                           type,
