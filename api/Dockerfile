@@ -26,4 +26,4 @@ COPY ImageMagick-6-policy.xml /etc/ImageMagick-6/policy.xml
 
 # Run a WSGI server to serve the application. gunicorn must be declared as
 # a dependency in requirements.txt.
-CMD gunicorn -c gunicorn.conf.py --paste idris-gae.ini -b :$PORT
+CMD honcho -f Procfile.gae start
