@@ -16,15 +16,15 @@ class RedisDownloadCounter(object):
 
     't-<YYYY-MM-DD>' = total downloads on a date
     'u-<YYYY-MM-DD>' = total unique user downloads on a date
-    'ts-<YYYY-MM-DD>' = total downloads sum of last 30 days
-    'us-<YYYY-MM-DD>' = total unique user downloads sum of last 30 days
+    'ts' = total downloads sum of last 30 days
+    'us' = total unique user downloads sum of last 30 days
 
     To retrieve the downloads on a specific day, retrieve the ts-<date> key.
     If None is returned, re-calculate the sum for that day, based on the 't-<date>'
     keys of the last 30 days
 
-    If a download is recorded increment the 't-<today>' field and the ts-<today> field
-    Similar to above, re-calculate the sum for that day if the ts-<today> key returns
+    If a download is recorded increment the 't-<today>' field and the ts field
+    Similar to above, re-calculate the sum for that day if the t key returns
     None
 
     Then, clean up all keys that are older then 30 days,
@@ -62,6 +62,8 @@ class RedisDownloadCounter(object):
         u_total = 0
         for raw_hkey in list(history.keys()):
             hkey = raw_hkey.decode('utf8')
+            if hkey == 'ts' or hkey == 'us':
+                continue
             if hkey.startswith('ts-') or hkey.startswith('us-'):
                 keys_to_delete.append(raw_hkey)
                 continue
@@ -76,8 +78,9 @@ class RedisDownloadCounter(object):
         pipe = self._client.pipeline()
         if keys_to_delete:
             pipe.hdel(key, *keys_to_delete)
-        pipe.hset(key, 'ts-%s' % when.strftime('%Y-%m-%d'), total)
-        pipe.hset(key, 'us-%s' % when.strftime('%Y-%m-%d'), u_total)
+        pipe.hset(key, 'ts', total)
+        pipe.hset(key, 'us', u_total)
+        pipe.expire(key, 86400 * 31)
         pipe.execute()
         return total, u_total
 
@@ -99,16 +102,21 @@ class RedisDownloadCounter(object):
             history[key.decode('utf8')] = int(value)
         return history
 
-    def get_counts(self, expression_id, when=None):
+    def get_total_counts(self, expression_ids, when=None):
         when = when or self.today
-        key = '%s:%s' % (self._prefix, expression_id)
         pipe = self._client.pipeline()
-        pipe.hget(key, 'ts-%s' % when.strftime('%Y-%m-%d'))
-        pipe.hget(key, 'us-%s' % when.strftime('%Y-%m-%d'))
-        t_count, u_count = pipe.execute()
-        if t_count is None:
-            t_count, u_count = self._update(key, when)
-        return int(t_count), int(u_count)
+        for expression_id in expression_ids:
+            key = '%s:%s' % (self._prefix, expression_id)
+            pipe.hget(key, 'ts')
+        return [int(count or 0) for count in  pipe.execute()]
+
+    def get_unique_counts(self, expression_ids, when=None):
+        when = when or self.today
+        pipe = self._client.pipeline()
+        for expression_id in expression_ids:
+            key = '%s:%s' % (self._prefix, expression_id)
+            pipe.hget(key, 'us')
+        return [int(count or 0) for count in  pipe.execute()]
 
     def count(self, expression_id, user_identifier, when=None):
         when = when or self.today
@@ -125,7 +133,7 @@ class RedisDownloadCounter(object):
             self._update(key, when)
             self._update_hll(key, when)
         else:
-            self._client.hincrby(key, 'ts-%s' % download_time, 1)
+            self._client.hincrby(key, 'ts', 1)
 
         if self._client.pfadd(
                 '%s:hll' % self._prefix, hll_value) == 1:
@@ -137,7 +145,7 @@ class RedisDownloadCounter(object):
                 # first unique download of today!
                 pipe.expire(hll_key, 86400 * 31) # 31 days
 
-            pipe.hincrby(key, 'us-%s' % download_time, 1)
+            pipe.hincrby(key, 'us', 1)
             pipe.execute()
         if expression_id != 'repo':
             # increment the global repository count

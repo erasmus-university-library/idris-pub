@@ -22,6 +22,9 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import UnfoldMoreIcon from '@material-ui/icons/UnfoldMore';
+import VerifiedUserIcon from '@material-ui/icons/VerifiedUser';
+import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import WarningIcon from '@material-ui/icons/Warning';
 
 import Citation from './widgets/Citation';
 import ExternalLink from './widgets/ExternalLink';
@@ -49,6 +52,12 @@ const styles = theme => ({
     fontSize: '0.9rem',
     backgroundColor: '#B00020'
   },
+  RoyaltyInfo: {
+    fontSize: '0.75rem',
+    lineHeight: 0,
+    color:'#bdbdbd',
+    display:'flex'
+  }
 });
 
 
@@ -85,6 +94,50 @@ export class CourseLiteratureRoyaltyAvatar extends Component {
     }
   }
 }
+
+@withStyles(styles)
+export class CourseLiteratureDownloadCounter extends Component {
+  render(){
+    const { unique_downloads, classes } = this.props;
+      return (
+	<Tooltip title="Downloads from unique students in last 30 days">
+	  <Avatar>{unique_downloads.toString()}</Avatar>
+	</Tooltip>
+      )
+  }
+}
+
+
+@withStyles(styles)
+export class CourseLiteratureInfoIcon extends Component {
+  render(){
+    const { warning_message, tariff, tariff_message, excempt_message, cost, cost_message, classes } = this.props;
+    let ammount = `€ ${(cost/100).toFixed(2)}`;
+
+    let colorStyle = cost > 0 ? {color:'#B00020'} : {};
+    if ((warning_message || null) === null){
+
+      return (<div className={classes.RoyaltyInfo} style={colorStyle}>
+	      {cost > 0 ?
+	       <ShoppingBasketIcon style={{width:'0.75em', height:'0.75em'}}/>
+	       :
+	       <VerifiedUserIcon style={{width:'0.75em', height:'0.75em'}}/>}
+	      <Typography gutterBottom color="inherit">
+	      {tariff === 'excempt' ? `${tariff_message}: ${excempt_message}`: tariff_message}
+	      {cost > 0 ? `: pay ${ammount} per student`: null}
+	      </Typography>
+	      </div>);
+    } else {
+      return (<div className={classes.RoyaltyInfo} style={{color:'#B00020'}}>
+	      <WarningIcon style={{width:'0.75em', height:'0.75em'}}/>
+	      <Typography gutterBottom color="inherit">
+	      {warning_message}
+	      </Typography>
+	      </div>);
+    }
+  }
+}
+
 
 @withStyles(styles)
 class CourseLiteratureItem extends Component {
@@ -138,6 +191,8 @@ class CourseLiteratureItem extends Component {
     const royalties = tocItem.royalties || null;
     const { optionsAnchorEl } = this.state;
     const resultEl = [];
+
+
     if (id) {
       resultEl.push(
 	<ListItem key={id}
@@ -147,11 +202,13 @@ class CourseLiteratureItem extends Component {
 	  <ListItemIcon>
 	    { isStudent ?
 	      <BookmarkBorderIcon /> :
-	      <CourseLiteratureRoyaltyAvatar {...royalties} />
-	      }
+	      <CourseLiteratureDownloadCounter unique_downloads={tocItem.downloaded} /> }
 	  </ListItemIcon>
   	  <ListItemText  inset
-			 primary={<Citation citation={tocItem} />}
+			 primary={[
+			     <Citation citation={tocItem} key={0} />,
+			    isStudent ? null : <CourseLiteratureInfoIcon {...royalties} key={1} />
+			     ]}
 			 secondary={comment}/>
 	  { isStudent ? null :
  	  <ListItemSecondaryAction>

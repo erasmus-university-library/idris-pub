@@ -210,7 +210,7 @@ class IAuditLogService(Interface):
 
     <action:string*>,
     <work_id:int*>,
-    <user_id:int*>,
+    <user_id:string*>,
     <context_id:int>,
     <message:string>,
     <created:datetime>,

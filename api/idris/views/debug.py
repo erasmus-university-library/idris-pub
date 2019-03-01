@@ -7,63 +7,17 @@ from pyramid.httpexceptions import HTTPNotFound
 
 from idris.interfaces import IAppRoot
 
-@view_config(context=IAppRoot, name='debug_cache')
-def echo_view(request):
-    logging.info(os.environ)
-    logging.info(request.environ)
-    request.response.content_type == 'text/plain'
-    logging.info(dict(request.headers))
-    return request.response
-
-    raise ValueError('gug')
-    import gzip
-    gzip_body = gzip.compress(b'Hello! ' * 10000)
-    response = request.response
-    logging.info(dict(request.headers))
-    filename = request.path.split('/')[-1]
-    files = {'1.pdf': {'headers': {'Content-Length': str(len('Hello! ' * 10000)),
-                                   'ETag': 'W/"hello"',
-                                   'Content-Type': 'text/plain',
-                                   'Cache-Control': 'public, must-revalidate'},
-                       'status': 200,
-                       'body': ('Hello! ' * 10000).encode('utf8') },
-             '2.pdf': {'headers': {'Content-Length': str(len(gzip_body)),
-                                   'ETag': '"33a64df551425fcc55e4d42a148795d9f25f89d4"',
-                                   'Content-Encoding': 'gzip',
-                                   'Content-Type': 'text/plain',
-                                   'Cache-Control': 'public, must-revalidate'},
-                       'status': 200,
-                       'body': gzip_body},
-             'foo.pdf': {'headers': {'Content-Length': str(len('Hello! ' * 10000)),
-                                     'Content-Type': 'text/plain',
-                                     'Cache-Control': request.GET.get('cache', '')},
-                         'status': 200,
-                         'body': ('Hello! ' * 10000).encode('utf8')}}
-    file = files.get(filename)
-    if file is None:
-        raise HTTPNotFound()
-
-    response.status_code = file['status']
-    for key, value in file['headers'].items():
-        response.headers[key] = value
-    response.write(file['body'])
-
-
-    for header in request.headers:
-        if header == 'Echo-Body':
-            response.write(request.headers[header])
-        elif header == 'Echo-Status':
-            response.status_code = int(request.headers[header])
-        elif header.startswith('Echo-'):
-            response.headers[header[5:]] = request.headers[header]
-    return response
-
-
 @view_config(context=IAppRoot, name='debug_log')
 def debug_log(request):
-    trace_id = request.headers['X-Cloud-Trace-Context']
-
-    logging.info('this is a log')
+    succeeded = request.repository.auditlog.append(
+        'debug', 'test', 0, 0, message='this is a test', value='woot')
+    if not succeeded:
+        if not request.repository.auditlog.has_log('debug'):
+            request.repository.auditlog.create_log('debug')
+            succeeded = request.repository.auditlog.append(
+                'debug', 'test', 0, 0, message='this is a test', value='woot')
+    request.response.content_type = 'application/json'
+    request.response.write(json.dumps(succeeded).encode('utf8'))
     return request.response
 
 @view_config(context=IAppRoot, name='debug_db')

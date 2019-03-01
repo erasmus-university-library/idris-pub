@@ -215,7 +215,7 @@ class CourseRoyaltiesTest(BaseTest):
                    'starting': 10,
                    'ending': 90,
                    'pages': 40,
-                   'book_pages': 300}
+                   'book_pages': 500}
         out = self.royalties.calculate([chapter])[0]
         assert out['tariff'] == 'long'
         assert out['cost_message'] == (
@@ -255,7 +255,7 @@ class CourseRoyaltiesTest(BaseTest):
         chapter = {'id': 0,
                    'type': 'bookChapter',
                    'book_title': 'Introduction to ABC',
-                   'book_pages': 300,
+                   'book_pages': 500,
                    'blob_id': 0,
                    'words': 15000,
                    'pages': 60}
@@ -291,7 +291,7 @@ class CourseRoyaltiesTest(BaseTest):
         assert out['tariff'] == 'unknown'
         assert out['warning'] == 'max_pages_reached'
         assert out['warning_message'] == (
-            'A maximum of 15 pages from this book can be used')
+            'Exceeded maximum of 15 pages from this book')
         # let's include the whole book, short takeover
         # a max of 33% is used (in 2019)
         chapter = {'id': 0,
@@ -305,7 +305,7 @@ class CourseRoyaltiesTest(BaseTest):
         assert out['tariff'] == 'unknown'
         assert out['warning'] == 'max_pages_reached'
         assert out['warning_message'] == (
-            'A maximum of 20 pages from this book can be used')
+            'Exceeded maximum of 20 pages from this book')
 
     def test_royalties_annotation(self):
         out = self.royalties.calculate([
