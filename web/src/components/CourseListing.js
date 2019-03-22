@@ -446,6 +446,7 @@ class CourseListing extends Component {
     this.setState({importCourseDialogOpen: false});
   }
   handleSubmitCourseImport = (targetCourseId) => {
+    console.log('importing course content from', targetCourseId);
     this.setState({importCourseDialogOpen: false});
     this.importCourse(targetCourseId);
   }

@@ -40,5 +40,6 @@ setup(name='idris',
       initialize_db = idris.tools:initialize_db
       drop_db = idris.tools:drop_db
       bigquery_schema = idris.tools:bigquery_schema
+      export_repository = idris.tools:export_repository
       """,
       paster_plugins=['pyramid'])

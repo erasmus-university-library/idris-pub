@@ -12,13 +12,13 @@ from idris import main
 from idris.models import Person, Group, Work
 
 
-def initialize_storage(config_uri):
+def initialize_storage(config_uri, namespace=None):
     """ Create an app and from the app return a storage registry
     object and an SQLAlchemey session. """
     settings = get_appsettings(config_uri)
     app = main({}, **settings)
     storage = app.registry['storage']
-    session = storage.make_session()
+    session = storage.make_session(namespace=namespace)
     return session, storage
 
 
@@ -93,6 +93,17 @@ def drop_db():
     else:
         drop_all_repositories(storage, session)
     transaction.commit()
+
+
+def export_repository():
+    if len(sys.argv) == 1:
+        cmd = os.path.basename(sys.argv[0])
+        print('usage: %s <config_uri> repo_id schema\n'
+              'example: "%s development.ini test Person"' % (cmd, cmd))
+        sys.exit(1)
+    session, storage = initialize_storage(sys.argv[1], sys.argv[2])
+    kind = _get_model(sys.argv[3])
+
 
 
 def _get_model(kind):

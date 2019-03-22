@@ -101,7 +101,7 @@ export class CourseLiteratureDownloadCounter extends Component {
     const { unique_downloads, classes } = this.props;
       return (
 	<Tooltip title="Downloads from unique students in last 30 days">
-	  <Avatar>{unique_downloads.toString()}</Avatar>
+	  <Avatar>{(unique_downloads || 0).toString()}</Avatar>
 	</Tooltip>
       )
   }

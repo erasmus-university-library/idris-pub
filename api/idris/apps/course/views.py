@@ -174,9 +174,8 @@ def lti_login_view(request):
     except Exception:
         is_valid = False
     if not is_valid:
-        logging.info(params)
-        logging.info(request.headers)
-        logging.info(url)
+        logging.warning('verify request failed')
+
         raise HTTPForbidden('Unauthorized')
     user_id = params['user_id']
     principals = ['user:%s' % user_id]
@@ -185,6 +184,7 @@ def lti_login_view(request):
         group = request.dbsession.query(Group).filter(
             Group.id==group_id).first()
     except:
+        logging.warning('no group found')
         group = None
     if not group:
         request.errors.add(
@@ -202,7 +202,6 @@ def lti_login_view(request):
     if course:
         course = course.work_id
 
-    params['roles'] = params['roles'].replace('urn:lti:instrole:ims/lis/', '')
     instructor_roles = set(['Instructor',
                             'Administrator',
                             'Coordinator',
@@ -210,12 +209,17 @@ def lti_login_view(request):
                             'TA',
                             'Student assistent',
                             'Course designer'])
-    if params['roles'] in instructor_roles:
-        principals.append('group:teacher')
-        if course:
-            principals.append('teacher:course:%s' % course)
+    for role in params['roles'].split(','):
+        role = role.strip().replace('urn:lti:instrole:ims/lis/', '')
+        if role in instructor_roles:
+            principals.append('group:teacher')
+            if course:
+                principals.append('teacher:course:%s' % course)
+            logging.info('Instructor role: %s' % role)
+            break
     else:
         principals.append('group:student')
+        logging.info('Student role')
         if course:
             principals.append('student:course:%s' % course)
         else:

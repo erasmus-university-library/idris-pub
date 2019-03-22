@@ -140,8 +140,8 @@ class ProCourseRoyaltyCalculator2017(object):
                 all_chapters = [
                     m for m in materials
                     if m.get('book_title') == material['book_title']]
-                total_words = sum([m['words'] for m in all_chapters])
-                total_pages = sum([m['pages'] for m in all_chapters])
+                total_words = sum([m.get('words', 0) for m in all_chapters])
+                total_pages = sum([m.get('pages', 0) for m in all_chapters])
                 total_exceptions = [m.get('exception') for m in all_chapters
                                    if m.get('exception')]
                 if (total_words <= self.tariff_short_max_chapter_words and

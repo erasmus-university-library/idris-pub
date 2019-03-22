@@ -349,7 +349,6 @@ class CourseLiteratureAddForm extends Component {
 		    </div>
 		    : null}
 		  <div className={classes.formFieldRow}>
-		    {material.type !== 'report' ?
 		    <TextField
 		      id="year"
 		      label="Year"
@@ -358,7 +357,6 @@ class CourseLiteratureAddForm extends Component {
 		      onChange={this.handleChange('year')}
 		      margin="dense"
 			/>
-		    : null }
 		  {material.type === 'article' ?
 		    <TextField
 		      id="volume"
@@ -442,7 +440,7 @@ class CourseLiteratureAddForm extends Component {
 				    <CourseLiteratureRoyaltyAvatar {...royalties} />
 				  </div>
 			    </div>
-		      {royalties.cost > 0 ?
+		{royalties.cost > 0 ?
 		<Card style={{backgroundColor: '#eeeeee', marginTop:16}}>
 		  <CardContent>
 		  <Typography variant="h5" color="textSecondary" gutterBottom>
@@ -533,6 +531,7 @@ class CourseLiteratureAddForm extends Component {
 			  variant="contained"
 			  disabled={!(Boolean(material.title) &&
 				      Boolean(material.authors) &&
+				      Boolean(material.year) &&
 				      (material.type === 'bookChapter' ? (Boolean(material.book_title) && Boolean(material.book_pages)): true))}>
 		    Next
 		  </Button>
