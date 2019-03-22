@@ -387,7 +387,6 @@ def person_bulk_import_view(request):
 
 @person_bulk.get(permission='export')
 def person_bulk_export_view(request):
-    # get existing resources from submitted bulk
     import pdb;pdb.set_trace()
 
 
