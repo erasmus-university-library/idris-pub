@@ -240,6 +240,37 @@ class PersonAuthorzationWebTest(BaseTest):
         out = self.api.get('/api/v1/person/records/2', headers=headers)
         assert out.json['initials'] == 'J.'
 
+    def test_person_bulk_export(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        records = {'records': [
+            {'id': 1,
+             'family_name': 'Doe',
+             'given_name': 'John',
+             'accounts': [{'type': 'local', 'value': '123'}]},
+            {'id': 2,
+             'family_name': 'Doe',
+             'given_name': 'Jane',
+             'accounts': [{'type': 'local', 'value': '345'}]}
+        ]}
+        # bulk add records
+        out = self.api.post_json('/api/v1/person/bulk',
+                                 records,
+                                 headers=headers,
+                                 status=201)
+
+        # Export get
+        out = self.api.get('/api/v1/person/bulk?limit=1', headers=headers)
+        assert out.json['remaining'] == 1
+        assert len(out.json['records']) == 1
+        cursor = out.json['cursor']
+        assert cursor is not None
+        out = self.api.get(
+            '/api/v1/person/bulk?limit=1&cursor=%s' % cursor,
+            headers=headers)
+        assert out.json['remaining'] == 0
+        assert len(out.json['records']) == 1
+        assert out.json['cursor'] is None
+        assert out.json['records'][0]['given_name'] == 'Jane'
 
 class PersonMembersTest(PersonWebTest):
     def setUp(self):

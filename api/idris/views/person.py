@@ -352,6 +352,39 @@ class PersonRecordAPI(object):
         return result
 
 
+class PersonBulkExportRequestSchema(colander.MappingSchema):
+    @colander.instantiate()
+    class querystring(colander.MappingSchema):
+        cursor = colander.SchemaNode(
+            colander.Int(),
+            default=0,
+            validator=colander.Range(min=0),
+            missing=0)
+        limit = colander.SchemaNode(colander.Int(),
+                                    default=100,
+                                    validator=colander.Range(0, 1000),
+                                    missing=100)
+
+class PersonBulkExportResponseSchema(colander.MappingSchema):
+    @colander.instantiate()
+    class body(colander.MappingSchema):
+        status = OKStatus
+        remaining = colander.SchemaNode(colander.Int())
+        cursor = colander.SchemaNode(colander.Int())
+        limit = colander.SchemaNode(colander.Int())
+
+        @colander.instantiate()
+        class records(colander.SequenceSchema):
+            person = PersonSchema()
+
+def bulk_validator(request, **kwargs):
+    if request.method == 'GET':
+        kwargs['schema'] = PersonBulkExportRequestSchema()
+        return colander_validator(request, **kwargs)
+    else:
+        kwargs['schema'] = PersonBulkRequestSchema()
+        return colander_bound_repository_body_validator(request, **kwargs)
+
 person_bulk = Service(
     name='PersonBulk',
     path='/api/v1/person/bulk',
@@ -359,15 +392,13 @@ person_bulk = Service(
     api_security=[{'jwt': []}],
     tags=['person'],
     cors_origins=('*', ),
-    schema=PersonBulkRequestSchema(),
-    validators=(colander_bound_repository_body_validator,),
-    response_schemas={
-        '200': OKStatusResponseSchema(description='Ok'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized')})
+    validators=(bulk_validator,))
 
-
-@person_bulk.post(permission='import')
+@person_bulk.post(permission='import',
+                  response_schemas={
+                      '200': OKStatusResponseSchema(description='Ok'),
+                      '400': ErrorResponseSchema(description='Bad Request'),
+                      '401': ErrorResponseSchema(description='Unauthorized')})
 def person_bulk_import_view(request):
     # get existing resources from submitted bulk
     keys = [r['id'] for r in request.validated['records'] if r.get('id')]
@@ -385,11 +416,35 @@ def person_bulk_import_view(request):
     request.response.status = 201
     return {'status': 'ok'}
 
-@person_bulk.get(permission='export')
+
+@person_bulk.get(permission='export',
+                 response_schemas={
+                     '200': PersonBulkExportResponseSchema(description='Ok'),
+                     '400': ErrorResponseSchema(description='Bad Request'),
+                     '401': ErrorResponseSchema(description='Unauthorized')})
 def person_bulk_export_view(request):
-    import pdb;pdb.set_trace()
+    cursor = request.validated['querystring']['cursor']
+    limit = request.validated['querystring']['limit']
+    listing = request.context.search(
+        filters=[Person.id >= cursor],
+        order_by=Person.id,
+        limit=limit+1,
+        principals=request.effective_principals)
 
+    schema = PersonSchema()
+    if len(listing['hits']) > limit:
+        cursor = listing['hits'][-1].id
+        listing['hits'].pop()
+    else:
+        cursor = None
 
+    result = {'remaining': listing['total']-len(listing['hits']),
+              'records': [schema.to_json(person.to_dict())
+                          for person in listing['hits']],
+              'limit': limit,
+              'cursor': cursor,
+              'status': 'ok'}
+    return result
 
 person_search = Service(
     name='PersonSearch',
