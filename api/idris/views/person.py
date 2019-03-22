@@ -385,6 +385,13 @@ def person_bulk_import_view(request):
     request.response.status = 201
     return {'status': 'ok'}
 
+@person_bulk.get(permission='export')
+def person_bulk_export_view(request):
+    # get existing resources from submitted bulk
+    import pdb;pdb.set_trace()
+
+
+
 person_search = Service(
     name='PersonSearch',
     path='/api/v1/person/search',
