@@ -94,7 +94,7 @@ def upload_persons(token, data):
         print('The following person account types are missing: %s' % ', ' \
                                                                      ''.join(
             sorted(missing_types)))
-        if raw_input('Use these types [y/N]? ') == 'y':
+        if input('Use these types [y/N]? ') == 'y':
             set_types(token,
                       'personAccount',
                       [{'key': t, 'label': t} for t in missing_types])
@@ -122,7 +122,7 @@ def upload_groups(token, data):
     if missing_types:
         print('The following group account types are missing: %s' % ', '.join(
             sorted(missing_types)))
-        if raw_input('Use these types [y/N]? ') == 'y':
+        if input('Use these types [y/N]? ') == 'y':
             set_types(token,
                       'groupAccount',
                       [{'key': t, 'label': t} for t in missing_types])
@@ -199,7 +199,7 @@ def upload_works(token, data):
         if missing_types:
             print('The following work %s types are missing: %s' % (
                 type, ', '.join(sorted(used_types[type]))))
-            if raw_input('Use these types [y/N]? ') == 'y':
+            if input('Use these types [y/N]? ') == 'y':
                 set_types(token,
                           type,
                           [{'key': t, 'label': t} for t in used_types[type]])
