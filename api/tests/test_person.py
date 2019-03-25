@@ -240,7 +240,7 @@ class PersonAuthorzationWebTest(BaseTest):
         out = self.api.get('/api/v1/person/records/2', headers=headers)
         assert out.json['initials'] == 'J.'
 
-    def test_person_bulk_export(self):
+    def test_person_bulk_export_record_schema(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         records = {'records': [
             {'id': 1,
@@ -252,25 +252,74 @@ class PersonAuthorzationWebTest(BaseTest):
              'given_name': 'Jane',
              'accounts': [{'type': 'local', 'value': '345'}]}
         ]}
-        # bulk add records
+
+        # Bulk add records
         out = self.api.post_json('/api/v1/person/bulk',
                                  records,
                                  headers=headers,
                                  status=201)
 
-        # Export get
+        # Export records
         out = self.api.get('/api/v1/person/bulk?limit=1', headers=headers)
+
+        # Test the output keys.
+        out_keys = sorted(['remaining', 'records', 'limit', 'cursor', 'status'])
+        assert out_keys == sorted(list(out.json.keys()))
+
+        # Test the record keys.
+        record = out.json['records'][0]
+        record_keys = sorted(['id', 'name', 'family_name', 'given_name',
+                             'accounts', 'memberships', 'positions'])
+        assert record_keys == sorted(list(record.keys()))
+
+        # Test record contents.
+        assert record['id'] == 1
+        assert record['name'] == 'Doe (John)'
+        assert record['family_name'] == 'Doe'
+        assert record['given_name'] == 'John'
+        assert len(record['accounts']) == 1
+        assert record['accounts'][0] == {'type': 'local', 'value': '123'}
+        assert len(record['memberships']) == 0
+        assert len(record['positions']) == 0
+
+    def test_person_bulk_export_cursor(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        records = {'records': [
+            {'id': 1,
+             'family_name': 'Doe',
+             'given_name': 'John',
+             'accounts': [{'type': 'local', 'value': '123'}]},
+            {'id': 2,
+             'family_name': 'Doe',
+             'given_name': 'Jane',
+             'accounts': [{'type': 'local', 'value': '345'}]}
+        ]}
+
+        # Bulk add records
+        out = self.api.post_json('/api/v1/person/bulk',
+                                 records,
+                                 headers=headers,
+                                 status=201)
+
+        # Test exporting in batches. There are two records and the batch
+        # limit is set at 1, so using the cursor we should be able to get one
+        # record per API call.
+        out = self.api.get('/api/v1/person/bulk?limit=1', headers=headers)
+
         assert out.json['remaining'] == 1
         assert len(out.json['records']) == 1
         cursor = out.json['cursor']
         assert cursor is not None
+
+        # Get the second record.
         out = self.api.get(
-            '/api/v1/person/bulk?limit=1&cursor=%s' % cursor,
-            headers=headers)
+            '/api/v1/person/bulk?limit=1&cursor={cursor}'.format(
+                cursor=cursor), headers=headers)
         assert out.json['remaining'] == 0
         assert len(out.json['records']) == 1
         assert out.json['cursor'] is None
         assert out.json['records'][0]['given_name'] == 'Jane'
+
 
 class PersonMembersTest(PersonWebTest):
     def setUp(self):
