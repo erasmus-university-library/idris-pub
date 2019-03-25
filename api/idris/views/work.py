@@ -12,6 +12,7 @@ from cornice import Service
 
 from idris.models import Work
 from idris.resources import ResourceFactory, WorkResource, GroupResource
+from idris.views.controller_utils import ControllerUtils
 from idris.views.contributor import (
     ContributorSchema, ContributorAffiliationSchema)
 
@@ -326,6 +327,34 @@ class WorkBulkRequestSchema(colander.MappingSchema):
         work = WorkSchema()
 
 
+class WorkBulkExportRequestSchema(colander.MappingSchema):
+    @colander.instantiate()
+    class querystring(colander.MappingSchema):
+        cursor = colander.SchemaNode(
+            colander.Int(),
+            default=0,
+            validator=colander.Range(min=0),
+            missing=0)
+        limit = colander.SchemaNode(
+            colander.Int(),
+            default=100,
+            validator=colander.Range(0, 1000),
+            missing=100)
+
+
+class WorkBulkExportResponseSchema(colander.MappingSchema):
+    @colander.instantiate()
+    class body(colander.MappingSchema):
+        status = OKStatus
+        remaining = colander.SchemaNode(colander.Int())
+        cursor = colander.SchemaNode(colander.Int())
+        limit = colander.SchemaNode(colander.Int())
+
+        @colander.instantiate()
+        class records(colander.SequenceSchema):
+            group = WorkSchema()
+
+
 @resource(name='Work',
           collection_path='/api/v1/work/records',
           path='/api/v1/work/records/{id}',
@@ -456,37 +485,40 @@ class WorkRecordAPI(object):
                   'status': 'ok'}
         return result
 
-work_bulk = Service(
+
+@resource(
     name='WorkBulk',
     path='/api/v1/work/bulk',
     factory=ResourceFactory(WorkResource),
     api_security=[{'jwt': []}],
     tags=['work'],
-    cors_origins=('*', ),
-    schema=WorkBulkRequestSchema(),
-    validators=(colander_bound_repository_body_validator,),
-    response_schemas={'200': OKStatusResponseSchema(description='Ok'),
-                      '400': ErrorResponseSchema(description='Bad Request'),
-                      '401': ErrorResponseSchema(description='Unauthorized')})
+    cors_origins=('*', ))
+class WorkImportExport(ControllerUtils):
+    def __init__(self, request, context):
+        self.request= request
+        self.context = context
 
+    @view(
+        permission='import',
+        schema=WorkBulkRequestSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        response_schemas={
+            '200': OKStatusResponseSchema(description='Ok'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
+    def post(self):
+        return self.post_bulk()
 
-@work_bulk.post(permission='import')
-def work_bulk_import_view(request):
-    # get existing resources from submitted bulk
-    keys = [r['id'] for r in request.validated['records'] if r.get('id')]
-    existing_records = {
-        r.id: r for r in request.context.get_many(keys) if r}
-    models = []
-    for record in request.validated['records']:
-        if record['id'] in existing_records:
-            model = existing_records[record['id']]
-            model.update_dict(record)
-        else:
-            model = request.context.orm_class.from_dict(record)
-        models.append(model)
-    models = request.context.put_many(models)
-    request.response.status = 201
-    return {'status': 'ok'}
+    @view(
+        permission='import',
+        schema=WorkBulkExportRequestSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        response_schemas={
+            '200': WorkBulkExportResponseSchema(description='Ok'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
+    def get(self):
+        pass
 
 
 def csl_convert(item):

@@ -1,6 +1,7 @@
 import json
 from core import BaseTest
 
+
 class WorkWebTest(BaseTest):
 
     def test_crud_as_admin(self):

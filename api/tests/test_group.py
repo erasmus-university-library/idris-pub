@@ -334,6 +334,7 @@ class GroupAuthorzationWebTest(BaseTest):
         assert out.json['cursor'] is None
         assert out.json['records'][0]['name'] == 'Other Corp.'
 
+
 class GroupRetrievalWebTest(GroupWebTest):
     def setUp(self):
         super(GroupRetrievalWebTest, self).setUp()
