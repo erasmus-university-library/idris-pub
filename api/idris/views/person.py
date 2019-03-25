@@ -7,6 +7,7 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
+from idris.views.controller_utils import ControllerUtils
 from idris.models import Person, Membership, Group, Contributor
 from idris.resources import ResourceFactory, PersonResource
 
@@ -389,7 +390,7 @@ class PersonRecordAPI(object):
           api_security=[{'jwt': []}],
           tags=['person'],
           cors_origins=('*', ))
-class PersonBulkExport(object):
+class PersonBulkImportExport(ControllerUtils):
     def __init__(self, request, context):
         self.request = request
         self.context = context
@@ -404,23 +405,7 @@ class PersonBulkExport(object):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def post(self):
-
-        # Get existing resources from submitted bulk.
-        keys = [r['id'] for r in self.request.validated['records']
-                if r.get('id')]
-        existing_records = {
-            r.id: r for r in self.request.context.get_many(keys) if r}
-        models = []
-        for record in self.request.validated['records']:
-            if record['id'] in existing_records:
-                model = existing_records[record['id']]
-                model.update_dict(record)
-            else:
-                model = self.request.context.orm_class.from_dict(record)
-            models.append(model)
-        models = self.request.context.put_many(models)
-        self.request.response.status = 201
-        return {'status': 'ok'}
+        return self.post_bulk()
 
     @view(
         permission='export',
@@ -432,28 +417,7 @@ class PersonBulkExport(object):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
-        cursor = self.request.validated['querystring']['cursor']
-        limit = self.request.validated['querystring']['limit']
-        listing = self.request.context.search(
-            filters=[Person.id >= cursor],
-            order_by=Person.id,
-            limit=limit+1,
-            principals=self.request.effective_principals)
-
-        schema = PersonSchema()
-        if len(listing['hits']) > limit:
-            cursor = listing['hits'][-1].id
-            listing['hits'].pop()
-        else:
-            cursor = None
-
-        result = {'remaining': listing['total']-len(listing['hits']),
-                  'records': [schema.to_json(person.to_dict())
-                              for person in listing['hits']],
-                  'limit': limit,
-                  'cursor': cursor,
-                  'status': 'ok'}
-        return result
+        return self.get_bulk(Person, PersonSchema)
 
 
 person_search = Service(

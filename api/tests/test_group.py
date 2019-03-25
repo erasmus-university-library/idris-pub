@@ -3,6 +3,7 @@ import transaction
 from core import BaseTest
 from idris.models import User
 
+
 class GroupWebTest(BaseTest):
 
     def test_crud_as_admin(self):
@@ -104,7 +105,6 @@ class GroupWebTest(BaseTest):
                            headers=headers)
         assert out.json['accounts'] == [{'type': 'local', 'value': 'XXXX'}]
 
-
     def test_insert_empty_account_or_no_account(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         out = self.api.post_json(
@@ -137,6 +137,7 @@ class GroupWebTest(BaseTest):
              headers=headers,
              status=200)
         assert out.json['accounts'] == []
+
 
 class GroupAuthorzationWebTest(BaseTest):
     def test_crud_groups_by_user_groups(self):
@@ -236,7 +237,8 @@ class GroupAuthorzationWebTest(BaseTest):
              'type': 'organisation',
              'accounts': [{'type': 'local', 'value': '345'}]}
              ]}
-        # bulk add records
+
+        # Bulk add records
         out = self.api.post_json('/api/v1/group/bulk',
                                  records,
                                  headers=headers,
@@ -253,6 +255,84 @@ class GroupAuthorzationWebTest(BaseTest):
         assert out.json['status'] == 'ok'
         out = self.api.get('/api/v1/group/records/2', headers=headers)
         assert out.json['international_name'] == 'Big Other Corp.'
+
+    def test_group_bulk_export_record_schema(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        records = {'records': [
+            {'id': 1,
+             'international_name': 'Corp.',
+             'type': 'organisation',
+             'accounts': [{'type': 'local', 'value': '123'}]},
+            {'id': 2,
+             'international_name': 'Other Corp.',
+             'type': 'organisation',
+             'accounts': [{'type': 'local', 'value': '345'}]}
+        ]}
+
+        # Bulk add records.
+        out = self.api.post_json('/api/v1/group/bulk',
+                                 records,
+                                 headers=headers,
+                                 status=201)
+
+        # Export records.
+        out = self.api.get('/api/v1/group/bulk?limit=1', headers=headers)
+
+        # Test the output keys.
+        out_keys = sorted(['remaining', 'records', 'limit', 'cursor', 'status'])
+        assert out_keys == sorted(list(out.json.keys()))
+
+        # Test the record keys.
+        record = out.json['records'][0]
+        record_keys = sorted(['id', 'name', 'type',
+                              'international_name', 'accounts'])
+        assert record_keys == sorted(list(record.keys()))
+
+        # Test record contents.
+        assert record['id'] == 1
+        assert record['type'] == 'organisation'
+        assert record['name'] == 'Corp.'
+        assert record['international_name'] == 'Corp.'
+        assert len(record['accounts']) == 1
+        assert record['accounts'][0] == {'type': 'local', 'value': '123'}
+
+    def test_group_bulk_export_cursor(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        records = {'records': [
+            {'id': 1,
+             'international_name': 'Corp.',
+             'type': 'organisation',
+             'accounts': [{'type': 'local', 'value': '123'}]},
+            {'id': 2,
+             'international_name': 'Other Corp.',
+             'type': 'organisation',
+             'accounts': [{'type': 'local', 'value': '345'}]}
+        ]}
+
+        # Bulk add records.
+        out = self.api.post_json('/api/v1/group/bulk',
+                                 records,
+                                 headers=headers,
+                                 status=201)
+
+        # Test exporting in batches. There are two records and the batch
+        # limit is set at 1, so using the cursor we should be able to get one
+        # record per API call.
+        out = self.api.get('/api/v1/group/bulk?limit=1', headers=headers)
+
+        assert out.json['remaining'] == 1
+        assert len(out.json['records']) == 1
+        cursor = out.json['cursor']
+        assert cursor is not None
+
+        # Get the second record.
+        out = self.api.get(
+            '/api/v1/group/bulk?limit=1&cursor={cursor}'.format(
+                cursor=cursor), headers=headers)
+        assert out.json['remaining'] == 0
+        assert len(out.json['records']) == 1
+        assert out.json['cursor'] is None
+        assert out.json['records'][0]['name'] == 'Other Corp.'
 
 class GroupRetrievalWebTest(GroupWebTest):
     def setUp(self):

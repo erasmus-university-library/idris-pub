@@ -7,16 +7,17 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
+from idris.views.controller_utils import ControllerUtils
 from idris.models import Group, Membership, Affiliation
 from idris.resources import ResourceFactory, GroupResource
 
 from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
-                           StatusResponseSchema,
-                           OKStatusResponseSchema,
-                           OKStatus,
-                           JsonMappingSchemaSerializerMixin,
-                           colander_bound_repository_body_validator)
+                         StatusResponseSchema,
+                         OKStatusResponseSchema,
+                         OKStatus,
+                         JsonMappingSchemaSerializerMixin,
+                         colander_bound_repository_body_validator)
 from idris.views.id_mint import BaseIdMinterAPI
 
 
@@ -64,12 +65,15 @@ class GroupSchema(colander.MappingSchema, JsonMappingSchemaSerializerMixin):
                                        validator=deferred_account_type_validator)
             value = colander.SchemaNode(colander.String())
 
+
 class GroupPostSchema(GroupSchema):
     # similar to group schema, but id is optional
     id = colander.SchemaNode(colander.Int(), missing=colander.drop)
 
+
 class GroupResponseSchema(colander.MappingSchema):
     body = GroupSchema()
+
 
 class GroupListingResponseSchema(colander.MappingSchema):
     @colander.instantiate()
@@ -93,6 +97,7 @@ class GroupListingResponseSchema(colander.MappingSchema):
                 members = colander.SchemaNode(colander.Int())
                 works = colander.SchemaNode(colander.Int())
 
+
 class GroupListingRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
@@ -115,6 +120,7 @@ class GroupListingRequestSchema(colander.MappingSchema):
             validator=colander.OneOf(['record', 'snippet']),
             missing=colander.drop)
 
+
 class GroupSearchRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class querystring(colander.MappingSchema):
@@ -129,10 +135,40 @@ class GroupSearchRequestSchema(colander.MappingSchema):
                                     validator=colander.Range(0, 100),
                                     missing=20)
 
+
 class GroupBulkRequestSchema(colander.MappingSchema):
     @colander.instantiate()
     class records(colander.SequenceSchema):
         group = GroupSchema()
+
+
+class GroupBulkExportRequestSchema(colander.MappingSchema):
+    @colander.instantiate()
+    class querystring(colander.MappingSchema):
+        cursor = colander.SchemaNode(
+            colander.Int(),
+            default=0,
+            validator=colander.Range(min=0),
+            missing=0)
+        limit = colander.SchemaNode(
+            colander.Int(),
+            default=100,
+            validator=colander.Range(0, 1000),
+            missing=100)
+
+
+class GroupBulkExportResponseSchema(colander.MappingSchema):
+    @colander.instantiate()
+    class body(colander.MappingSchema):
+        status = OKStatus
+        remaining = colander.SchemaNode(colander.Int())
+        cursor = colander.SchemaNode(colander.Int())
+        limit = colander.SchemaNode(colander.Int())
+
+        @colander.instantiate()
+        class records(colander.SequenceSchema):
+            group = GroupSchema()
+
 
 @resource(name='Group',
           collection_path='/api/v1/group/records',
@@ -148,26 +184,24 @@ class GroupRecordAPI(object):
 
     @view(permission='view',
           response_schemas={
-        '200': GroupResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+            '200': GroupResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found')})
     def get(self):
-        "Retrieve a Group"
+        """Retrieve a Group"""
         return GroupSchema().to_json(self.context.model.to_dict())
 
     @view(permission='edit',
           schema=GroupSchema(),
           validators=(colander_bound_repository_body_validator,),
           response_schemas={
-        '200': GroupResponseSchema(description='Ok'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        '404': ErrorResponseSchema(description='Not Found'),
-        })
+            '200': GroupResponseSchema(description='Ok'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden'),
+            '404': ErrorResponseSchema(description='Not Found')})
     def put(self):
-        "Modify an Group"
+        """Modify an Group"""
         body = self.request.validated
         body['id'] = int(self.request.matchdict['id'])
         self.context.model.update_dict(body)
@@ -184,10 +218,9 @@ class GroupRecordAPI(object):
               '200': StatusResponseSchema(description='Ok'),
               '401': ErrorResponseSchema(description='Unauthorized'),
               '403': ErrorResponseSchema(description='Forbidden'),
-              '404': ErrorResponseSchema(description='Not Found'),
-          })
+              '404': ErrorResponseSchema(description='Not Found')})
     def delete(self):
-        "Delete an Group"
+        """Delete an Group"""
         self.context.delete()
         return {'status': 'ok'}
 
@@ -195,13 +228,12 @@ class GroupRecordAPI(object):
           schema=GroupPostSchema(),
           validators=(colander_bound_repository_body_validator,),
           response_schemas={
-        '201': GroupResponseSchema(description='Created'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized'),
-        '403': ErrorResponseSchema(description='Forbidden'),
-        })
+            '201': GroupResponseSchema(description='Created'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized'),
+            '403': ErrorResponseSchema(description='Forbidden')})
     def collection_post(self):
-        "Create a new Group"
+        """Create a new Group"""
         group = Group.from_dict(self.request.validated)
         try:
             self.context.put(group)
@@ -209,18 +241,18 @@ class GroupRecordAPI(object):
             self.request.errors.status = 400
             self.request.errors.add('body', err.location, str(err))
             return
+
         self.request.response.status = 201
         return GroupSchema().to_json(group.to_dict())
-
 
     @view(permission='view',
           schema=GroupListingRequestSchema(),
           validators=(colander_validator),
           cors_origins=('*', ),
           response_schemas={
-        '200': GroupListingResponseSchema(description='Ok'),
-        '400': ErrorResponseSchema(description='Bad Request'),
-        '401': ErrorResponseSchema(description='Unauthorized')})
+            '200': GroupListingResponseSchema(description='Ok'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
     def collection_get(self):
         offset = self.request.validated['querystring']['offset']
         limit = self.request.validated['querystring']['limit']
@@ -240,7 +272,7 @@ class GroupRecordAPI(object):
         if filter_parent:
             filters.append(Group.parent_id == filter_parent)
 
-        from_query=None
+        from_query = None
         query_callback = None
         if format == 'snippet':
             from_query = self.context.session.query(Group)
@@ -251,13 +283,12 @@ class GroupRecordAPI(object):
                                                         Group.type,
                                                         Group.name)
 
-
-
             def query_callback(from_query):
                 filtered_groups = from_query.cte('filtered_groups')
                 with_memberships = self.context.session.query(
                     filtered_groups,
-                    func.count(Membership.id.distinct()).label('membership_count')
+                    func.count(Membership.id.distinct()).label(
+                        'membership_count')
                     ).outerjoin(Membership).group_by(filtered_groups.c.id,
                                                      filtered_groups.c.type,
                                                      filtered_groups.c.name)
@@ -268,8 +299,6 @@ class GroupRecordAPI(object):
                     func.count(Affiliation.work_id.distinct()).label('work_count'),
                     ).outerjoin(Affiliation).group_by(filtered_memberships)
                 return with_work_counts
-
-
 
         listing = self.context.search(
             filters=filters,
@@ -303,48 +332,57 @@ class GroupRecordAPI(object):
 
         return result
 
-group_bulk = Service(name='GroupBulk',
-                     path='/api/v1/group/bulk',
-                     factory=ResourceFactory(GroupResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['group'],
-                     cors_origins=('*', ),
-                     schema=GroupBulkRequestSchema(),
-                     validators=(colander_bound_repository_body_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
 
-@group_bulk.post(permission='import')
-def group_bulk_import_view(request):
-    # get existing resources from submitted bulk
-    keys = [r['id'] for r in request.validated['records'] if r.get('id')]
-    existing_records = {r.id:r for r in request.context.get_many(keys) if r}
-    models = []
-    for record in request.validated['records']:
-        if record['id'] in existing_records:
-            model = existing_records[record['id']]
-            model.update_dict(record)
-        else:
-            model = request.context.orm_class.from_dict(record)
-        models.append(model)
-    models = request.context.put_many(models)
-    request.response.status = 201
-    return {'status': 'ok'}
+@resource(
+    name='GroupBulk',
+    path='/api/v1/group/bulk',
+    factory=ResourceFactory(GroupResource),
+    api_security=[{'jwt': []}],
+    tags=['group'],
+    cors_origins=('*', ))
+class GroupBulkImportExport(ControllerUtils):
+    def __init__(self, request, context):
+        self.request = request
+        self.context = context
 
-group_search = Service(name='GroupSearch',
-                     path='/api/v1/group/search',
-                     factory=ResourceFactory(GroupResource),
-                     api_security=[{'jwt':[]}],
-                     tags=['group'],
-                     cors_origins=('*', ),
-                     schema=GroupSearchRequestSchema(),
-                     validators=(colander_validator,),
-                     response_schemas={
-    '200': OKStatusResponseSchema(description='Ok'),
-    '400': ErrorResponseSchema(description='Bad Request'),
-    '401': ErrorResponseSchema(description='Unauthorized')})
+    @view(
+        permission='import',
+        schema=GroupBulkRequestSchema(),
+        validators=(colander_bound_repository_body_validator,),
+        response_schemas={
+            '200': OKStatusResponseSchema(description='Ok'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
+    def post(self):
+        return self.post_bulk()
+
+    @view(
+        permission='export',
+        schema=GroupBulkExportRequestSchema(),
+        validators=(colander_validator, ),
+        cors_origins=('*', ),
+        response_schemas={
+            '200': GroupBulkExportResponseSchema(description='Ok'),
+            '400': ErrorResponseSchema(description='Bad Request'),
+            '401': ErrorResponseSchema(description='Unauthorized')})
+    def get(self):
+        return self.get_bulk(Group, GroupSchema)
+
+
+group_search = Service(
+    name='GroupSearch',
+    path='/api/v1/group/search',
+    factory=ResourceFactory(GroupResource),
+    api_security=[{'jwt':[]}],
+    tags=['group'],
+    cors_origins=('*', ),
+    schema=GroupSearchRequestSchema(),
+    validators=(colander_validator,),
+    response_schemas={
+        '200': OKStatusResponseSchema(description='Ok'),
+        '400': ErrorResponseSchema(description='Bad Request'),
+        '401': ErrorResponseSchema(description='Unauthorized')})
+
 
 @group_search.get(permission='search')
 def group_search_view(request):

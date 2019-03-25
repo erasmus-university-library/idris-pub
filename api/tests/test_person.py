@@ -231,7 +231,8 @@ class PersonAuthorzationWebTest(BaseTest):
         out = self.api.get('/api/v1/person/records/2', headers=headers)
         assert out.json['given_name'] == 'Jane'
         records['records'][1]['initials'] = 'J.'
-        # bulk update records
+
+        # Bulk update records
         out = self.api.post_json('/api/v1/person/bulk',
                                  records,
                                  headers=headers,
