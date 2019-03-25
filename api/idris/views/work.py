@@ -376,7 +376,7 @@ class WorkRecordAPI(object):
             '404': ErrorResponseSchema(description='Not Found'),
         })
     def get(self):
-        "Retrieve a Work"
+        """Retrieve a Work"""
         return WorkSchema().to_json(self.context.model.to_dict())
 
     @view(
@@ -390,7 +390,7 @@ class WorkRecordAPI(object):
             '404': ErrorResponseSchema(description='Not Found'),
         })
     def put(self):
-        "Modify a Work"
+        """Modify a Work"""
         body = self.request.validated
         body['id'] = int(self.request.matchdict['id'])
         self.context.model.update_dict(body)
@@ -411,7 +411,7 @@ class WorkRecordAPI(object):
             '404': ErrorResponseSchema(description='Not Found'),
         })
     def delete(self):
-        "Delete a Work"
+        """Delete a Work"""
         self.context.delete()
         return {'status': 'ok'}
 
@@ -426,7 +426,7 @@ class WorkRecordAPI(object):
             '403': ErrorResponseSchema(description='Forbidden')}
     )
     def collection_post(self):
-        "Create a new Work"
+        """Create a new Work"""
         work = Work.from_dict(self.request.validated)
         try:
             self.context.put(work)
@@ -510,15 +510,15 @@ class WorkImportExport(ControllerUtils):
         return self.post_bulk()
 
     @view(
-        permission='import',
+        permission='export',
         schema=WorkBulkExportRequestSchema(),
-        validators=(colander_bound_repository_body_validator,),
+        validators=(colander_validator, ),
         response_schemas={
             '200': WorkBulkExportResponseSchema(description='Ok'),
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
-        pass
+        return self.get_bulk(Work, WorkSchema)
 
 
 def csl_convert(item):

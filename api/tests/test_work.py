@@ -74,6 +74,54 @@ class WorkWebTest(BaseTest):
         out = self.api.get('/api/v1/work/records/2', headers=headers)
         assert out.json['title'] == 'Pub 2 with modified title'
 
+    def test_work_bulk_export_record_schema(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        records = {'records': [
+            {'id': 1,
+             'title': 'Pub 1',
+             'type': 'article',
+             'issued': '2018-01-01'},
+            {'id': 2,
+             'title': 'Pub 2',
+             'type': 'article',
+             'issued': '2018-01-01'
+             }]}
+
+        # bulk add records
+        out = self.api.post_json('/api/v1/work/bulk',
+                                 records,
+                                 headers=headers,
+                                 status=201)
+        # Export records.
+        out = self.api.get('/api/v1/work/bulk?limit=1', headers=headers)
+
+        # Test the output keys.
+        out_keys = sorted(['remaining', 'records', 'limit', 'cursor', 'status'])
+        assert out_keys == sorted(list(out.json.keys()))
+
+        # Test the record keys.
+        record = out.json['records'][0]
+        record_keys = sorted(['id', 'title', 'type', 'issued',
+                              'start_date', 'end_date', 'identifiers',
+                              'measures', 'contributors', 'descriptions',
+                              'expressions', 'relations'])
+        assert record_keys == sorted(list(record.keys()))
+
+        # Test record contents.
+        assert record['id'] == 1
+        assert record['type'] == 'article'
+        assert record['title'] == 'Pub 1'
+        assert record['issued'] == '2018-01-01'
+        assert record['start_date'] == '2018-01-01'
+        assert record['end_date'] == '2018-01-01'
+        assert len(record['identifiers']) == 0
+        assert len(record['measures']) == 0
+        assert len(record['contributors']) == 0
+        assert len(record['descriptions']) == 0
+        assert len(record['expressions']) == 0
+        assert len(record['relations']) == 0
+
+
 class WorkPermissionWebTest(BaseTest):
     def setUp(self):
         super(WorkPermissionWebTest, self).setUp()
