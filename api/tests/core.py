@@ -19,6 +19,7 @@ DB_INITIALIZED_TESTS = set()
 GOOGLE_CREDENTIALS_FILE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'service-account.json')
 
+
 def has_google_credentials_file():
     return os.path.isfile(GOOGLE_CREDENTIALS_FILE)
 

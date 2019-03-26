@@ -227,6 +227,7 @@ class PersonAuthorzationWebTest(BaseTest):
                                  records,
                                  headers=headers,
                                  status=201)
+
         assert out.json['status'] == 'ok'
         out = self.api.get('/api/v1/person/records/2', headers=headers)
         assert out.json['given_name'] == 'Jane'
