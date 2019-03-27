@@ -12,7 +12,7 @@ from cornice import Service
 
 from idris.models import Work
 from idris.resources import ResourceFactory, WorkResource, GroupResource
-from idris.views.bulk import BaseBulk
+from idris.views.bulkbase import BaseBulk
 from idris.views.contributor import (
     ContributorSchema, ContributorAffiliationSchema)
 

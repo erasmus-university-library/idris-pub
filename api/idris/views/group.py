@@ -7,7 +7,7 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from idris.views.bulk import BaseBulk
+from idris.views.bulkbase import BaseBulk
 from idris.models import Group, Membership, Affiliation
 from idris.resources import ResourceFactory, GroupResource
 
