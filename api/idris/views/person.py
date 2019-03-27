@@ -7,17 +7,17 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from idris.views.controller_utils import ControllerUtils
+from idris.views.bulk import BaseBulk
 from idris.models import Person, Membership, Group, Contributor
 from idris.resources import ResourceFactory, PersonResource
 
 from idris.exceptions import StorageError
 from idris.utils import (ErrorResponseSchema,
-                           StatusResponseSchema,
-                           OKStatusResponseSchema,
-                           OKStatus,
-                           JsonMappingSchemaSerializerMixin,
-                           colander_bound_repository_body_validator)
+                         StatusResponseSchema,
+                         OKStatusResponseSchema,
+                         OKStatus,
+                         JsonMappingSchemaSerializerMixin,
+                         colander_bound_repository_body_validator)
 from idris.views.id_mint import BaseIdMinterAPI
 
 
@@ -390,10 +390,12 @@ class PersonRecordAPI(object):
           api_security=[{'jwt': []}],
           tags=['person'],
           cors_origins=('*', ))
-class PersonBulkImportExport(ControllerUtils):
+class PersonBulkImportExport(BaseBulk):
     def __init__(self, request, context):
         self.request = request
         self.context = context
+        self.obj = Person
+        self.obj_schema = PersonSchema()
 
     @view(
         permission='import',
@@ -405,7 +407,8 @@ class PersonBulkImportExport(ControllerUtils):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def post(self):
-        return self.post_bulk()
+        result = super(PersonBulkImportExport, self).post()
+        return result
 
     @view(
         permission='export',
@@ -417,7 +420,8 @@ class PersonBulkImportExport(ControllerUtils):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
-        return self.get_bulk(Person, PersonSchema)
+        result = super(PersonBulkImportExport, self).get()
+        return result
 
 
 person_search = Service(

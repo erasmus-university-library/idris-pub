@@ -12,7 +12,7 @@ from cornice import Service
 
 from idris.models import Work
 from idris.resources import ResourceFactory, WorkResource, GroupResource
-from idris.views.controller_utils import ControllerUtils
+from idris.views.bulk import BaseBulk
 from idris.views.contributor import (
     ContributorSchema, ContributorAffiliationSchema)
 
@@ -493,10 +493,12 @@ class WorkRecordAPI(object):
     api_security=[{'jwt': []}],
     tags=['work'],
     cors_origins=('*', ))
-class WorkImportExport(ControllerUtils):
+class WorkImportExport(BaseBulk):
     def __init__(self, request, context):
-        self.request= request
+        self.request = request
         self.context = context
+        self.obj = Work
+        self.obj_schema = WorkSchema()
 
     @view(
         permission='import',
@@ -507,7 +509,8 @@ class WorkImportExport(ControllerUtils):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def post(self):
-        return self.post_bulk()
+        result = super(WorkImportExport, self).post()
+        return result
 
     @view(
         permission='export',
@@ -518,7 +521,8 @@ class WorkImportExport(ControllerUtils):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
-        return self.get_bulk(Work, WorkSchema)
+        result = super(WorkImportExport, self).get()
+        return result
 
 
 def csl_convert(item):

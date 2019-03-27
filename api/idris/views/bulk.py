@@ -1,5 +1,5 @@
-class ControllerUtils(object):
-    def post_bulk(self):
+class BaseBulk(object):
+    def post(self):
 
         # Get existing resources from submitted bulk.
         keys = [r['id'] for r in self.request.validated['records']
@@ -18,16 +18,15 @@ class ControllerUtils(object):
         self.request.response.status = 201
         return {'status': 'ok'}
 
-    def get_bulk(self, obj, obj_schema):
+    def get(self):
         cursor = self.request.validated['querystring']['cursor']
         limit = self.request.validated['querystring']['limit']
         listing = self.request.context.search(
-            filters=[obj.id >= cursor],
-            order_by=obj.id,
+            filters=[self.obj.id >= cursor],
+            order_by=self.obj.id,
             limit=limit+1,
             principals=self.request.effective_principals)
 
-        schema = obj_schema()
         if len(listing['hits']) > limit:
             cursor = listing['hits'][-1].id
             listing['hits'].pop()
@@ -35,7 +34,7 @@ class ControllerUtils(object):
             cursor = None
 
         result = {'remaining': listing['total']-len(listing['hits']),
-                  'records': [schema.to_json(record.to_dict())
+                  'records': [self.obj_schema.to_json(record.to_dict())
                               for record in listing['hits']],
                   'limit': limit,
                   'cursor': cursor,

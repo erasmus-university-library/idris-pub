@@ -7,7 +7,7 @@ from cornice.resource import resource, view
 from cornice.validators import colander_validator
 from cornice import Service
 
-from idris.views.controller_utils import ControllerUtils
+from idris.views.bulk import BaseBulk
 from idris.models import Group, Membership, Affiliation
 from idris.resources import ResourceFactory, GroupResource
 
@@ -340,10 +340,12 @@ class GroupRecordAPI(object):
     api_security=[{'jwt': []}],
     tags=['group'],
     cors_origins=('*', ))
-class GroupBulkImportExport(ControllerUtils):
+class GroupBulkImportExport(BaseBulk):
     def __init__(self, request, context):
         self.request = request
         self.context = context
+        self.obj = Group
+        self.obj_schema = GroupSchema()
 
     @view(
         permission='import',
@@ -354,7 +356,8 @@ class GroupBulkImportExport(ControllerUtils):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def post(self):
-        return self.post_bulk()
+        result = super(GroupBulkImportExport, self).post()
+        return result
 
     @view(
         permission='export',
@@ -366,7 +369,8 @@ class GroupBulkImportExport(ControllerUtils):
             '400': ErrorResponseSchema(description='Bad Request'),
             '401': ErrorResponseSchema(description='Unauthorized')})
     def get(self):
-        return self.get_bulk(Group, GroupSchema)
+        result = super(GroupBulkImportExport, self).get()
+        return result
 
 
 group_search = Service(

@@ -16,6 +16,7 @@ class IdMintResponseSchema(colander.MappingSchema, JsonMappingSchemaSerializerMi
         current_id = colander.SchemaNode(colander.Integer())
         highest_observed_id = colander.SchemaNode(colander.Integer())
 
+
 class BaseIdMinterAPI(object):
 
     def __init__(self, request, context):
