@@ -284,9 +284,7 @@ class CourseWebTest(BaseCourseTest):
         assert work['expressions'][0]['url'] == material['link']
         assert work['descriptions'][0]['value'] == material['exception']
 
-    def test_course_material_info_report(self):
-        headers = dict(Authorization='Bearer %s' % self.admin_token())
-
+    def _setup_report_data(self, headers):
         # Add materials
         new_material = {'title': 'Report test article 1',
                         'authors': 'Erasmus University',
@@ -316,6 +314,10 @@ class CourseWebTest(BaseCourseTest):
             {'material': material},
             headers=headers)
 
+    def test_course_material_report(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        self._setup_report_data(headers)
+
         # Get the csv file.
         out = self.api.get(
             '/api/v1/course/records/{id}/materials/report'.format(
@@ -329,8 +331,15 @@ class CourseWebTest(BaseCourseTest):
         # Test row data.
         assert '5,article,10,10,0,2,3,4,,Journal' in out.text
 
-    def test_courses_by_faculty_report(self):
-        pass
+    def test_courses_faculty_report(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        self._setup_report_data(headers)
+
+        # Get the csv file.
+        out = self.api.get(
+            '/api/v1/course/records/{id}/materials/report'.format(
+                id=self.course_id),
+            headers=headers)
 
     def test_materials_per_courses_report(self):
         pass

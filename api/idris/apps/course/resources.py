@@ -383,15 +383,19 @@ class CourseResource(BaseResource):
         LEFT JOIN measures m ON m.work_id = w.id
         JOIN expressions e ON e.work_id = w.id
         LEFT JOIN relations wr ON wr.work_id = w.id
-        --WHERE r.work_id = w.id  XXX not sure if this was for testing.
-        --AND r.type = 'toc'
-        WHERE r.type = 'toc'
+        WHERE r.work_id = :course_id
+        AND r.type = 'toc'
         AND r.target_id IS NOT NULL
         AND (wr.type = 'journal' OR wr.type = 'book')
         AND w.type != 'report'
         GROUP BY w.id, w.title""")
 
         result = []
-        for row in self.session.execute(query):
+        params = dict(course_id=self.model.id)
+        for row in self.session.execute(query, params):
             result.append(dict(row))
         return result
+
+    def facult_report(self):
+        query = sql.text("""
+        """)
