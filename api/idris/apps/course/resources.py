@@ -396,6 +396,22 @@ class CourseResource(BaseResource):
             result.append(dict(row))
         return result
 
-    def facult_report(self):
+    def course_faculty_report(self):
         query = sql.text("""
+        SELECT
+            g.name AS faculty,
+            COUNT(DISTINCT c.work_id) AS courses,
+            MAX(w.issued) AS latest,
+            MIN(w.issued) AS earliest
+        FROM groups g
+        JOIN contributors c ON c.group_id = g.id
+        JOIN works w ON c.work_id = w.id
+        WHERE g.type = 'faculty'
+        AND c.role = 'publisher'
+        AND '[2018-09-01, 2019-09-01]'::DATERANGE @> w.issued
+        GROUP BY g.name
         """)
+        result = []
+        for row in self.session.execute(query):
+            result.append(dict(row))
+        return result

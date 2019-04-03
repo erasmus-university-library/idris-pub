@@ -285,6 +285,17 @@ class CourseWebTest(BaseCourseTest):
         assert work['descriptions'][0]['value'] == material['exception']
 
     def _setup_report_data(self, headers):
+
+        # A course with no publications.
+        out = self.api.post_json(
+            '/api/v1/work/records',
+            {'title': 'Course XX',
+             'type': 'course',
+             'issued': '2018-02-27'},
+            headers=headers,
+            status=201)
+        self.empty_course_id = out.json['id']
+
         # Add materials
         new_material = {'title': 'Report test article 1',
                         'authors': 'Erasmus University',
@@ -329,16 +340,25 @@ class CourseWebTest(BaseCourseTest):
                'book_pages,book_title' in out.text
 
         # Test row data.
-        assert '5,article,10,10,0,2,3,4,,Journal' in out.text
+        assert '6,article,10,10,0,2,3,4,,Journal' in out.text
 
-    def test_courses_faculty_report(self):
+        # Get the csv file for course with no materials.
+        out = self.api.get(
+            '/api/v1/course/records/{id}/materials/report'.format(
+                id=self.empty_course_id),
+            headers=headers)
+
+        # Test course with no materials
+        assert 'id,type,words,pages,blob_count,url_count,starting,ending,' \
+               'book_pages,book_title\r\n' == out.text
+
+    def test_course_faculty_report(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         self._setup_report_data(headers)
 
         # Get the csv file.
         out = self.api.get(
-            '/api/v1/course/records/{id}/materials/report'.format(
-                id=self.course_id),
+            '/api/v1/course/records/faculty/report',
             headers=headers)
 
     def test_materials_per_courses_report(self):
