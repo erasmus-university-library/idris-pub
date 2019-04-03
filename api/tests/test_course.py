@@ -325,7 +325,7 @@ class CourseWebTest(BaseCourseTest):
             {'material': material},
             headers=headers)
 
-    def test_course_material_report(self):
+    def test_course_materials_report(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         self._setup_report_data(headers)
 
@@ -388,5 +388,15 @@ class CourseWebTest(BaseCourseTest):
         assert 'faculty,courses,latest,earliest\r\nFaculty X,1,2018-09-02,' \
                '2018-09-02\r\n' == out.text
 
-    def test_materials_per_courses_report(self):
-        pass
+    def test_materials_by_courses_report(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+        self._setup_report_data(headers)
+
+        # Get csv file with no data.
+        out = self.api.get(
+            '/api/v1/course/records/{id}/materials/by/courses/report'.format(
+                id=self.corp_id),
+            headers=headers)
+
+        # Test the headers
+        assert 'id,title,courseCode,starting,ending,materials\r\n' == out.text

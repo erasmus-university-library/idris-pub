@@ -7,8 +7,8 @@ import sqlalchemy as sql
 from pyramid.security import Allow, Deny, Everyone, ALL_PERMISSIONS
 
 from idris.interfaces import IAppRoot
-from idris.resources import BaseResource, ResourceFactory
-from idris.models import Work
+from idris.resources import BaseResource, ResourceFactory, GroupResource
+from idris.models import Work, Group
 
 
 @implementer(IAppRoot)
@@ -361,7 +361,7 @@ class CourseResource(BaseResource):
             result['toc'].append(toc)
         return result
 
-    def course_material_report(self):
+    def course_materials_report(self):
         query = sql.text("""
         SELECT
             w.id,
@@ -413,5 +413,35 @@ class CourseResource(BaseResource):
         """)
         result = []
         for row in self.session.execute(query):
+            result.append(dict(row))
+        return result
+
+
+class CourseGroupResource(GroupResource):
+    def materials_by_courses_report(self):
+        query = sql.text("""
+        SELECT
+            w.id,
+            w.title,
+            MAX(i.value) AS courseCode,
+            LOWER(w.during) AS starting,
+            UPPER(w.during) AS ending,
+            COUNT(DISTINCT r.target_id) AS materials
+        FROM contributors c
+        JOIN works w ON c.work_id = w.id
+        JOIN identifiers i ON i.work_id = w.id
+        JOIN relations r ON r.work_id = w.id
+        WHERE c.group_id = :group_id  -- Add to endpoint!
+        AND c.role = 'publisher'
+        AND '[2018-09-01, 2019-09-01]'::DATERANGE @> w.issued
+        AND i.type = 'courseCode'
+        AND w.type = 'course'
+        AND r.type = 'toc'
+        and r.target_id IS NOT NULL
+        GROUP BY w.id, w.title, starting, ending
+        """)
+        result = []
+        params = dict(group_id=self.model.id)
+        for row in self.session.execute(query, params):
             result.append(dict(row))
         return result
