@@ -53,6 +53,7 @@ class BaseCourseTest(BaseTest):
             status=201)
         self.course_id = out.json['id']
 
+
 class CourseWebTest(BaseCourseTest):
 
     def test_course_navigation(self):
@@ -282,3 +283,54 @@ class CourseWebTest(BaseCourseTest):
         assert work['relations'][0]['ending'] == material['ending']
         assert work['expressions'][0]['url'] == material['link']
         assert work['descriptions'][0]['value'] == material['exception']
+
+    def test_course_material_info_report(self):
+        headers = dict(Authorization='Bearer %s' % self.admin_token())
+
+        # Add materials
+        new_material = {'title': 'Report test article 1',
+                        'authors': 'Erasmus University',
+                        'type': 'article',
+                        'link': 'https://eur.nl',
+                        'year': '2018'}
+        self.api.post_json(
+            '/api/v1/course/records/%s/materials' % self.course_id,
+            {'material': new_material},
+            headers=headers)
+
+        material = {'title': 'Report test article 2',
+                    'authors': 'The Authors et al',
+                    'journal': 'Journal',
+                    'issue': '1',
+                    'volume': '2',
+                    'starting': '3',
+                    'ending': '4',
+                    'type': 'article',
+                    'doi': '10.12345',
+                    'link': 'https://eur.nl',
+                    'words': '10',
+                    'pages': '10',
+                    'year': '2018'}
+        self.api.post_json(
+            '/api/v1/course/records/%s/materials' % self.course_id,
+            {'material': material},
+            headers=headers)
+
+        # Get the csv file.
+        out = self.api.get(
+            '/api/v1/course/records/{id}/materials/report'.format(
+                id=self.course_id),
+            headers=headers)
+
+        # Test csv headers.
+        assert 'id,type,words,pages,blob_count,url_count,starting,ending,' \
+               'book_pages,book_title' in out.text
+
+        # Test row data.
+        assert '5,article,10,10,0,2,3,4,,Journal' in out.text
+
+    def test_courses_by_faculty_report(self):
+        pass
+
+    def test_materials_per_courses_report(self):
+        pass

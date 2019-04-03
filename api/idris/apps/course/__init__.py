@@ -11,6 +11,7 @@ def includeme(config):
     config.registry.registerUtility(
         CourseAppRoot, IAppRoot, 'course')
     config.scan('idris.apps.course.views')
+    config.scan('idris.apps.course.reports')
     config.registry.registerUtility(
         ProCourseRoyaltyCalculator2017, ICourseRoyaltyCalculator, '2017')
     config.registry.registerUtility(

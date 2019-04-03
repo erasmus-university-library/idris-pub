@@ -10,6 +10,7 @@ from idris.interfaces import IAppRoot
 from idris.resources import BaseResource, ResourceFactory
 from idris.models import Work
 
+
 @implementer(IAppRoot)
 class CourseAppRoot(object):
     def __init__(self, request):
@@ -20,10 +21,10 @@ class CourseAppRoot(object):
             return ResourceFactory(CourseResource, request=self.request)
         raise KeyError('no such page: %s' % key)
 
+
 class CourseResource(BaseResource):
     orm_class = Work
     key_col_name = 'id'
-
 
     def __acl__(self):
 
@@ -59,7 +60,6 @@ class CourseResource(BaseResource):
         yield (Allow, 'group:teacher', 'course_add')
         yield (Allow, 'group:teacher', 'course_list')
         yield (Allow, 'system.Authenticated', 'view')
-
 
     def toc_items_royalty(self):
         query = sql.text("""
@@ -359,4 +359,39 @@ class CourseResource(BaseResource):
                 toc['module_id'] = rel.number
                 del toc['comment']
             result['toc'].append(toc)
+        return result
+
+    def course_material_report(self):
+        query = sql.text("""
+        SELECT
+            w.id,
+            w.type,
+            MAX(CASE WHEN m.type='wordCount'
+                THEN CAST(m.value AS int) ELSE 0 END) AS words,
+            MAX(CASE WHEN m.type='pageCount'
+                THEN cast(m.value AS int) ELSE 0 END) AS pages,
+            SUM(CASE WHEN e.blob_id IS NULL
+                THEN 0 ELSE 1 END) AS blob_count,
+            SUM(CASE WHEN e.url IS NULL
+                THEN 0 ELSE 1 END) AS url_count,
+            MAX(CAST(wr.starting AS INT)) AS starting,
+            MAX(CAST(wr.ending AS INT)) AS ending,
+            MAX(CAST(wr.total AS INT)) AS book_pages,
+            MAX(wr.description) AS book_title
+        FROM relations AS r
+        JOIN works w ON r.target_id = w.id
+        LEFT JOIN measures m ON m.work_id = w.id
+        JOIN expressions e ON e.work_id = w.id
+        LEFT JOIN relations wr ON wr.work_id = w.id
+        --WHERE r.work_id = w.id  XXX not sure if this was for testing.
+        --AND r.type = 'toc'
+        WHERE r.type = 'toc'
+        AND r.target_id IS NOT NULL
+        AND (wr.type = 'journal' OR wr.type = 'book')
+        AND w.type != 'report'
+        GROUP BY w.id, w.title""")
+
+        result = []
+        for row in self.session.execute(query):
+            result.append(dict(row))
         return result
