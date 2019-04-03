@@ -367,11 +367,6 @@ class CourseWebTest(BaseCourseTest):
         assert 'faculty,courses,latest,earliest\r\n' == out.text
 
         # Change the issued date within the date range.
-        out = self.api.get(
-            '/api/v1/work/records/{id}'.format(
-                id=self.course_id),
-            headers=headers)
-
         self.api.put_json(
             '/api/v1/work/records/{id}'.format(
                 id=self.course_id),
@@ -390,7 +385,7 @@ class CourseWebTest(BaseCourseTest):
 
     def test_materials_by_courses_report(self):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
-        self._setup_report_data(headers)
+        # self._setup_report_data(headers)
 
         # Get csv file with no data.
         out = self.api.get(
@@ -400,3 +395,24 @@ class CourseWebTest(BaseCourseTest):
 
         # Test the headers
         assert 'id,title,courseCode,starting,ending,materials\r\n' == out.text
+
+        # Change the issued date within the date range.
+        self.api.put_json(
+            '/api/v1/work/records/{id}'.format(
+                id=self.course_id),
+            {'id': self.course_id,
+             'title': 'Course X',
+             'issued': '2018-09-2',
+             'type': 'course',
+             'identifiers': [{'type': 'courseCode', 'value': '666'}]},
+            headers=headers)
+
+        # Get csv file with data.
+        out = self.api.get(
+            '/api/v1/course/records/{id}/materials/by/courses/report'.format(
+                id=self.corp_id),
+            headers=headers)
+
+        # Test csv data.
+        assert 'id,title,courseCode,starting,ending,materials\r\n3,Course X,' \
+               '666,2018-09-02,2018-09-03,1\r\n' == out.text
