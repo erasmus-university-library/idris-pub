@@ -408,7 +408,7 @@ class CourseResource(BaseResource):
         JOIN works w ON c.work_id = w.id
         WHERE g.type = 'faculty'
         AND c.role = 'publisher'
-        AND '[2018-09-01, 2019-09-01]'::DATERANGE @> w.issued
+        AND '[2018-09-01, 2019-09-01]'::DATERANGE @> w.issued  -- Add as params
         GROUP BY g.name
         """)
         result = []

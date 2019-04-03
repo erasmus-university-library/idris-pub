@@ -356,10 +356,37 @@ class CourseWebTest(BaseCourseTest):
         headers = dict(Authorization='Bearer %s' % self.admin_token())
         self._setup_report_data(headers)
 
-        # Get the csv file.
+        # Get the csv file outside of date range.
+        # XXX The date range is in the resources module. The dates should be
+        # changed to params.
         out = self.api.get(
             '/api/v1/course/records/faculty/report',
             headers=headers)
+
+        # Test csv headers.
+        assert 'faculty,courses,latest,earliest\r\n' == out.text
+
+        # Change the issued date within the date range.
+        out = self.api.get(
+            '/api/v1/work/records/{id}'.format(
+                id=self.course_id),
+            headers=headers)
+
+        self.api.put_json(
+            '/api/v1/work/records/{id}'.format(
+                id=self.course_id),
+            {'id': self.course_id,
+             'title': 'Course X',
+             'issued': '2018-09-2',
+             'type': 'course'},
+            headers=headers)
+
+        # Get csv file with data.
+        out = self.api.get(
+            '/api/v1/course/records/faculty/report',
+            headers=headers)
+        assert 'faculty,courses,latest,earliest\r\nFaculty X,1,2018-09-02,' \
+               '2018-09-02\r\n' == out.text
 
     def test_materials_per_courses_report(self):
         pass
