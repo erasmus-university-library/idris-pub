@@ -342,9 +342,14 @@ class PersonRecordAPI(object):
                     func.array_agg(Group.name.distinct()).label('group_names'),
                     func.count(Contributor.work_id.distinct()).label(
                         'work_count')
-                    ).outerjoin(Contributor).outerjoin(Membership).outerjoin(
-                    Group).group_by(filtered_persons.c.id,
-                                    filtered_persons.c.name)
+                    )
+                with_memberships = with_memberships.outerjoin(
+                    Contributor, Contributor.person_id == filtered_persons.c.id)
+                with_memberships = with_memberships.outerjoin(
+                    Membership, Membership.person_id == filtered_persons.c.id)
+                with_memberships = with_memberships.outerjoin(
+                    Group, Group.id == Membership.group_id).group_by(
+                        filtered_persons.c.id, filtered_persons.c.name)
                 return with_memberships.order_by(filtered_persons.c.name)
 
         listing = self.context.search(

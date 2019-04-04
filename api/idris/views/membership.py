@@ -248,7 +248,9 @@ class MembershipRecordAPI(object):
                     func.max(filtered_members.c.id).label('id'),
                     Person.id.label('person_id'),
                     Person.name.label('person_name')).join(
-                    Person).join(Group).outerjoin(Person.contributors)
+                        Person, Person.id == filtered_members.c.person_id).join(
+                            Group, Group.id == filtered_members.c.group_id).outerjoin(
+                                Person.contributors, )
                 if query and group_id:
                     with_members = with_members.filter(
                         Person.family_name.ilike('%%%s%%' % query))
