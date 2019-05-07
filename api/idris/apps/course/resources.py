@@ -345,8 +345,10 @@ class CourseResource(BaseResource):
         for identifier in course.identifiers:
             if identifier.type == 'courseCode':
                 id_key = 'course_id'
-            else:
+            elif identifier.type in ['lti', 'canvas']:
                 id_key = '%s_id' % identifier.type
+            else:
+                continue
             result[id_key] = identifier.value
         for rel in course.relations:
             if not rel.type == 'toc':
