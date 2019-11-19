@@ -20,6 +20,7 @@ RUN pip install -r /app/requirements.txt
 
 # Add the application source code.
 ADD . /app
+RUN pip install -e .
 
 # copy the ImageMagick policy file
 COPY ImageMagick-6-policy.xml /etc/ImageMagick-6/policy.xml

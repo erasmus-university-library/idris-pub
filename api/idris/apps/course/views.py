@@ -1,6 +1,7 @@
 import os
 import base64
 import json
+import logging
 from urllib.parse import parse_qsl, quote
 
 from cornice import Service
@@ -150,19 +151,36 @@ def lti_login_view(request):
     params = dict(request.GET)
     params.update(dict(parse_qsl(request.body.decode('utf8'),
                                  keep_blank_values=True)))
-    import logging
-    logging.info('url: %s' % request.url)
-    logging.info('scheme: %s' % request.scheme)
-    logging.info('%s' % dict(request.headers))
-    logging.info(request.environ)
-    logging.info(params)
-    logging.info('LTI post for course: %s' % params['context_id'])
+
+    roles = params.get('roles', '').split(',')
+    if 'custom_roles' in params:
+        roles = params['custom_roles'].split(',')
+
+    course_id = params.get('custom_course_id', params['context_id'])
+
+    if 'custom_instructor_roles' in params:
+        instructor_roles = set(params['custom_instructor_roles'].split(','))
+    else:
+        instructor_roles = set(['Instructor',
+                                'Administrator',
+                                'Coordinator',
+                                'Editor',
+                                'TA',
+                                'Student assistent',
+                                'Course designer'])
+
+    consumer_key = params.get('oauth_consumer_key', '')
+
+    #logging.info('url: %s' % request.url)
+    #logging.info('scheme: %s' % request.scheme)
+    #logging.info('%s' % dict(request.headers))
+    #logging.info(request.environ)
+    #logging.info(params)
 
     url = request.url
     if request.headers.get('X-Forwarded-Proto') == 'https':
         url = url.replace('http://', 'https://')
 
-    consumer_key = params.get('oauth_consumer_key', '')
     consumers = {consumer_key: {
         'secret': settings['course_lti_secret']}}
     try:
@@ -173,10 +191,20 @@ def lti_login_view(request):
                                          params)
     except Exception:
         is_valid = False
-    if not is_valid:
-        logging.warning('verify request failed')
 
+
+    logging.info('%s: %s (%s) with roles: %s, consumer: %s' % (
+        {True: 'login', False: 'failed login'}[is_valid],
+        params['context_id'],
+        params.get('custom_course_id', ''),
+        roles,
+        consumer_key
+    ))
+
+
+    if not is_valid:
         raise HTTPForbidden('Unauthorized')
+
     user_id = params['user_id']
     principals = ['user:%s' % user_id]
     group_id = consumer_key.split('-')[-1]
@@ -193,8 +221,8 @@ def lti_login_view(request):
             'Bad consumer_key, no such group: "%s"' % group_id)
         raise HTTPNotFound(
             'Bad consumer_key, no such group: "%s"' % group_id)
-    if group:
-        principals.append('member:group:%s' % group.id)
+
+    principals.append('member:group:%s' % group.id)
 
     course = request.dbsession.query(Identifier).filter(
         Identifier.type=='lti',
@@ -202,14 +230,7 @@ def lti_login_view(request):
     if course:
         course = course.work_id
 
-    instructor_roles = set(['Instructor',
-                            'Administrator',
-                            'Coordinator',
-                            'Editor',
-                            'TA',
-                            'Student assistent',
-                            'Course designer'])
-    for role in params['roles'].split(','):
+    for role in roles:
         role = role.strip().replace('urn:lti:instrole:ims/lis/', '')
         if role in instructor_roles:
             principals.append('group:teacher')
@@ -219,7 +240,6 @@ def lti_login_view(request):
             break
     else:
         principals.append('group:student')
-        logging.info('Student role')
         if course:
             principals.append('student:course:%s' % course)
         else:
@@ -228,7 +248,11 @@ def lti_login_view(request):
             request.response.status = 404
             request.response.content_type = 'text/html'
             request.response.write('<html></html>')
+            logging.info('principals: %s' % principals)
             return request.response
+
+    logging.info('principals: %s' % principals)
+
     token_params = {}
     if params['lti_message_type'] == 'ContentItemSelectionRequest':
         token_params['return_url'] = params['content_item_return_url']
@@ -255,7 +279,7 @@ def lti_login_view(request):
             url_params,
             quote(params.get('context_title', '')),
             quote(params.get('context_label', '')),
-            quote(params['context_id']))
+            quote(course_id))
     redirect_url = '%s%s%s' % (redirect_url, url_params, url_fragment)
 
     request.response.content_type = 'application/json'
@@ -277,6 +301,8 @@ class CourseSchema(colander.MappingSchema,
         end_date = colander.SchemaNode(colander.Date(), missing=None)
         group = colander.SchemaNode(colander.Int(), missing=None)
 
+        enrollments = colander.SchemaNode(
+            colander.Int(), missing=colander.drop)
         course_id = colander.SchemaNode(
             colander.String(), missing=colander.drop)
         canvas_id = colander.SchemaNode(

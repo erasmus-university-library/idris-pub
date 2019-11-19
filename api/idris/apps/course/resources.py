@@ -309,6 +309,12 @@ class CourseResource(BaseResource):
                 {'role': 'publisher', 'group_id': data.pop('group')})
         if 'toc_items' in data:
             del data['toc_items']
+
+        if 'enrollments' in data:
+            enrollments = data.pop('enrollments')
+            data['measures'] = [{
+                'type': 'enrollments', 'value': str(enrollments)}]
+
         for key in [key for key in data if key.endswith('_id')]:
             value = data.pop(key)
             id_key = key[:-3]
@@ -338,6 +344,7 @@ class CourseResource(BaseResource):
                   'start_date': course.during.lower,
                   'end_date': course.during.upper,
                   'group': None,
+                  'enrollments': 0,
                   'toc': []}
         for contrib in course.contributors:
             if contrib.role == 'publisher':
@@ -350,6 +357,11 @@ class CourseResource(BaseResource):
             else:
                 continue
             result[id_key] = identifier.value
+
+        for measure in course.measures:
+            if measure.type == 'enrollments':
+                result['enrollments'] = int(measure.value)
+
         for rel in course.relations:
             if not rel.type == 'toc':
                 continue

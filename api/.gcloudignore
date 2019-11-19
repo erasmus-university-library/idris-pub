@@ -1,0 +1,7 @@
+*.pyc
+lib/
+bin/
+include/
+var/
+share/
+.pytest_cache/

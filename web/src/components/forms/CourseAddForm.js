@@ -34,6 +34,7 @@ class CourseAddForm extends Component {
     start_date: currentCourseYear()[0],
     end_date: currentCourseYear()[1],
     course_id: sdk.config.course_id || '',
+    enrollments: sdk.config.enrollments || '0',
     lti_id: sdk.config.lti_id || '',
   }
 
@@ -43,9 +44,12 @@ class CourseAddForm extends Component {
       const course = this.props.course;
       this.setState({title: course.title,
 		     start_date: course.start_date,
-		     end_date: course.end_date})
+		     end_date: course.end_date,
+		     course_id: course.course_id||'',
+		     enrollments: course.enrollments||'0'})
     }
   }
+
   handleChange = (name) => (event) => {
     this.setState({[name]: event.target.value});
   }
@@ -105,7 +109,6 @@ class CourseAddForm extends Component {
 		margin="dense"
 		/>
 	    </div>
-	    {isEditForm ? null :
 	    <div className={classes.formFieldRow}>
 	      <TextField
 		id="course_id"
@@ -116,6 +119,15 @@ class CourseAddForm extends Component {
 		onChange={this.handleChange('course_id')}
 		margin="dense"
 		/>
+	      <TextField
+		id="enrollments"
+		className={classes.flex}
+		label="Enrollments"
+		type="number"
+		value={this.state.enrollments}
+		onChange={this.handleChange('enrollments')}
+		margin="dense"
+		/>
               <TextField
 		id="lti_id"
 		type="hidden"
@@ -124,7 +136,6 @@ class CourseAddForm extends Component {
 		margin="dense"
 		/>
 	      </div>
-	    }
           </form>
         </DialogContent>
           <DialogActions>

@@ -433,6 +433,8 @@ class CourseListing extends Component {
     course.title = courseData.title;
     course.start_date =  courseData.start_date;
     course.end_date = courseData.end_date;
+    course.course_id = courseData.course_id;
+    course.enrollments = courseData.enrollments;
 
     this.setState({course,
 		   editCourseDialogOpen: false,
@@ -535,16 +537,6 @@ class CourseListing extends Component {
 	  ))}
 	</List>
 	  </form>
-	  <Zoom in={true} className={classes.AddButton}>
-	  <Button
-	variant="fab"
-	value="new"
-	onClick={this.handleModuleChange}
-	color="primary">
-          <AddIcon />
-	  </Button>
-	  </Zoom>
-	{newModuleDialogOpen ? this.renderNewModuleDialog() : null}
 	  </Paper>)
 	}
     return (

@@ -89,6 +89,7 @@ DEFAULTS = {
     'measure_types': {'cites': 'Citations',
                       'openAccess': 'Open Access',
                       'impactFactor': 'Impact Factor',
+                      'enrollments': 'Enrollments',
                       'wordCount': 'Words',
                       'pageCount': 'Pages'},
     'position_types': {'academic': 'Academic Side Position',
