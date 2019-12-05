@@ -148,8 +148,7 @@ class CourseWebTest(BaseCourseTest):
             '/api/v1/course/lookup/doi?doi=%s' % quote(doi),
             headers=headers)
         course = out.json['course']
-        assert course['title'] == (
-            'Measured measurement: Quantum tomography')
+        assert course['title'].startswith('Measured measurement')
         assert course['volume'] == '5'
         assert course['year'] == '2009'
         assert course['issue'] == '1'

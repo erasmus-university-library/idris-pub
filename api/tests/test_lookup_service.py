@@ -28,7 +28,7 @@ class CrossRefLookupTest(BaseTest):
             # crossref might be down
             warnings.warn('Error connecting to "%s"' % self.lookup.base_url)
             return
-        assert result['title'] == 'Measured measurement: Quantum tomography'
+        assert result['title'].startswith('Measured measurement')
         assert result['type'] == 'article'
         assert result['issued'] == datetime.date(2009, 1, 1)
 
