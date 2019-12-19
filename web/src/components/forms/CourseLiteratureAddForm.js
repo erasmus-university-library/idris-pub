@@ -62,12 +62,19 @@ class CourseLiteratureAddForm extends Component {
 	      },
     doi_error: null,
     link_error: null,
+    starting_error: null,
+    ending_error: null,
     metadata_error: null,
+    book_pages_error: null,
     citation: {},
     royalties: {},
   }
 
   handleChange = (name) => (event) => {
+    let starting_error = this.state.starting_error;
+    let ending_error = this.state.ending_error;
+    let book_pages_error = this.state.book_pages_error;
+
     const material = this.state.material;
     if (event.target.type === 'checkbox'){
       material[name] = event.target.checked;
@@ -77,10 +84,34 @@ class CourseLiteratureAddForm extends Component {
     } else if (name === 'book_title' && event.target.value === 'other'){
       material[name] = '';
       material['customBookTitle'] = true;
+    } else if (name === 'starting'){
+      if (isNaN(event.target.value)){
+	starting_error = 'number only';
+      } else {
+	starting_error = null;
+      }
+      material[name] = event.target.value;
+    } else if (name === 'ending'){
+      if (isNaN(event.target.value)){
+	ending_error = 'number only';
+      } else {
+	ending_error = null;
+      }
+      material[name] = event.target.value;
+    } else if (name === 'book_pages'){
+      if (isNaN(event.target.value)){
+	book_pages_error = 'number only';
+      } else {
+	book_pages_error = null;
+      }
+      material[name] = event.target.value;
     } else {
       material[name] = event.target.value;
     }
-    this.setState({material});
+    this.setState({material,
+		   starting_error,
+		   ending_error,
+		   book_pages_error});
   }
 
   selectBookTitle = (event) => {
@@ -131,8 +162,11 @@ class CourseLiteratureAddForm extends Component {
 	  response => response.json(),
 	  error => {console.log('DOI Lookup Error: ' + error)})
 	  .then(data => {
-	    this.setState({material: Object.assign(this.state.material, data.course),
-			   processing: false});
+	    this.setState({
+	      material: Object.assign(this.state.material, data.course),
+	      starting_error: (data.course.starting && isNaN(data.course.starting)? 'number only' : null),
+	      ending_error: (data.course.ending && isNaN(data.course.ending)? 'number only' : null),
+	      processing: false});
       });
     } else {
       this.setState({activeStep: link_error === null && doi_error === null ? 1: 0,
@@ -186,13 +220,17 @@ class CourseLiteratureAddForm extends Component {
       material[key] = '';
     }
     this.setState({material,
+		   starting_error: null,
+		   ending_error: null,
+		   book_pages_error: null,
 		   activeStep:0});
     this.props.onClose();
   }
 
   render() {
     const { classes } = this.props;
-    const { activeStep, processing, link_error, doi_error,
+    const { activeStep, processing,
+	    link_error, doi_error, starting_error, ending_error, book_pages_error,
 	    material, citation, royalties } = this.state;
     let bookTitles = new Set();
     Object.values(this.props.tocItems).forEach(toc => (toc.type === 'book-chapter' ? bookTitles.add(toc['container-title']): null))
@@ -380,7 +418,8 @@ class CourseLiteratureAddForm extends Component {
 		    {material.type === 'article'  || material.type === 'bookChapter' ?
 		    <TextField
 		      id="starting"
-		      label="Start Page"
+		      error={Boolean(starting_error)}
+		      label={Boolean(starting_error) ? starting_error: "Start Page"}
 		      value={material.starting}
 		      className={classes.guttered}
 		      onChange={this.handleChange('starting')}
@@ -390,7 +429,8 @@ class CourseLiteratureAddForm extends Component {
 		    {material.type === 'article'  || material.type === 'bookChapter' ?
 		    <TextField
 		      id="ending"
-		      label="End Page"
+		      error={Boolean(ending_error)}
+		      label={Boolean(ending_error) ? ending_error: "End Page"}
 		      value={material.ending}
 		      className={material.type === 'bookChapter' ? classes.guttered :classes.gutteredRightField}
 		      onChange={this.handleChange('ending')}
@@ -400,7 +440,8 @@ class CourseLiteratureAddForm extends Component {
 		  {material.type === 'bookChapter' ?
 		    <TextField
 		      id="book_pages"
-		      label="Total Pages in Book"
+		      error={Boolean(book_pages_error)}
+		      label={Boolean(book_pages_error) ? book_pages_error: "Total Pages in Book"}
 		      value={material.book_pages}
 		      className={classes.gutteredRightField}
 		      onChange={this.handleChange('book_pages')}
@@ -532,7 +573,21 @@ class CourseLiteratureAddForm extends Component {
 			  disabled={!(Boolean(material.title) &&
 				      Boolean(material.authors) &&
 				      Boolean(material.year) &&
-				      (material.type === 'bookChapter' ? (Boolean(material.book_title) && Boolean(material.book_pages)): true))}>
+				      (material.type === 'article' ? (
+					Boolean(material.starting)  &&
+					  Boolean(material.ending)  &&
+					  starting_error === null &&
+					  ending_error === null
+				      ): true) &&
+				      (material.type === 'bookChapter' ? (
+					Boolean(material.book_title) &&
+					  Boolean(material.book_pages) &&
+					  Boolean(material.starting)  &&
+					  Boolean(material.ending)  &&
+					  starting_error === null &&
+					  ending_error === null &&
+					  book_pages_error === null
+				      ): true))}>
 		    Next
 		  </Button>
 	      : null}
