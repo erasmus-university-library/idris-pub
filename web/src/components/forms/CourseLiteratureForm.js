@@ -36,7 +36,7 @@ import IdrisSDK from '../../sdk.js';
 const sdk = new IdrisSDK();
 
 @withStyles(styles)
-class CourseLiteratureAddForm extends Component {
+class CourseLiteratureForm extends Component {
 
   state = {
     activeStep: 0,
@@ -59,7 +59,9 @@ class CourseLiteratureAddForm extends Component {
 	       type: '',
 	       exception: '',
 	       confirmed: '',
+	       id: '',
 	      },
+    editing: false,
     doi_error: null,
     link_error: null,
     starting_error: null,
@@ -69,6 +71,37 @@ class CourseLiteratureAddForm extends Component {
     citation: {},
     royalties: {},
   }
+
+  componentDidUpdate = (prevProps, prevState) => {
+    if (this.props.material && (prevProps.material||{}).id !== this.props.material.id){
+      let material = {
+	id: this.props.material.id,
+	title: this.props.material.title||'',
+	authors: this.props.material.author?this.props.material.author[0].literal:'',
+	year: this.props.material.issued?this.props.material.issued['date-parts'][0][0]:'',
+	starting: this.props.material.page?this.props.material.page.split('-')[0]:'',
+	ending: this.props.material.page?this.props.material.page.split('-')[1]:'',
+	book_pages: this.props.material.total||'',
+	book_title: this.props.material['container-title'] || '',
+	journal: this.props.material['container-title'] || '',
+	volume: this.props.material.volume||'',
+	issue: this.props.material.issue||'',
+	type: ({'article-journal': 'article',
+	       'book-chapter': 'bookChapter',
+	       'report': 'report',
+		'annotation': 'annotation'}[this.props.material.type])||'',
+      };
+
+      material.title = this.props.material.title;
+
+      this.setState({activeStep: 1,
+		     editing: true,
+		     processing: false,
+		     material})
+    }
+  }
+
+
 
   handleChange = (name) => (event) => {
     let starting_error = this.state.starting_error;
@@ -132,7 +165,6 @@ class CourseLiteratureAddForm extends Component {
       material.book_pages = selectedToc.total;
 
     }
-    console.log(material);
     this.setState({material});
   }
 
@@ -177,6 +209,17 @@ class CourseLiteratureAddForm extends Component {
   }
 
   handleSubmitDescribeLiterature = (event) => {
+    if (this.state.editing){
+      console.log('edited', this.state.material);
+      this.setState({processing: true});
+      sdk.courseUpdateMaterial(this.props.courseId, this.state.material.id, this.state.material).then(
+	response => response.json(),
+	error => {console.log('Update Material Error: ' + error)})
+	.then(data => {
+	  this.handleClose(true);
+	});
+      return;
+    }
     this.setState({activeStep: 2,
 		   processing: true});
     sdk.courseAddMaterial(this.props.courseId, this.state.material, true).then(
@@ -195,7 +238,7 @@ class CourseLiteratureAddForm extends Component {
       response => response.json(),
       error => {console.log('Add Material Error: ' + error)})
       .then(data => {
-	this.handleClose();
+	this.handleClose(true);
       });
 
   }
@@ -214,7 +257,7 @@ class CourseLiteratureAddForm extends Component {
     this.setState({material: material});
   }
 
-  handleClose = () => {
+  handleClose = (updated) => {
     const material = this.state.material;
     for (var key in material){
       material[key] = '';
@@ -223,29 +266,36 @@ class CourseLiteratureAddForm extends Component {
 		   starting_error: null,
 		   ending_error: null,
 		   book_pages_error: null,
+		   editing: false,
 		   activeStep:0});
-    this.props.onClose();
+    this.props.onClose(updated);
   }
 
   render() {
-    const { classes } = this.props;
-    const { activeStep, processing,
+    const { classes, tocItems, open, courseId } = this.props;
+    const { activeStep, processing, editing,
 	    link_error, doi_error, starting_error, ending_error, book_pages_error,
 	    material, citation, royalties } = this.state;
+
+    if (open !== true){
+      return null;
+    }
+
     let bookTitles = new Set();
-    Object.values(this.props.tocItems).forEach(toc => (toc.type === 'book-chapter' ? bookTitles.add(toc['container-title']): null))
+    Object.values(tocItems).forEach(toc => (toc.type === 'book-chapter' ? bookTitles.add(toc['container-title']): null))
     bookTitles = Array.from(bookTitles);
+
     return (
-      <Dialog open={this.props.open !== false}
+      <Dialog open={open !== false}
 	      onClose={this.handleClose}>
         <DialogTitle>
-	  New Course Literature
+	  { editing === true ? 'Edit Course Literature' : 'New Course Literature'}
 	</DialogTitle>
         <DialogContent style={{minWidth: 550}}>
 	  <Stepper activeStep={activeStep}
 		   orientation="vertical"
 		   className={classes.FullStepper}>
-	    <Step key={0}>
+	    <Step key={0} completed={editing}>
 	      <StepLabel>
 		<Tooltip title="Provide an article DOI, a website link or a PDF file of the literature you want to add."
 			 placement="right">
@@ -551,12 +601,12 @@ class CourseLiteratureAddForm extends Component {
             <Button onClick={this.handleClose} color="primary">
               Cancel
             </Button>
-	    {activeStep > 0 ?
+  	{!editing && (activeStep > 0) ?
  	      <Button onClick={this.handleSubmitBack} color="primary">
 		  Back
 		</Button>
 	      : null}
-	    {activeStep === 0 ?
+      {!editing && (activeStep === 0) ?
 		  <Button onClick={this.handleSubmitAddLiterature}
 			  color="primary"
 			  variant="contained"
@@ -588,7 +638,7 @@ class CourseLiteratureAddForm extends Component {
 					  ending_error === null &&
 					  book_pages_error === null
 				      ): true))}>
-		    Next
+	     {editing ? 'Update': 'Next'}
 		  </Button>
 	      : null}
 	    {activeStep === 2 ?
@@ -605,4 +655,4 @@ class CourseLiteratureAddForm extends Component {
   }
 }
 
-export default CourseLiteratureAddForm;
+export default CourseLiteratureForm;

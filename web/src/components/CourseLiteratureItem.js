@@ -145,7 +145,8 @@ class CourseLiteratureItem extends Component {
   state = {optionsAnchorEl: null};
 
   shouldComponentUpdate(nextProps, nextState){
-    if (nextProps.id === this.props.id &&
+    if (
+        nextProps.id === this.props.id &&
 	nextProps.draggable == this.props.draggable &&
 	nextProps.comment === this.props.comment &&
 	nextProps.module === this.props.module &&
@@ -182,6 +183,12 @@ class CourseLiteratureItem extends Component {
   handleRemove = () => {
     this.closeOptionsMenu();
     this.props.onRemove(this.props.tocId);
+
+  }
+
+  handleEdit = () => {
+    this.closeOptionsMenu();
+    this.props.onEdit(this.props.tocId);
 
   }
 
@@ -225,6 +232,11 @@ class CourseLiteratureItem extends Component {
 		  anchorEl={optionsAnchorEl}
 		  onClose={this.closeOptionsMenu}
 		  open={Boolean(optionsAnchorEl)} >
+ 	      <MenuItem onClick={this.handleEdit}>
+		<ListItemIcon>
+		  <EditIcon />
+		</ListItemIcon> Edit
+	      </MenuItem>
  	      <MenuItem onClick={this.handleRemove}>
 		<ListItemIcon>
 		  <DeleteIcon />

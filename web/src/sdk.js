@@ -606,6 +606,16 @@ export class IdrisSDK {
 
   }
 
+  courseUpdateMaterial = function(courseId, materialId, materialData){
+    return fetch(`${this.backendURL}/course/records/${courseId}/material/${materialId}`,
+                 {method: 'PATCH',
+                  body: JSON.stringify({material:materialData}),
+                  mode: 'cors',
+                  headers: {'Authorization': `Bearer ${this.token}`,
+                            'Content-Type': 'application/json'}});
+
+  }
+
   courseAddMaterial = function(courseId, materialData, dryRun=false){
     return fetch(`${this.backendURL}/course/records/${courseId}/materials`,
                  {method: 'POST',

@@ -25,6 +25,7 @@ class CourseRecord extends Component {
 		       	    navigation={this.props.navigation} />)
     } else if (match.path === '/group/:group_id/course/:course_id' ||
 	       match.path === '/group/:group_id/course/:course_id/add' ||
+	       match.path === '/group/:group_id/course/:course_id/edit/:material_id' ||
 	       match.path === '/group/:group_id/course/:course_id/filters' ||
 	       match.path === '/group/:group_id/course/:course_id/filter/:module_id') {
       return (
@@ -32,6 +33,7 @@ class CourseRecord extends Component {
 		       filter={match.params.module_id || null}
 		       showFilterSelect={match.path === '/group/:group_id/course/:course_id/filters'}
 		       openAddDialog={match.path === '/group/:group_id/course/:course_id/add'}
+		       editMaterial={match.params.material_id || null}
 		       loadNavigation={this.props.loadCourseNavigation}
 		       navigation={this.props.navigation}
 		       history={this.props.history}

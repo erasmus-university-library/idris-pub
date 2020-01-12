@@ -37,7 +37,7 @@ import ImportExportIcon from '@material-ui/icons/ImportExport';
 import Menu from '@material-ui/core/Menu';
 
 import CourseLiteratureItem from './CourseLiteratureItem';
-import CourseLiteratureAddForm from './forms/CourseLiteratureAddForm';
+import CourseLiteratureForm from './forms/CourseLiteratureForm';
 import CourseGroupListing from './CourseGroupListing';
 import CourseAddForm from './forms/CourseAddForm';
 
@@ -80,6 +80,8 @@ class CourseListing extends Component {
 	   courseOptionsAnchorEl: null,
 	   importCourseDialogOpen: false,
 	   editCourseDialogOpen: false,
+	   editMaterialDialogOpen: false,
+	   editMaterial: null,
 	   filterSelection: null,
 	   loading: false,
 	   needsUpdate: false,
@@ -163,7 +165,9 @@ class CourseListing extends Component {
   }
 
   loadCourse = () => {
-    this.setState({loading: true});
+    this.setState({loading: true,
+		   editMaterialDialogOpen: false,
+		   editMaterial: null});
     sdk.courseLoad(this.props.id, !this.isStudent).then(
       response => response.json(),
       error => {console.log('LoadCourse Error: ' + error)})
@@ -275,7 +279,7 @@ class CourseListing extends Component {
   }
 
   handleReorder = (event, previousIndex, nextIndex, fromId, toId) => {
-    console.log(event, previousIndex, nextIndex, fromId, toId);
+    //console.log(event, previousIndex, nextIndex, fromId, toId);
   }
 
   handleSubmitComment = () => {
@@ -307,9 +311,20 @@ class CourseListing extends Component {
    });
   }
 
-  handleAddLiteratureClose = () => {
-    this.loadCourse();
-    this.props.history.push(`/group/${this.props.groupId}/course/${this.props.id}`);
+  handleAddLiteratureClose = (updated) => {
+    if (this.state.editMaterialDialogOpen === true){
+      this.setState({editCourseDialogOpen: false,
+		     editMaterial: null});
+      this.loadCourse();
+      // force refresh everything. This is a hard refresh because
+      // it is quite complicated to refresh the citations since they
+      // are heavily cached.
+      if (updated === true){
+	window.location.reload();
+      }
+    } else {
+      this.props.history.push(`/group/${this.props.groupId}/course/${this.props.id}`);
+    }
   }
 
   handleLiteratureDrag = (id) => {
@@ -346,6 +361,16 @@ class CourseListing extends Component {
 		   courseOptionsAnchorEl:null})
   }
 
+  handleEditMaterial = (id) => {
+    for(let item of this.state.course.toc){
+      if(item.id === id){
+	this.setState({editMaterialDialogOpen: true,
+		       editMaterial: this.tocItems[item.target_id]});
+	break;
+      }
+    };
+  }
+
   handleRemove = (id) => {
     const newToc = [];
     this.state.course.toc.forEach((item) => {
@@ -363,6 +388,33 @@ class CourseListing extends Component {
   handleCourseImport = (e) => {
     this.setState({importCourseDialogOpen: true,
 		   courseOptionsAnchorEl:null})
+  }
+
+  handleEditCourseSubmit = (courseData) => {
+    const course = this.state.course;
+    course.title = courseData.title;
+    course.start_date =  courseData.start_date;
+    course.end_date = courseData.end_date;
+    course.course_id = courseData.course_id;
+    course.enrollments = courseData.enrollments;
+
+    this.setState({course,
+		   editCourseDialogOpen: false,
+		   needsUpdateAndReload: true});
+  }
+
+  handleCancelCourseEdit = () => {
+    this.setState({editCourseDialogOpen: false});
+  }
+
+  handleCancelCourseImport = () => {
+    this.setState({importCourseDialogOpen: false});
+  }
+
+  handleSubmitCourseImport = (targetCourseId) => {
+    console.log('importing course content from', targetCourseId);
+    this.setState({importCourseDialogOpen: false});
+    this.importCourse(targetCourseId);
   }
 
   openCourseOptionsMenu = (e) => {
@@ -395,6 +447,7 @@ class CourseListing extends Component {
 			onEditModuleName={this.handleEditModuleName}
 			onEditComment={this.handleEditComment}
 			onRemove={this.handleRemove}
+			onEdit={this.handleEditMaterial}
 			tocItem={this.tocItems[item.target_id]||{}} />
 	))}
       </List>
@@ -428,30 +481,6 @@ class CourseListing extends Component {
     )
   }
 
-  handleEditCourseSubmit = (courseData) => {
-    const course = this.state.course;
-    course.title = courseData.title;
-    course.start_date =  courseData.start_date;
-    course.end_date = courseData.end_date;
-    course.course_id = courseData.course_id;
-    course.enrollments = courseData.enrollments;
-
-    this.setState({course,
-		   editCourseDialogOpen: false,
-		   needsUpdateAndReload: true});
-  }
-  handleCancelCourseEdit = () => {
-    this.setState({editCourseDialogOpen: false});
-  }
-
-  handleCancelCourseImport = () => {
-    this.setState({importCourseDialogOpen: false});
-  }
-  handleSubmitCourseImport = (targetCourseId) => {
-    console.log('importing course content from', targetCourseId);
-    this.setState({importCourseDialogOpen: false});
-    this.importCourse(targetCourseId);
-  }
 
   renderNewModuleDialog = () => {
     return (
@@ -493,6 +522,7 @@ class CourseListing extends Component {
 	    commentDialogOpen, commentText,
 	    importCourseDialogOpen,
 	    editCourseDialogOpen,
+	    editMaterialDialogOpen, editMaterial,
 	    filterSelection, courseOptionsAnchorEl} = this.state;
     const { classes, openAddDialog, id, groupId,
 	    showFilterSelect } = this.props;
@@ -507,6 +537,7 @@ class CourseListing extends Component {
 	    <input type="hidden" name="lti_message_type" value="ContentItemSelection" />
 	    <input type="hidden" name="lti_version" value="LTI-1p0" />
 	    <input type="hidden" name="content_items" ref={form => this.filterFormInputRef=form}/>
+
           <AppBar position="sticky" color="default">
           <Toolbar>
             <Typography variant="title" color="inherit" noWrap>
@@ -541,11 +572,12 @@ class CourseListing extends Component {
 	}
     return (
       <Paper>
-	<CourseLiteratureAddForm open={openAddDialog}
-				 courseId={id}
-				 tocItems={this.tocItems}
-				 onClose={this.handleAddLiteratureClose}
-				 onSubmit={this.handleAddLiteratureSubmit} />
+	<CourseLiteratureForm open={openAddDialog||editMaterialDialogOpen}
+			      courseId={id}
+			      material={editMaterial}
+			      tocItems={this.tocItems}
+			      onClose={this.handleAddLiteratureClose}
+			      onSubmit={this.handleAddLiteratureSubmit} />
 	{importCourseDialogOpen ? this.renderImportCourseDialog() : null}
 	{editCourseDialogOpen ? this.renderEditCourseDialog() : null}
 	{newModuleDialogOpen ? this.renderNewModuleDialog() : null}

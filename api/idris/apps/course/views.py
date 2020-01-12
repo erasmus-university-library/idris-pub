@@ -575,6 +575,56 @@ def course_material_add_view(request):
             'csl': context.material_data_to_csl(material),
             'royalties': calculated_royalties}
 
+course_material_update = Service(
+    name='CourseMaterialUpdate',
+    path='/api/v1/course/records/{id}/material/{material_id}',
+    factory=ResourceFactory(CourseResource),
+    schema=CourseMaterialSchema(),
+    api_security=[{'jwt': []}],
+    tags=['course'],
+    cors_origins=('*', ))
+
+@course_material_update.patch(
+    permission='course_material_add',
+    validators=colander_bound_repository_body_validator)
+def course_material_update_view(request):
+    material_id = int(request.matchdict['material_id'])
+    course = request.context.model
+    for material_toc in course.relations:
+        if material_toc.target_id == material_id:
+            break
+    else:
+        raise HTTPNotFound(
+            'Course %s has no material %s' % (
+                course.id, material_id))
+    material = request.context.get(material_id)
+
+    new_fields = dict([(k, v) for (k, v) in request.validated['material'].items() if v])
+    new_work = request.context.from_course_material_data(new_fields)
+    # merge
+
+    allowed_fields = ['type', 'title', 'issued', 'start_date', 'end_date',
+                      'contributors', 'relations']
+    material_data = material.to_dict()
+    for name, field in new_work.to_dict().items():
+        if name in allowed_fields:
+            material_data[name] = field
+    material.update_dict(material_data)
+
+    try:
+        request.context.put(material)
+        # also update the course, so that the revision is incremented
+        # and the cache invalidated
+        request.context.put()
+    except StorageError as err:
+        request.errors.status = 400
+        request.errors.add('body', err.location, str(err))
+        return
+
+    # force reload the course from db to retrieve the new toc
+    request.context.session.refresh(request.context.model)
+    request.response.status_code = 200
+    return {'material': new_fields}
 
 course_nav = Service(name='CourseNavigation',
                      path='/api/v1/course/nav',
