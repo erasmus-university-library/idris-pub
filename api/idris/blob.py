@@ -237,7 +237,7 @@ class GCSBlobStore(object):
         signed_url = gcs_blob.generate_signed_url(
             expiration=datetime.timedelta(minutes=15),
             method='GET',
-            response_disposition= 'attachment; filename=%s' % blob.model.name)
+            response_disposition= 'attachment; filename="%s"' % blob.model.name)
         raise HTTPFound(location=signed_url)
 
     def has_transform_data(self, blob_key, transform_id):

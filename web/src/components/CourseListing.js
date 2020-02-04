@@ -313,17 +313,20 @@ class CourseListing extends Component {
 
   handleAddLiteratureClose = (updated) => {
     if (this.state.editMaterialDialogOpen === true){
-      this.setState({editCourseDialogOpen: false,
-		     editMaterial: null});
-      this.loadCourse();
+      this.setState({
+        editCourseDialogOpen: false,
+        editMaterialDialogOpen: false,
+		    editMaterial: null
+      });
       // force refresh everything. This is a hard refresh because
       // it is quite complicated to refresh the citations since they
       // are heavily cached.
       if (updated === true){
-	window.location.reload();
+	      window.location.reload();
       }
     } else {
       this.props.history.push(`/group/${this.props.groupId}/course/${this.props.id}`);
+      this.loadCourse();
     }
   }
 
@@ -357,8 +360,10 @@ class CourseListing extends Component {
   }
 
   handleCourseEdit = (e) => {
-    this.setState({editCourseDialogOpen: true,
-		   courseOptionsAnchorEl:null})
+    this.setState({
+      editCourseDialogOpen: true,
+		  courseOptionsAnchorEl:null
+    })
   }
 
   handleEditMaterial = (id) => {

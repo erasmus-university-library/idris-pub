@@ -82,7 +82,7 @@ class CourseResource(BaseResource):
         LEFT JOIN measures m ON m.work_id = w.id
         LEFT JOIN relations r ON r.work_id = w.id
         LEFT JOIN descriptions d ON d.work_id = w.id
-        LEFT JOIN expressions e on e.work_id = w.id
+        LEFT JOIN (select * from expressions where format = 'published') e on e.work_id = w.id
         WHERE toc.work_id=:course_id
          GROUP BY
           w.id,

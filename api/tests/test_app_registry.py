@@ -4,6 +4,7 @@ from core import BaseTest
 
 from idris.interfaces import IAppRoot
 
+
 class UnittestAppRoot(object):
     def __init__(self, request):
         self.request = request
@@ -12,6 +13,7 @@ class UnittestAppRoot(object):
         if key == 'foo':
             return FooResource()
         raise KeyError('Not Found')
+
 
 class FooResource(object):
     name = 'bar'

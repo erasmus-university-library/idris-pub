@@ -32,7 +32,7 @@ def home_view(request):
     config = {
         'app': 'course',
         'title': request.GET.get('title'),
-        'course_id': '202618',#request.GET.get('course_id'),
+        'course_id': request.GET.get('course_id'),
         'lti_id': request.GET.get('lti'),
         'cache': {}
     }
@@ -156,7 +156,8 @@ def lti_login_view(request):
     if 'custom_roles' in params:
         roles = params['custom_roles'].split(',')
 
-    course_id = params.get('custom_course_id', params['context_id'])
+    canvas_id = params.get('custom_course_id')
+    course_id = params['context_id']
 
     if 'custom_instructor_roles' in params:
         instructor_roles = set(params['custom_instructor_roles'].split(','))
