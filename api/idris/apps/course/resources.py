@@ -332,6 +332,7 @@ class CourseResource(BaseResource):
                     toc['location'] = 'module'
                     toc['description'] = module
                     toc['number'] = module_id or str(uuid.uuid4())
+                    toc['volume'] = comment
                 elif comment:
                     toc['description'] = comment
             data['relations'] = data.pop('toc')
@@ -371,6 +372,6 @@ class CourseResource(BaseResource):
             if rel.location == 'module':
                 toc['module'] = rel.description
                 toc['module_id'] = rel.number
-                del toc['comment']
+                toc['comment'] = rel.volume
             result['toc'].append(toc)
         return result
