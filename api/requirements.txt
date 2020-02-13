@@ -14,7 +14,7 @@ psycopg2
 gunicorn
 intervals
 google-cloud-storage
-google-cloud-bigquery>=1.20.0
+google-cloud-bigquery
 google-cloud-logging
 grpcio
 requests
