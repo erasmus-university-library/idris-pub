@@ -8,6 +8,7 @@ class CacheServiceTest(BaseTest):
     def setUp(self):
         super(CacheServiceTest, self).setUp()
         self.cache = cache_factory(self.app.registry, 'unittest')
+        self.cache.flush()
 
     def test_set_get(self):
         assert self.cache.set('hello', 'world')
