@@ -19,7 +19,7 @@ before_install:
   - sudo apt-get install -y imagemagick
 
 install:
-  - pip install -U pip wheel setuptools
+  - pip install -U pip wheel setuptools six
   - pip install -e .
   - pip install "pytest>=3.6" webtest codecov pytest-cov
 
